@@ -29,3 +29,7 @@ env/
 .idea/
 Thumbs.db
 desktop.ini
+
+# ---- 一次性补丁脚本（开发过程产物，不进仓库）----
+tools/_*.py
+*.bak_v*
