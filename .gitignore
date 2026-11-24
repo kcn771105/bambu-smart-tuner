@@ -1,0 +1,31 @@
+# ---- 构建产物（不进仓库，二进制走 GitHub Releases）----
+dist/
+build/
+release/
+*.spec.bak
+
+# ---- 规则库/文档的历史备份 ----
+*.bak
+*.bak2
+*.bak3
+*.bak4
+*.bak_*
+
+# ---- 日志 ----
+*.log
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+env/
+*.egg-info/
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

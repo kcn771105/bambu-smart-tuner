@@ -1,0 +1,2704 @@
+{
+ "meta": {
+  "source": "Bambu Studio zh_CN + 手工对照",
+  "count": 269,
+  "stat": {
+   "override": 90,
+   "mo": 141,
+   "hidden": 38,
+   "unknown": 0
+  }
+ },
+ "items": {
+  "layer_height": {
+   "key": "layer_height",
+   "label": "层高",
+   "tab": "质量",
+   "group": "层高",
+   "studio_zh": "层高",
+   "studio_en": "Layer height",
+   "hidden": false,
+   "note": ""
+  },
+  "initial_layer_print_height": {
+   "key": "initial_layer_print_height",
+   "label": "首层层高",
+   "tab": "质量",
+   "group": "层高",
+   "studio_zh": "首层层高",
+   "studio_en": "Initial layer height",
+   "hidden": false,
+   "note": ""
+  },
+  "line_width": {
+   "key": "line_width",
+   "label": "默认线宽",
+   "tab": "质量",
+   "group": "线宽",
+   "studio_zh": "默认",
+   "studio_en": "Default",
+   "hidden": false,
+   "note": ""
+  },
+  "outer_wall_line_width": {
+   "key": "outer_wall_line_width",
+   "label": "外壁线宽",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "外墙的线宽",
+   "studio_en": "Line width of outer wall",
+   "hidden": false,
+   "note": ""
+  },
+  "inner_wall_line_width": {
+   "key": "inner_wall_line_width",
+   "label": "内壁线宽",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "内墙的线宽",
+   "studio_en": "Line width of inner wall",
+   "hidden": false,
+   "note": ""
+  },
+  "internal_solid_infill_line_width": {
+   "key": "internal_solid_infill_line_width",
+   "label": "内部实心线宽",
+   "tab": "强度",
+   "group": "填充",
+   "studio_zh": "内部实心填充的线宽",
+   "studio_en": "Line width of internal solid infill",
+   "hidden": false,
+   "note": ""
+  },
+  "sparse_infill_line_width": {
+   "key": "sparse_infill_line_width",
+   "label": "稀疏填充线宽",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "内部稀疏填充的线宽",
+   "studio_en": "Line width of internal sparse infill",
+   "hidden": false,
+   "note": ""
+  },
+  "top_surface_line_width": {
+   "key": "top_surface_line_width",
+   "label": "顶面线宽",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "顶面的线宽",
+   "studio_en": "Line width for top surfaces",
+   "hidden": false,
+   "note": ""
+  },
+  "initial_layer_line_width": {
+   "key": "initial_layer_line_width",
+   "label": "首层线宽",
+   "tab": "质量",
+   "group": "线宽",
+   "studio_zh": "首层",
+   "studio_en": "Initial layer",
+   "hidden": false,
+   "note": ""
+  },
+  "support_line_width": {
+   "key": "support_line_width",
+   "label": "支撑线宽",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "支撑的线宽",
+   "studio_en": "Line width of support",
+   "hidden": false,
+   "note": ""
+  },
+  "wall_loops": {
+   "key": "wall_loops",
+   "label": "墙层数（外壁+内壁）",
+   "tab": "强度",
+   "group": "墙层数",
+   "studio_zh": "墙层数",
+   "studio_en": "Wall loops",
+   "hidden": false,
+   "note": ""
+  },
+  "top_shell_layers": {
+   "key": "top_shell_layers",
+   "label": "顶层层数",
+   "tab": "强度",
+   "group": "顶/底壳层数",
+   "studio_zh": "顶部壳体层数",
+   "studio_en": "Top shell layers",
+   "hidden": false,
+   "note": ""
+  },
+  "bottom_shell_layers": {
+   "key": "bottom_shell_layers",
+   "label": "底层层数",
+   "tab": "强度",
+   "group": "顶/底壳层数",
+   "studio_zh": "底部壳体层数",
+   "studio_en": "Bottom shell layers",
+   "hidden": false,
+   "note": ""
+  },
+  "sparse_infill_density": {
+   "key": "sparse_infill_density",
+   "label": "填充密度",
+   "tab": "强度",
+   "group": "填充",
+   "studio_zh": "稀疏填充密度",
+   "studio_en": "Sparse infill density",
+   "hidden": false,
+   "note": ""
+  },
+  "sparse_infill_pattern": {
+   "key": "sparse_infill_pattern",
+   "label": "填充图案",
+   "tab": "强度",
+   "group": "填充",
+   "studio_zh": "稀疏填充图案",
+   "studio_en": "Sparse infill pattern",
+   "hidden": false,
+   "note": ""
+  },
+  "top_surface_pattern": {
+   "key": "top_surface_pattern",
+   "label": "顶面图案",
+   "tab": "强度",
+   "group": "顶/底壳层数",
+   "studio_zh": "顶面图案",
+   "studio_en": "Top surface pattern",
+   "hidden": false,
+   "note": ""
+  },
+  "internal_solid_infill_pattern": {
+   "key": "internal_solid_infill_pattern",
+   "label": "内部实心图案",
+   "tab": "强度",
+   "group": "填充",
+   "studio_zh": "内部实心填充图案",
+   "studio_en": "Internal solid infill pattern",
+   "hidden": false,
+   "note": ""
+  },
+  "infill_wall_overlap": {
+   "key": "infill_wall_overlap",
+   "label": "填充与墙重叠",
+   "tab": "强度",
+   "group": "填充",
+   "studio_zh": "填充/墙 重叠",
+   "studio_en": "Infill/Wall overlap",
+   "hidden": false,
+   "note": ""
+  },
+  "top_bottom_infill_wall_overlap": {
+   "key": "top_bottom_infill_wall_overlap",
+   "label": "顶底与墙重叠",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "填充/墙 重叠",
+   "studio_en": "Infill/Wall overlap",
+   "hidden": false,
+   "note": ""
+  },
+  "infill_direction": {
+   "key": "infill_direction",
+   "label": "填充走线角度",
+   "tab": "强度",
+   "group": "填充",
+   "studio_zh": "填充方向",
+   "studio_en": "Infill direction",
+   "hidden": false,
+   "note": ""
+  },
+  "outer_wall_speed": {
+   "key": "outer_wall_speed",
+   "label": "外壁速度",
+   "tab": "速度",
+   "group": "其他层速度",
+   "studio_zh": "外墙速度",
+   "studio_en": "Outer wall speed",
+   "hidden": false,
+   "note": ""
+  },
+  "inner_wall_speed": {
+   "key": "inner_wall_speed",
+   "label": "内壁速度",
+   "tab": "速度",
+   "group": "其他层速度",
+   "studio_zh": "内圈墙打印速度",
+   "studio_en": "Speed of inner wall",
+   "hidden": false,
+   "note": ""
+  },
+  "sparse_infill_speed": {
+   "key": "sparse_infill_speed",
+   "label": "稀疏填充速度",
+   "tab": "强度",
+   "group": "其他层速度",
+   "studio_zh": "稀疏填充",
+   "studio_en": "Sparse infill",
+   "hidden": false,
+   "note": ""
+  },
+  "internal_solid_infill_speed": {
+   "key": "internal_solid_infill_speed",
+   "label": "内部实心速度",
+   "tab": "强度",
+   "group": "其他层速度",
+   "studio_zh": "内部实心填充",
+   "studio_en": "Internal solid infill",
+   "hidden": false,
+   "note": ""
+  },
+  "top_surface_speed": {
+   "key": "top_surface_speed",
+   "label": "顶面速度",
+   "tab": "强度",
+   "group": "其他层速度",
+   "studio_zh": "顶面",
+   "studio_en": "Top surface",
+   "hidden": false,
+   "note": ""
+  },
+  "initial_layer_speed": {
+   "key": "initial_layer_speed",
+   "label": "首层速度",
+   "tab": "速度",
+   "group": "其他层速度",
+   "studio_zh": "首层速度",
+   "studio_en": "Initial layer speed",
+   "hidden": false,
+   "note": ""
+  },
+  "initial_layer_infill_speed": {
+   "key": "initial_layer_infill_speed",
+   "label": "首层填充速度",
+   "tab": "速度",
+   "group": "其他层速度",
+   "studio_zh": "首层填充",
+   "studio_en": "Initial layer infill",
+   "hidden": false,
+   "note": ""
+  },
+  "gap_infill_speed": {
+   "key": "gap_infill_speed",
+   "label": "缝隙填充速度",
+   "tab": "速度",
+   "group": "其他层速度",
+   "studio_zh": "缝隙填充",
+   "studio_en": "Gap fill",
+   "hidden": false,
+   "note": ""
+  },
+  "travel_speed": {
+   "key": "travel_speed",
+   "label": "空走速度",
+   "tab": "速度",
+   "group": "移动速度",
+   "studio_zh": "空驶",
+   "studio_en": "Travel",
+   "hidden": false,
+   "note": ""
+  },
+  "support_speed": {
+   "key": "support_speed",
+   "label": "支撑速度",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "支撑打印速度",
+   "studio_en": "Speed of support",
+   "hidden": false,
+   "note": ""
+  },
+  "bridge_speed": {
+   "key": "bridge_speed",
+   "label": "桥接速度",
+   "tab": "速度",
+   "group": "其他层速度",
+   "studio_zh": "桥接",
+   "studio_en": "Bridge",
+   "hidden": false,
+   "note": ""
+  },
+  "overhang_1_4_speed": {
+   "key": "overhang_1_4_speed",
+   "label": "悬垂 1/4 速度",
+   "tab": "速度",
+   "group": "悬垂速度",
+   "studio_zh": "10%–25%",
+   "studio_en": "Overhang wall 10%-25%",
+   "hidden": false,
+   "note": ""
+  },
+  "overhang_2_4_speed": {
+   "key": "overhang_2_4_speed",
+   "label": "悬垂 2/4 速度",
+   "tab": "速度",
+   "group": "悬垂速度",
+   "studio_zh": "25%–50%",
+   "studio_en": "Overhang wall 25%-50%",
+   "hidden": false,
+   "note": ""
+  },
+  "overhang_3_4_speed": {
+   "key": "overhang_3_4_speed",
+   "label": "悬垂 3/4 速度",
+   "tab": "速度",
+   "group": "悬垂速度",
+   "studio_zh": "50%–75%",
+   "studio_en": "Overhang wall 50%-75%",
+   "hidden": false,
+   "note": ""
+  },
+  "overhang_4_4_speed": {
+   "key": "overhang_4_4_speed",
+   "label": "悬垂 4/4 速度",
+   "tab": "速度",
+   "group": "悬垂速度",
+   "studio_zh": "75%–100%",
+   "studio_en": "Overhang wall 75%-100%",
+   "hidden": false,
+   "note": ""
+  },
+  "enable_overhang_speed": {
+   "key": "enable_overhang_speed",
+   "label": "启用悬垂降速",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "悬垂速度",
+   "studio_en": "Overhang speed",
+   "hidden": false,
+   "note": ""
+  },
+  "enable_prime_tower": {
+   "key": "enable_prime_tower",
+   "label": "启用擦料塔",
+   "tab": "多材料",
+   "group": "擦料塔",
+   "studio_zh": "启用",
+   "studio_en": "Enable",
+   "hidden": false,
+   "note": ""
+  },
+  "prime_tower_width": {
+   "key": "prime_tower_width",
+   "label": "擦料塔宽度",
+   "tab": "多材料",
+   "group": "擦料塔",
+   "studio_zh": "宽度",
+   "studio_en": "Width",
+   "hidden": false,
+   "note": ""
+  },
+  "prime_tower_brim_width": {
+   "key": "prime_tower_brim_width",
+   "label": "擦料塔底座宽度",
+   "tab": "多材料",
+   "group": "",
+   "studio_zh": "擦拭塔宽度",
+   "studio_en": "Width of prime tower",
+   "hidden": false,
+   "note": ""
+  },
+  "default_acceleration": {
+   "key": "default_acceleration",
+   "label": "默认加速度",
+   "tab": "速度",
+   "group": "加速度",
+   "studio_zh": "默认",
+   "studio_en": "Normal printing",
+   "hidden": false,
+   "note": ""
+  },
+  "outer_wall_acceleration": {
+   "key": "outer_wall_acceleration",
+   "label": "外壁加速度",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "外墙",
+   "studio_en": "Outer wall",
+   "hidden": false,
+   "note": ""
+  },
+  "inner_wall_acceleration": {
+   "key": "inner_wall_acceleration",
+   "label": "内壁加速度（0=跟随）",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "内墙",
+   "studio_en": "Inner wall",
+   "hidden": false,
+   "note": ""
+  },
+  "sparse_infill_acceleration": {
+   "key": "sparse_infill_acceleration",
+   "label": "稀疏填充加速度（100%=跟随）",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "稀疏填充",
+   "studio_en": "Sparse infill",
+   "hidden": false,
+   "note": ""
+  },
+  "internal_solid_infill_acceleration": {
+   "key": "internal_solid_infill_acceleration",
+   "label": "内部实心加速度",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "内部实心填充",
+   "studio_en": "Internal solid infill",
+   "hidden": false,
+   "note": ""
+  },
+  "top_surface_acceleration": {
+   "key": "top_surface_acceleration",
+   "label": "顶面加速度",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "顶面",
+   "studio_en": "Top surface",
+   "hidden": false,
+   "note": ""
+  },
+  "initial_layer_acceleration": {
+   "key": "initial_layer_acceleration",
+   "label": "首层加速度",
+   "tab": "速度",
+   "group": "加速度",
+   "studio_zh": "首层",
+   "studio_en": "Initial layer",
+   "hidden": false,
+   "note": ""
+  },
+  "travel_acceleration": {
+   "key": "travel_acceleration",
+   "label": "空走加速度",
+   "tab": "速度",
+   "group": "加速度",
+   "studio_zh": "空驶",
+   "studio_en": "Travel",
+   "hidden": false,
+   "note": ""
+  },
+  "bridge_acceleration": {
+   "key": "bridge_acceleration",
+   "label": "桥接加速度",
+   "tab": "速度",
+   "group": "加速度",
+   "studio_zh": "桥接",
+   "studio_en": "Bridge",
+   "hidden": false,
+   "note": ""
+  },
+  "elefant_foot_compensation": {
+   "key": "elefant_foot_compensation",
+   "label": "象脚 / 首层对齐补偿",
+   "tab": "质量",
+   "group": "精度",
+   "studio_zh": "象脚补偿",
+   "studio_en": "Elephant foot compensation",
+   "hidden": false,
+   "note": ""
+  },
+  "elefant_foot_compensation_layers": {
+   "key": "elefant_foot_compensation_layers",
+   "label": "象脚补偿层数",
+   "tab": "质量",
+   "group": "精度",
+   "studio_zh": "象脚补偿层数",
+   "studio_en": "Elephant foot compensation layers",
+   "hidden": false,
+   "note": ""
+  },
+  "reduce_crossing_wall": {
+   "key": "reduce_crossing_wall",
+   "label": "减少外墙穿越",
+   "tab": "强度",
+   "group": "墙层数",
+   "studio_zh": "减少交叉墙",
+   "studio_en": "Reduce crossing wall",
+   "hidden": false,
+   "note": ""
+  },
+  "xy_hole_compensation": {
+   "key": "xy_hole_compensation",
+   "label": "孔洞 XY 补偿",
+   "tab": "质量",
+   "group": "精度",
+   "studio_zh": "孔洞补偿",
+   "studio_en": "Hole compensation",
+   "hidden": false,
+   "note": ""
+  },
+  "xy_contour_compensation": {
+   "key": "xy_contour_compensation",
+   "label": "轮廓 XY 补偿",
+   "tab": "质量",
+   "group": "精度",
+   "studio_zh": "轮廓补偿",
+   "studio_en": "Contour compensation",
+   "hidden": false,
+   "note": ""
+  },
+  "support_threshold_angle": {
+   "key": "support_threshold_angle",
+   "label": "悬垂判定角",
+   "tab": "支撑",
+   "group": "角度",
+   "studio_zh": "阈值角度",
+   "studio_en": "Threshold angle",
+   "hidden": false,
+   "note": ""
+  },
+  "support_density": {
+   "key": "support_density",
+   "label": "支撑密度",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "Studio 用「支撑线距」代替密度，没有密度滑块"
+  },
+  "support_top_z_distance": {
+   "key": "support_top_z_distance",
+   "label": "支撑顶面分离间隙",
+   "tab": "支撑",
+   "group": "间距",
+   "studio_zh": "顶部Z距离",
+   "studio_en": "Top Z distance",
+   "hidden": false,
+   "note": ""
+  },
+  "support_bottom_z_distance": {
+   "key": "support_bottom_z_distance",
+   "label": "支撑底面分离间隙",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "底部Z距离",
+   "studio_en": "Bottom Z distance",
+   "hidden": false,
+   "note": ""
+  },
+  "support_object_xy_distance": {
+   "key": "support_object_xy_distance",
+   "label": "支撑与模型 XY 间距",
+   "tab": "支撑",
+   "group": "间距",
+   "studio_zh": "支撑/模型xy间距",
+   "studio_en": "Support/object xy distance",
+   "hidden": false,
+   "note": ""
+  },
+  "support_interface_top_layers": {
+   "key": "support_interface_top_layers",
+   "label": "支撑接触层数",
+   "tab": "支撑",
+   "group": "顶部界面层",
+   "studio_zh": "顶部界面层数",
+   "studio_en": "Top interface layers",
+   "hidden": false,
+   "note": ""
+  },
+  "support_base_pattern": {
+   "key": "support_base_pattern",
+   "label": "支撑主体图案",
+   "tab": "支撑",
+   "group": "支撑样式",
+   "studio_zh": "支撑主体图案",
+   "studio_en": "Base pattern",
+   "hidden": false,
+   "note": ""
+  },
+  "support_type": {
+   "key": "support_type",
+   "label": "支撑类型",
+   "tab": "支撑",
+   "group": "支撑样式",
+   "studio_zh": "类型",
+   "studio_en": "Type",
+   "hidden": false,
+   "note": ""
+  },
+  "support_style": {
+   "key": "support_style",
+   "label": "支撑样式",
+   "tab": "支撑",
+   "group": "支撑样式",
+   "studio_zh": "样式",
+   "studio_en": "Style",
+   "hidden": false,
+   "note": ""
+  },
+  "brim_type": {
+   "key": "brim_type",
+   "label": "裙边类型",
+   "tab": "多材料",
+   "group": "裙边",
+   "studio_zh": "Brim类型",
+   "studio_en": "Brim type",
+   "hidden": false,
+   "note": ""
+  },
+  "brim_width": {
+   "key": "brim_width",
+   "label": "裙边宽度",
+   "tab": "多材料",
+   "group": "裙边",
+   "studio_zh": "Brim宽度",
+   "studio_en": "Brim width",
+   "hidden": false,
+   "note": ""
+  },
+  "brim_object_gap": {
+   "key": "brim_object_gap",
+   "label": "裙边与模型间距",
+   "tab": "多材料",
+   "group": "裙边",
+   "studio_zh": "Brim与模型的间隙",
+   "studio_en": "Brim-object gap",
+   "hidden": false,
+   "note": ""
+  },
+  "raft_layers": {
+   "key": "raft_layers",
+   "label": "筏板层数",
+   "tab": "支撑",
+   "group": "筏板",
+   "studio_zh": "筏板层数",
+   "studio_en": "Raft layers",
+   "hidden": false,
+   "note": ""
+  },
+  "ironing_type": {
+   "key": "ironing_type",
+   "label": "熨烫类型",
+   "tab": "质量",
+   "group": "熨烫",
+   "studio_zh": "熨烫类型",
+   "studio_en": "Ironing Type",
+   "hidden": false,
+   "note": ""
+  },
+  "ironing_pattern": {
+   "key": "ironing_pattern",
+   "label": "熨烫图案",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "熨烫模式",
+   "studio_en": "Ironing Pattern",
+   "hidden": false,
+   "note": ""
+  },
+  "ironing_flow": {
+   "key": "ironing_flow",
+   "label": "熨烫流量",
+   "tab": "质量",
+   "group": "熨烫",
+   "studio_zh": "熨烫流量",
+   "studio_en": "Ironing flow",
+   "hidden": false,
+   "note": ""
+  },
+  "ironing_spacing": {
+   "key": "ironing_spacing",
+   "label": "熨烫走线间距",
+   "tab": "质量",
+   "group": "熨烫",
+   "studio_zh": "熨烫间距",
+   "studio_en": "Ironing line spacing",
+   "hidden": false,
+   "note": ""
+  },
+  "ironing_speed": {
+   "key": "ironing_speed",
+   "label": "熨烫速度",
+   "tab": "质量",
+   "group": "熨烫",
+   "studio_zh": "熨烫速度",
+   "studio_en": "Ironing speed",
+   "hidden": false,
+   "note": ""
+  },
+  "ironing_inset": {
+   "key": "ironing_inset",
+   "label": "熨烫内缩",
+   "tab": "质量",
+   "group": "熨烫",
+   "studio_zh": "熨烫内缩",
+   "studio_en": "Ironing inset",
+   "hidden": false,
+   "note": ""
+  },
+  "ironing_direction": {
+   "key": "ironing_direction",
+   "label": "熨烫方向",
+   "tab": "质量",
+   "group": "熨烫",
+   "studio_zh": "熨烫方向",
+   "studio_en": "ironing direction",
+   "hidden": false,
+   "note": ""
+  },
+  "seam_position": {
+   "key": "seam_position",
+   "label": "接缝位置",
+   "tab": "质量",
+   "group": "接缝",
+   "studio_zh": "接缝位置",
+   "studio_en": "Seam position",
+   "hidden": false,
+   "note": ""
+  },
+  "seam_gap": {
+   "key": "seam_gap",
+   "label": "接缝间隙",
+   "tab": "质量",
+   "group": "接缝",
+   "studio_zh": "接缝间隔",
+   "studio_en": "Seam gap",
+   "hidden": false,
+   "note": ""
+  },
+  "seam_placement_away_from_overhangs": {
+   "key": "seam_placement_away_from_overhangs",
+   "label": "接缝避开悬垂",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "接缝远离悬垂点放置（实验）",
+   "studio_en": "Seam placement away from overhangs(experimental)",
+   "hidden": false,
+   "note": ""
+  },
+  "seam_slope_type": {
+   "key": "seam_slope_type",
+   "label": "接缝斜切类型",
+   "tab": "质量",
+   "group": "接缝",
+   "studio_zh": "斜接类型",
+   "studio_en": "Scarf joint seam type",
+   "hidden": false,
+   "note": ""
+  },
+  "seam_slope_conditional": {
+   "key": "seam_slope_conditional",
+   "label": "斜切仅用于外露",
+   "tab": "质量",
+   "group": "接缝",
+   "studio_zh": "条件斜接",
+   "studio_en": "Conditional scarf",
+   "hidden": false,
+   "note": ""
+  },
+  "seam_slope_entire_loop": {
+   "key": "seam_slope_entire_loop",
+   "label": "斜切覆盖整圈",
+   "tab": "质量",
+   "group": "接缝",
+   "studio_zh": "整圈斜接",
+   "studio_en": "Scarf entire loop",
+   "hidden": false,
+   "note": ""
+  },
+  "seam_slope_gap": {
+   "key": "seam_slope_gap",
+   "label": "斜切间隙",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "接缝间隔",
+   "studio_en": "Seam gap",
+   "hidden": false,
+   "note": ""
+  },
+  "seam_slope_min_length": {
+   "key": "seam_slope_min_length",
+   "label": "斜切最小长度",
+   "tab": "质量",
+   "group": "接缝",
+   "studio_zh": "斜接最小长度",
+   "studio_en": "Scarf min length",
+   "hidden": false,
+   "note": ""
+  },
+  "seam_slope_start_height": {
+   "key": "seam_slope_start_height",
+   "label": "斜切起始高度",
+   "tab": "质量",
+   "group": "接缝",
+   "studio_zh": "斜接起始高度",
+   "studio_en": "Scarf start height",
+   "hidden": false,
+   "note": ""
+  },
+  "seam_slope_steps": {
+   "key": "seam_slope_steps",
+   "label": "斜切层数",
+   "tab": "质量",
+   "group": "接缝",
+   "studio_zh": "斜接步数",
+   "studio_en": "Scarf steps",
+   "hidden": false,
+   "note": ""
+  },
+  "seam_slope_inner_walls": {
+   "key": "seam_slope_inner_walls",
+   "label": "内壁也做斜切",
+   "tab": "质量",
+   "group": "接缝",
+   "studio_zh": "内墙斜接",
+   "studio_en": "Scarf inner walls",
+   "hidden": false,
+   "note": ""
+  },
+  "scarf_angle_threshold": {
+   "key": "scarf_angle_threshold",
+   "label": "斜切角度阈值",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "阈值角度",
+   "studio_en": "Threshold angle",
+   "hidden": false,
+   "note": ""
+  },
+  "wipe_speed": {
+   "key": "wipe_speed",
+   "label": "擦嘴速度",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "擦拭速度",
+   "studio_en": "Wipe speed",
+   "hidden": false,
+   "note": ""
+  },
+  "wall_generator": {
+   "key": "wall_generator",
+   "label": "墙生成器",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "墙生成器",
+   "studio_en": "Wall generator",
+   "hidden": false,
+   "note": ""
+  },
+  "wall_sequence": {
+   "key": "wall_sequence",
+   "label": "墙打印顺序",
+   "tab": "强度",
+   "group": "墙层数",
+   "studio_zh": "墙顺序",
+   "studio_en": "Wall sequence",
+   "hidden": false,
+   "note": ""
+  },
+  "wall_distribution_count": {
+   "key": "wall_distribution_count",
+   "label": "墙均匀分配数",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "墙分布计数",
+   "studio_en": "Wall distribution count",
+   "hidden": false,
+   "note": ""
+  },
+  "wall_transition_angle": {
+   "key": "wall_transition_angle",
+   "label": "墙过渡角度",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "Arachne 墙过渡角度，界面上没有"
+  },
+  "wall_transition_length": {
+   "key": "wall_transition_length",
+   "label": "墙过渡长度",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "墙过渡长度",
+   "studio_en": "Wall transition length",
+   "hidden": false,
+   "note": ""
+  },
+  "wall_transition_filter_deviation": {
+   "key": "wall_transition_filter_deviation",
+   "label": "墙过渡过滤偏差",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "Arachne 墙过渡过滤偏差，界面上没有"
+  },
+  "only_one_wall_first_layer": {
+   "key": "only_one_wall_first_layer",
+   "label": "首层只打一圈墙",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "首层仅单层墙",
+   "studio_en": "Only one wall on first layer",
+   "hidden": false,
+   "note": ""
+  },
+  "only_one_wall_top": {
+   "key": "only_one_wall_top",
+   "label": "顶面只打一圈墙",
+   "tab": "强度",
+   "group": "墙层数",
+   "studio_zh": "顶面单层墙",
+   "studio_en": "Only one wall on top surfaces",
+   "hidden": false,
+   "note": ""
+  },
+  "precise_outer_wall": {
+   "key": "precise_outer_wall",
+   "label": "外壁精确走线",
+   "tab": "质量",
+   "group": "精度",
+   "studio_zh": "精确外壁",
+   "studio_en": "Precise outer contour",
+   "hidden": false,
+   "note": ""
+  },
+  "detect_thin_wall": {
+   "key": "detect_thin_wall",
+   "label": "检测薄壁",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "检查薄壁",
+   "studio_en": "Detect thin wall",
+   "hidden": false,
+   "note": ""
+  },
+  "detect_overhang_wall": {
+   "key": "detect_overhang_wall",
+   "label": "检测悬垂墙",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "识别悬空外墙",
+   "studio_en": "Detect overhang wall",
+   "hidden": false,
+   "note": ""
+  },
+  "ensure_vertical_shell_thickness": {
+   "key": "ensure_vertical_shell_thickness",
+   "label": "保证垂直外壳厚度",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "确保垂直外壳厚度",
+   "studio_en": "Ensure vertical shell thickness",
+   "hidden": false,
+   "note": ""
+  },
+  "alternate_extra_wall": {
+   "key": "alternate_extra_wall",
+   "label": "交替加墙",
+   "tab": "强度",
+   "group": "墙层数",
+   "studio_zh": "交替额外墙",
+   "studio_en": "Alternate extra wall",
+   "hidden": false,
+   "note": ""
+  },
+  "monotonic_travel_into_wall": {
+   "key": "monotonic_travel_into_wall",
+   "label": "单调线延伸入墙比例",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "单调空走进墙，界面上没有"
+  },
+  "min_bead_width": {
+   "key": "min_bead_width",
+   "label": "最小挤线宽度",
+   "tab": "质量",
+   "group": "精度",
+   "studio_zh": "最小挤出宽度",
+   "studio_en": "Minimum wall width",
+   "hidden": false,
+   "note": ""
+  },
+  "top_one_wall_type": {
+   "key": "top_one_wall_type",
+   "label": "顶面单墙类型",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "顶面单层墙",
+   "studio_en": "Only one wall on top surfaces",
+   "hidden": false,
+   "note": ""
+  },
+  "skirt_loops": {
+   "key": "skirt_loops",
+   "label": "裙边圈数",
+   "tab": "多材料",
+   "group": "",
+   "studio_zh": "Skirt圈数",
+   "studio_en": "Skirt loops",
+   "hidden": false,
+   "note": ""
+  },
+  "skirt_height": {
+   "key": "skirt_height",
+   "label": "裙边层数",
+   "tab": "多材料",
+   "group": "",
+   "studio_zh": "Skirt高度",
+   "studio_en": "Skirt height",
+   "hidden": false,
+   "note": ""
+  },
+  "skirt_distance": {
+   "key": "skirt_distance",
+   "label": "裙边距离",
+   "tab": "多材料",
+   "group": "",
+   "studio_zh": "Skirt距离",
+   "studio_en": "Skirt distance",
+   "hidden": false,
+   "note": ""
+  },
+  "skirt_per_object": {
+   "key": "skirt_per_object",
+   "label": "每个对象单独裙边",
+   "tab": "多材料",
+   "group": "裙边",
+   "studio_zh": "每个对象单独裙边",
+   "studio_en": "Skirt per object",
+   "hidden": false,
+   "note": ""
+  },
+  "raft_contact_distance": {
+   "key": "raft_contact_distance",
+   "label": "筏板接触间距",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "筏层Z间距",
+   "studio_en": "Raft contact Z distance",
+   "hidden": false,
+   "note": ""
+  },
+  "raft_expansion": {
+   "key": "raft_expansion",
+   "label": "筏板扩展",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "筏层扩展",
+   "studio_en": "Raft expansion",
+   "hidden": false,
+   "note": ""
+  },
+  "raft_first_layer_density": {
+   "key": "raft_first_layer_density",
+   "label": "筏板首层密度",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "筏和支撑的首层密度",
+   "studio_en": "Density of the first raft or support layer",
+   "hidden": false,
+   "note": ""
+  },
+  "raft_first_layer_expansion": {
+   "key": "raft_first_layer_expansion",
+   "label": "筏板首层扩展",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "筏层扩展",
+   "studio_en": "Raft expansion",
+   "hidden": false,
+   "note": ""
+  },
+  "enable_support": {
+   "key": "enable_support",
+   "label": "启用支撑",
+   "tab": "支撑",
+   "group": "启用",
+   "studio_zh": "启用支撑",
+   "studio_en": "Enable support",
+   "hidden": false,
+   "note": ""
+  },
+  "support_expansion": {
+   "key": "support_expansion",
+   "label": "支撑外扩",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "普通支撑拓展",
+   "studio_en": "Normal Support expansion",
+   "hidden": false,
+   "note": ""
+  },
+  "support_base_pattern_spacing": {
+   "key": "support_base_pattern_spacing",
+   "label": "支撑主体线距",
+   "tab": "支撑",
+   "group": "间距",
+   "studio_zh": "主体图案线距",
+   "studio_en": "Base pattern spacing",
+   "hidden": false,
+   "note": ""
+  },
+  "support_interface_spacing": {
+   "key": "support_interface_spacing",
+   "label": "支撑接触面线距",
+   "tab": "支撑",
+   "group": "间距",
+   "studio_zh": "支撑面",
+   "studio_en": "Support interface",
+   "hidden": false,
+   "note": ""
+  },
+  "support_interface_pattern": {
+   "key": "support_interface_pattern",
+   "label": "支撑接触面图案",
+   "tab": "支撑",
+   "group": "顶部界面层",
+   "studio_zh": "界面图案",
+   "studio_en": "Interface pattern",
+   "hidden": false,
+   "note": ""
+  },
+  "support_interface_bottom_layers": {
+   "key": "support_interface_bottom_layers",
+   "label": "支撑底面接触层数",
+   "tab": "支撑",
+   "group": "底部界面层",
+   "studio_zh": "底部界面层数",
+   "studio_en": "Bottom interface layers",
+   "hidden": false,
+   "note": ""
+  },
+  "support_interface_speed": {
+   "key": "support_interface_speed",
+   "label": "支撑接触面速度",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "支撑面速度",
+   "studio_en": "Speed of support interface",
+   "hidden": false,
+   "note": ""
+  },
+  "support_object_first_layer_gap": {
+   "key": "support_object_first_layer_gap",
+   "label": "支撑首层间距",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "支撑/对象首层间距",
+   "studio_en": "Support/object first layer gap",
+   "hidden": false,
+   "note": ""
+  },
+  "support_critical_regions_only": {
+   "key": "support_critical_regions_only",
+   "label": "仅关键区域加支撑",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "仅支撑关键区域",
+   "studio_en": "Support critical regions only",
+   "hidden": false,
+   "note": ""
+  },
+  "support_on_build_plate_only": {
+   "key": "support_on_build_plate_only",
+   "label": "支撑仅落在热床",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "仅在打印板生成",
+   "studio_en": "On build plate only",
+   "hidden": false,
+   "note": ""
+  },
+  "support_remove_small_overhang": {
+   "key": "support_remove_small_overhang",
+   "label": "忽略小悬垂",
+   "tab": "支撑",
+   "group": "其他",
+   "studio_zh": "忽略小悬垂",
+   "studio_en": "Ignore small overhang",
+   "hidden": false,
+   "note": ""
+  },
+  "independent_support_layer_height": {
+   "key": "independent_support_layer_height",
+   "label": "支撑独立层高",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "支撑独立层高",
+   "studio_en": "Independent support layer height",
+   "hidden": false,
+   "note": ""
+  },
+  "enforce_support_layers": {
+   "key": "enforce_support_layers",
+   "label": "强制支撑层数",
+   "tab": "支撑",
+   "group": "其他",
+   "studio_zh": "强制支撑层",
+   "studio_en": "Enforce support for the first",
+   "hidden": false,
+   "note": ""
+  },
+  "support_ironing_flow": {
+   "key": "support_ironing_flow",
+   "label": "支撑熨烫流量",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "熨烫流量",
+   "studio_en": "Ironing flow",
+   "hidden": false,
+   "note": ""
+  },
+  "support_ironing_spacing": {
+   "key": "support_ironing_spacing",
+   "label": "支撑熨烫间距",
+   "tab": "支撑",
+   "group": "支撑熨烫",
+   "studio_zh": "熨烫间距",
+   "studio_en": "Ironing spacing",
+   "hidden": false,
+   "note": ""
+  },
+  "support_ironing_speed": {
+   "key": "support_ironing_speed",
+   "label": "支撑熨烫速度",
+   "tab": "支撑",
+   "group": "支撑熨烫",
+   "studio_zh": "熨烫速度",
+   "studio_en": "Ironing speed",
+   "hidden": false,
+   "note": ""
+  },
+  "tree_support_branch_angle": {
+   "key": "tree_support_branch_angle",
+   "label": "树状支撑分枝角",
+   "tab": "支撑",
+   "group": "树状支撑",
+   "studio_zh": "分支角度",
+   "studio_en": "Branch angle",
+   "hidden": false,
+   "note": ""
+  },
+  "tree_support_branch_diameter": {
+   "key": "tree_support_branch_diameter",
+   "label": "树状支撑枝径",
+   "tab": "支撑",
+   "group": "树状支撑",
+   "studio_zh": "分支直径",
+   "studio_en": "Branch diameter",
+   "hidden": false,
+   "note": ""
+  },
+  "tree_support_branch_diameter_angle": {
+   "key": "tree_support_branch_diameter_angle",
+   "label": "枝径变化角",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "分支直径角度",
+   "studio_en": "Branch diameter angle",
+   "hidden": false,
+   "note": ""
+  },
+  "tree_support_branch_distance": {
+   "key": "tree_support_branch_distance",
+   "label": "枝间距",
+   "tab": "支撑",
+   "group": "树状支撑",
+   "studio_zh": "分支间距",
+   "studio_en": "Branch distance",
+   "hidden": false,
+   "note": ""
+  },
+  "tree_support_wall_count": {
+   "key": "tree_support_wall_count",
+   "label": "树状支撑墙数",
+   "tab": "支撑",
+   "group": "树状支撑",
+   "studio_zh": "树干壁数",
+   "studio_en": "Support wall loops",
+   "hidden": false,
+   "note": ""
+  },
+  "fuzzy_skin": {
+   "key": "fuzzy_skin",
+   "label": "磨砂皮肤",
+   "tab": "其他",
+   "group": "毛绒表面",
+   "studio_zh": "毛绒皮肤",
+   "studio_en": "Fuzzy skin",
+   "hidden": false,
+   "note": ""
+  },
+  "fuzzy_skin_thickness": {
+   "key": "fuzzy_skin_thickness",
+   "label": "磨砂厚度",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "绒毛表面厚度",
+   "studio_en": "Fuzzy skin thickness",
+   "hidden": false,
+   "note": ""
+  },
+  "fuzzy_skin_point_distance": {
+   "key": "fuzzy_skin_point_distance",
+   "label": "磨砂点距",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "绒毛表面点间距",
+   "studio_en": "Fuzzy skin point distance",
+   "hidden": false,
+   "note": ""
+  },
+  "fuzzy_skin_first_layer": {
+   "key": "fuzzy_skin_first_layer",
+   "label": "首层也磨砂",
+   "tab": "其他",
+   "group": "毛绒表面",
+   "studio_zh": "毛绒首层",
+   "studio_en": "Fuzzy skin on first layer",
+   "hidden": false,
+   "note": ""
+  },
+  "fuzzy_skin_mode": {
+   "key": "fuzzy_skin_mode",
+   "label": "磨砂模式",
+   "tab": "其他",
+   "group": "毛绒表面",
+   "studio_zh": "毛绒模式",
+   "studio_en": "Fuzzy skin mode",
+   "hidden": false,
+   "note": ""
+  },
+  "fuzzy_skin_noise_type": {
+   "key": "fuzzy_skin_noise_type",
+   "label": "磨砂噪声类型",
+   "tab": "其他",
+   "group": "毛绒表面",
+   "studio_zh": "噪波类型",
+   "studio_en": "Noise type",
+   "hidden": false,
+   "note": ""
+  },
+  "fuzzy_skin_octaves": {
+   "key": "fuzzy_skin_octaves",
+   "label": "磨砂噪声八度",
+   "tab": "其他",
+   "group": "毛绒表面",
+   "studio_zh": "噪波层数",
+   "studio_en": "Noise octaves",
+   "hidden": false,
+   "note": ""
+  },
+  "fuzzy_skin_persistence": {
+   "key": "fuzzy_skin_persistence",
+   "label": "磨砂噪声持续度",
+   "tab": "其他",
+   "group": "毛绒表面",
+   "studio_zh": "噪波持续性",
+   "studio_en": "Noise persistence",
+   "hidden": false,
+   "note": ""
+  },
+  "fuzzy_skin_scale": {
+   "key": "fuzzy_skin_scale",
+   "label": "磨砂噪声尺度",
+   "tab": "其他",
+   "group": "毛绒表面",
+   "studio_zh": "噪波缩放",
+   "studio_en": "Noise scale",
+   "hidden": false,
+   "note": ""
+  },
+  "spiral_mode": {
+   "key": "spiral_mode",
+   "label": "螺旋花瓶模式",
+   "tab": "其他",
+   "group": "特殊模式",
+   "studio_zh": "螺旋花瓶模式",
+   "studio_en": "Spiral vase",
+   "hidden": false,
+   "note": ""
+  },
+  "spiral_mode_smooth": {
+   "key": "spiral_mode_smooth",
+   "label": "螺旋平滑",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "平滑旋转花瓶",
+   "studio_en": "Smooth Spiral",
+   "hidden": false,
+   "note": ""
+  },
+  "spiral_mode_max_xy_smoothing": {
+   "key": "spiral_mode_max_xy_smoothing",
+   "label": "螺旋 XY 平滑上限",
+   "tab": "其他",
+   "group": "特殊模式",
+   "studio_zh": "螺旋最大 XY 平滑",
+   "studio_en": "Max XY smoothing",
+   "hidden": false,
+   "note": ""
+  },
+  "bridge_angle": {
+   "key": "bridge_angle",
+   "label": "桥接方向",
+   "tab": "质量",
+   "group": "精度",
+   "studio_zh": "桥接方向",
+   "studio_en": "Bridge direction",
+   "hidden": false,
+   "note": ""
+  },
+  "bridge_flow": {
+   "key": "bridge_flow",
+   "label": "桥接流量",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "桥接流量",
+   "studio_en": "Bridge flow",
+   "hidden": false,
+   "note": ""
+  },
+  "bridge_no_support": {
+   "key": "bridge_no_support",
+   "label": "桥接处不加支撑",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "桥接不生成支撑，界面上没有"
+  },
+  "max_bridge_length": {
+   "key": "max_bridge_length",
+   "label": "免支撑最大桥长",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "最大桥接长度",
+   "studio_en": "Max bridge length",
+   "hidden": false,
+   "note": ""
+  },
+  "thick_bridges": {
+   "key": "thick_bridges",
+   "label": "厚桥接",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "厚桥",
+   "studio_en": "Thick bridges",
+   "hidden": false,
+   "note": ""
+  },
+  "internal_bridge_support_thickness": {
+   "key": "internal_bridge_support_thickness",
+   "label": "内部桥接支撑厚度",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "内部桥接支撑厚度",
+   "studio_en": "Internal bridge support thickness",
+   "hidden": false,
+   "note": ""
+  },
+  "counterbore_hole_bridging": {
+   "key": "counterbore_hole_bridging",
+   "label": "沉孔桥接",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "沉孔桥接，界面上没有"
+  },
+  "overhang_totally_speed": {
+   "key": "overhang_totally_speed",
+   "label": "全悬垂速度",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "悬垂速度",
+   "studio_en": "Overhang speed",
+   "hidden": false,
+   "note": ""
+  },
+  "top_surface_density": {
+   "key": "top_surface_density",
+   "label": "顶面密度",
+   "tab": "强度",
+   "group": "顶/底壳层数",
+   "studio_zh": "顶面",
+   "studio_en": "Top surface",
+   "hidden": false,
+   "note": ""
+  },
+  "bottom_surface_density": {
+   "key": "bottom_surface_density",
+   "label": "底面密度",
+   "tab": "强度",
+   "group": "顶/底壳层数",
+   "studio_zh": "底面",
+   "studio_en": "Bottom surface",
+   "hidden": false,
+   "note": ""
+  },
+  "bottom_surface_pattern": {
+   "key": "bottom_surface_pattern",
+   "label": "底面图案",
+   "tab": "强度",
+   "group": "顶/底壳层数",
+   "studio_zh": "底面图案",
+   "studio_en": "Bottom surface pattern",
+   "hidden": false,
+   "note": ""
+  },
+  "sub_top_surface_pattern": {
+   "key": "sub_top_surface_pattern",
+   "label": "次顶面图案",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "顶面图案",
+   "studio_en": "Top surface pattern",
+   "hidden": false,
+   "note": ""
+  },
+  "top_shell_thickness": {
+   "key": "top_shell_thickness",
+   "label": "顶层最小厚度",
+   "tab": "强度",
+   "group": "顶/底壳层数",
+   "studio_zh": "顶部壳体厚度",
+   "studio_en": "Top shell thickness",
+   "hidden": false,
+   "note": ""
+  },
+  "bottom_shell_thickness": {
+   "key": "bottom_shell_thickness",
+   "label": "底层最小厚度",
+   "tab": "强度",
+   "group": "顶/底壳层数",
+   "studio_zh": "底部壳体厚度",
+   "studio_en": "Bottom shell thickness",
+   "hidden": false,
+   "note": ""
+  },
+  "top_area_threshold": {
+   "key": "top_area_threshold",
+   "label": "顶面判定阈值",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "顶部区域阈值",
+   "studio_en": "Top area threshold",
+   "hidden": false,
+   "note": ""
+  },
+  "top_solid_infill_flow_ratio": {
+   "key": "top_solid_infill_flow_ratio",
+   "label": "顶面实心流量比",
+   "tab": "强度",
+   "group": "填充",
+   "studio_zh": "顶面实心流量比",
+   "studio_en": "Top solid infill flow",
+   "hidden": false,
+   "note": ""
+  },
+  "top_color_penetration_layers": {
+   "key": "top_color_penetration_layers",
+   "label": "顶面混色渗透层",
+   "tab": "强度",
+   "group": "顶/底壳层数",
+   "studio_zh": "顶部颜色渗透层数",
+   "studio_en": "Top color penetration layers",
+   "hidden": false,
+   "note": ""
+  },
+  "bottom_color_penetration_layers": {
+   "key": "bottom_color_penetration_layers",
+   "label": "底面混色渗透层",
+   "tab": "强度",
+   "group": "顶/底壳层数",
+   "studio_zh": "底部颜色渗透层数",
+   "studio_en": "Bottom color penetration layers",
+   "hidden": false,
+   "note": ""
+  },
+  "infill_combination": {
+   "key": "infill_combination",
+   "label": "合并填充",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "合并填充",
+   "studio_en": "Infill combination",
+   "hidden": false,
+   "note": ""
+  },
+  "infill_rotate_step": {
+   "key": "infill_rotate_step",
+   "label": "填充旋转步进",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "填充旋转步长",
+   "studio_en": "Infill rotate step",
+   "hidden": false,
+   "note": ""
+  },
+  "infill_shift_step": {
+   "key": "infill_shift_step",
+   "label": "填充偏移步进",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "填充移动步长",
+   "studio_en": "Infill shift step",
+   "hidden": false,
+   "note": ""
+  },
+  "infill_lock_depth": {
+   "key": "infill_lock_depth",
+   "label": "填充锁定深度",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "填充互锁深度",
+   "studio_en": "Infill lock depth",
+   "hidden": false,
+   "note": ""
+  },
+  "minimum_sparse_infill_area": {
+   "key": "minimum_sparse_infill_area",
+   "label": "稀疏填充最小面积",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "稀疏填充",
+   "studio_en": "Sparse infill",
+   "hidden": false,
+   "note": ""
+  },
+  "infill_instead_top_bottom_surfaces": {
+   "key": "infill_instead_top_bottom_surfaces",
+   "label": "用填充替代顶底面",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "用填充代替顶底面，界面上没有"
+  },
+  "sparse_infill_anchor": {
+   "key": "sparse_infill_anchor",
+   "label": "稀疏填充锚固",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "锚点参数，界面上没有"
+  },
+  "sparse_infill_anchor_max": {
+   "key": "sparse_infill_anchor_max",
+   "label": "锚固最大值",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "锚点参数，界面上没有"
+  },
+  "symmetric_infill_y_axis": {
+   "key": "symmetric_infill_y_axis",
+   "label": "Y 轴对称填充",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "填充关于y轴对称",
+   "studio_en": "Symmetric infill y axis",
+   "hidden": false,
+   "note": ""
+  },
+  "small_perimeter_speed": {
+   "key": "small_perimeter_speed",
+   "label": "小周长速度",
+   "tab": "速度",
+   "group": "其他层速度",
+   "studio_zh": "小周长速度",
+   "studio_en": "Small perimeters",
+   "hidden": false,
+   "note": ""
+  },
+  "small_perimeter_threshold": {
+   "key": "small_perimeter_threshold",
+   "label": "小周长阈值",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "小轮廓阈值",
+   "studio_en": "Small perimeter threshold",
+   "hidden": false,
+   "note": ""
+  },
+  "vertical_shell_speed": {
+   "key": "vertical_shell_speed",
+   "label": "垂直外壳速度",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "斜面填充速度",
+   "studio_en": "Vertical shell speed",
+   "hidden": false,
+   "note": ""
+  },
+  "travel_speed_z": {
+   "key": "travel_speed_z",
+   "label": "Z 向空走速度",
+   "tab": "速度",
+   "group": "移动速度",
+   "studio_zh": "Z 空驶",
+   "studio_en": "Z travel",
+   "hidden": false,
+   "note": ""
+  },
+  "accel_to_decel_enable": {
+   "key": "accel_to_decel_enable",
+   "label": "启用减速（accel_to_decel）",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "加减速比是 Orca 的开关，Bambu 界面没有"
+  },
+  "accel_to_decel_factor": {
+   "key": "accel_to_decel_factor",
+   "label": "减速系数",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "加减速比是 Orca 的参数，Bambu 界面没有"
+  },
+  "initial_layer_travel_acceleration": {
+   "key": "initial_layer_travel_acceleration",
+   "label": "首层空走加速度",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "首层空驶加速度，界面上没有"
+  },
+  "travel_short_distance_acceleration": {
+   "key": "travel_short_distance_acceleration",
+   "label": "短距空走加速度",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "短距空走加速度，界面上没有"
+  },
+  "enable_height_slowdown": {
+   "key": "enable_height_slowdown",
+   "label": "启用高度降速",
+   "tab": "速度",
+   "group": "按高度降速",
+   "studio_zh": "启用按高度降速",
+   "studio_en": "Enable height slowdown",
+   "hidden": false,
+   "note": ""
+  },
+  "slowdown_start_height": {
+   "key": "slowdown_start_height",
+   "label": "降速起始高度",
+   "tab": "速度",
+   "group": "按高度降速",
+   "studio_zh": "起始高度",
+   "studio_en": "Slowdown start height",
+   "hidden": false,
+   "note": ""
+  },
+  "slowdown_end_height": {
+   "key": "slowdown_end_height",
+   "label": "降速结束高度",
+   "tab": "速度",
+   "group": "按高度降速",
+   "studio_zh": "结束高度",
+   "studio_en": "Slowdown end height",
+   "hidden": false,
+   "note": ""
+  },
+  "slowdown_start_speed": {
+   "key": "slowdown_start_speed",
+   "label": "降速起始速度",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "起始速度",
+   "studio_en": "Start speed: ",
+   "hidden": false,
+   "note": ""
+  },
+  "slowdown_end_speed": {
+   "key": "slowdown_end_speed",
+   "label": "降速结束速度",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "结束速度",
+   "studio_en": "End speed: ",
+   "hidden": false,
+   "note": ""
+  },
+  "slowdown_start_acc": {
+   "key": "slowdown_start_acc",
+   "label": "降速起始加速度",
+   "tab": "速度",
+   "group": "按高度降速",
+   "studio_zh": "起始加速度",
+   "studio_en": "Slowdown start acceleration",
+   "hidden": false,
+   "note": ""
+  },
+  "slowdown_end_acc": {
+   "key": "slowdown_end_acc",
+   "label": "降速结束加速度",
+   "tab": "速度",
+   "group": "按高度降速",
+   "studio_zh": "结束加速度",
+   "studio_en": "Slowdown end acceleration",
+   "hidden": false,
+   "note": ""
+  },
+  "first_x_layer_fan_speed": {
+   "key": "first_x_layer_fan_speed",
+   "label": "首 N 层风扇转速",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "属耗材页（风扇），工艺面板没有"
+  },
+  "pre_start_fan_time": {
+   "key": "pre_start_fan_time",
+   "label": "提前开风扇时间",
+   "tab": "其他",
+   "group": "",
+   "studio_zh": "风扇预启动时间",
+   "studio_en": "Pre start fan time",
+   "hidden": false,
+   "note": ""
+  },
+  "prime_tower_lift_height": {
+   "key": "prime_tower_lift_height",
+   "label": "擦料塔抬升高度",
+   "tab": "多材料",
+   "group": "擦料塔",
+   "studio_zh": "抬升高度",
+   "studio_en": "Lift height",
+   "hidden": false,
+   "note": ""
+  },
+  "prime_tower_lift_speed": {
+   "key": "prime_tower_lift_speed",
+   "label": "擦料塔抬升速度",
+   "tab": "多材料",
+   "group": "擦料塔",
+   "studio_zh": "抬升速度",
+   "studio_en": "Lift speed",
+   "hidden": false,
+   "note": ""
+  },
+  "prime_tower_max_speed": {
+   "key": "prime_tower_max_speed",
+   "label": "擦料塔最高速度",
+   "tab": "多材料",
+   "group": "擦料塔",
+   "studio_zh": "最大速度",
+   "studio_en": "Max speed",
+   "hidden": false,
+   "note": ""
+  },
+  "prime_tower_rib_wall": {
+   "key": "prime_tower_rib_wall",
+   "label": "擦料塔带肋墙",
+   "tab": "多材料",
+   "group": "擦料塔",
+   "studio_zh": "肋墙",
+   "studio_en": "Rib wall",
+   "hidden": false,
+   "note": ""
+  },
+  "prime_tower_rib_width": {
+   "key": "prime_tower_rib_width",
+   "label": "擦料塔肋宽",
+   "tab": "多材料",
+   "group": "",
+   "studio_zh": "擦拭塔宽度",
+   "studio_en": "Width of prime tower",
+   "hidden": false,
+   "note": ""
+  },
+  "prime_tower_infill_gap": {
+   "key": "prime_tower_infill_gap",
+   "label": "擦料塔填充间隙",
+   "tab": "多材料",
+   "group": "擦料塔",
+   "studio_zh": "填充间隙",
+   "studio_en": "Infill gap",
+   "hidden": false,
+   "note": ""
+  },
+  "prime_tower_skip_points": {
+   "key": "prime_tower_skip_points",
+   "label": "擦料塔跳过尖角",
+   "tab": "多材料",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "擦料塔跳过点，界面上没有"
+  },
+  "wipe_tower_no_sparse_layers": {
+   "key": "wipe_tower_no_sparse_layers",
+   "label": "擦料塔不留稀疏层",
+   "tab": "多材料",
+   "group": "擦料塔",
+   "studio_zh": "不生成稀疏层",
+   "studio_en": "No sparse layers",
+   "hidden": false,
+   "note": ""
+  },
+  "flush_into_infill": {
+   "key": "flush_into_infill",
+   "label": "废料冲入填充",
+   "tab": "多材料",
+   "group": "",
+   "studio_zh": "冲刷到对象的填充",
+   "studio_en": "Flush into objects' infill",
+   "hidden": false,
+   "note": ""
+  },
+  "flush_into_objects": {
+   "key": "flush_into_objects",
+   "label": "废料冲入对象",
+   "tab": "多材料",
+   "group": "冲刷",
+   "studio_zh": "冲刷到填充",
+   "studio_en": "Flush into objects' infill",
+   "hidden": false,
+   "note": ""
+  },
+  "flush_into_support": {
+   "key": "flush_into_support",
+   "label": "废料冲入支撑",
+   "tab": "多材料",
+   "group": "",
+   "studio_zh": "冲刷到对象的支撑",
+   "studio_en": "Flush into objects' support",
+   "hidden": false,
+   "note": ""
+  },
+  "precise_z_height": {
+   "key": "precise_z_height",
+   "label": "精确 Z 高度",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "精准Z高度",
+   "studio_en": "Precise Z height",
+   "hidden": false,
+   "note": ""
+  },
+  "slicing_mode": {
+   "key": "slicing_mode",
+   "label": "切片模式",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "切片模式",
+   "studio_en": "Slicing Mode",
+   "hidden": false,
+   "note": ""
+  },
+  "slice_closing_radius": {
+   "key": "slice_closing_radius",
+   "label": "切片闭合半径",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "切片间隙闭合半径",
+   "studio_en": "Slice gap closing radius",
+   "hidden": false,
+   "note": ""
+  },
+  "resolution": {
+   "key": "resolution",
+   "label": "切片分辨率",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "分辨率",
+   "studio_en": "Resolution",
+   "hidden": false,
+   "note": ""
+  },
+  "min_feature_size": {
+   "key": "min_feature_size",
+   "label": "最小特征尺寸",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "最小特征尺寸",
+   "studio_en": "Minimum feature size",
+   "hidden": false,
+   "note": ""
+  },
+  "enable_arc_fitting": {
+   "key": "enable_arc_fitting",
+   "label": "圆弧拟合（G2/G3）",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "圆弧拟合",
+   "studio_en": "Arc fitting",
+   "hidden": false,
+   "note": ""
+  },
+  "print_in_clockwise": {
+   "key": "print_in_clockwise",
+   "label": "顺时针打印",
+   "tab": "其他",
+   "group": "其他",
+   "studio_zh": "顺时针打印",
+   "studio_en": "Print sequence by clockwise",
+   "hidden": false,
+   "note": ""
+  },
+  "circle_compensation_manual_offset": {
+   "key": "circle_compensation_manual_offset",
+   "label": "圆补偿手动偏移",
+   "tab": "其他",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "圆孔补偿手动偏移，界面上没有"
+  },
+  "enable_circle_compensation": {
+   "key": "enable_circle_compensation",
+   "label": "启用圆补偿",
+   "tab": "其他",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "圆孔补偿，界面上没有"
+  },
+  "initial_layer_infill_line_width": {
+   "key": "initial_layer_infill_line_width",
+   "label": "首层填充线宽",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "首层的线宽",
+   "studio_en": "Line width of initial layer",
+   "hidden": false,
+   "note": ""
+  },
+  "apply_scarf_seam_on_circles": {
+   "key": "apply_scarf_seam_on_circles",
+   "label": "圆形也做斜接缝",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "在补偿的圆形上应用斜拼接缝",
+   "studio_en": "Scarf Seam On Compensation Circles",
+   "hidden": false,
+   "note": ""
+  },
+  "has_scarf_joint_seam": {
+   "key": "has_scarf_joint_seam",
+   "label": "已有斜接缝",
+   "tab": "质量",
+   "group": "接缝",
+   "studio_zh": "启用斜接",
+   "studio_en": "Scarf joint seam",
+   "hidden": false,
+   "note": ""
+  },
+  "override_filament_scarf_seam_setting": {
+   "key": "override_filament_scarf_seam_setting",
+   "label": "覆盖耗材斜接缝设置",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "覆盖材料的斜拼接缝参数",
+   "studio_en": "Override filament scarf seam setting",
+   "hidden": false,
+   "note": ""
+  },
+  "role_base_wipe_speed": {
+   "key": "role_base_wipe_speed",
+   "label": "按角色擦嘴速度",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "自动擦拭速度",
+   "studio_en": "Role-based wipe speed",
+   "hidden": false,
+   "note": ""
+  },
+  "embedding_wall_into_infill": {
+   "key": "embedding_wall_into_infill",
+   "label": "墙嵌入填充",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "墙嵌入填充，界面上没有"
+  },
+  "detect_floating_vertical_shell": {
+   "key": "detect_floating_vertical_shell",
+   "label": "检测悬空垂直壳",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "识别悬空实心填充",
+   "studio_en": "Detect floating vertical shells",
+   "hidden": false,
+   "note": ""
+  },
+  "detect_narrow_internal_solid_infill": {
+   "key": "detect_narrow_internal_solid_infill",
+   "label": "检测窄内部实心",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "识别狭窄内部实心填充",
+   "studio_en": "Detect narrow internal solid infill",
+   "hidden": false,
+   "note": ""
+  },
+  "filter_out_gap_fill": {
+   "key": "filter_out_gap_fill",
+   "label": "滤除缝隙填充",
+   "tab": "质量",
+   "group": "精度",
+   "studio_zh": "过滤缝隙填充",
+   "studio_en": "Filter out gap fill",
+   "hidden": false,
+   "note": ""
+  },
+  "interface_shells": {
+   "key": "interface_shells",
+   "label": "接触面外壳",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "接触面外壳",
+   "studio_en": "Interface shells",
+   "hidden": false,
+   "note": ""
+  },
+  "z_direction_outwall_speed_continuous": {
+   "key": "z_direction_outwall_speed_continuous",
+   "label": "Z 向外壁速度连续",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "Z 方向连续外壁速度，界面上没有"
+  },
+  "smooth_coefficient": {
+   "key": "smooth_coefficient",
+   "label": "速度平滑系数",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "平滑系数",
+   "studio_en": "Smooth coefficient",
+   "hidden": false,
+   "note": ""
+  },
+  "smooth_speed_discontinuity_area": {
+   "key": "smooth_speed_discontinuity_area",
+   "label": "平滑速度突变区",
+   "tab": "速度",
+   "group": "",
+   "studio_zh": "平滑速度不连续区域",
+   "studio_en": "Smooth speed discontinuity area",
+   "hidden": false,
+   "note": ""
+  },
+  "max_travel_detour_distance": {
+   "key": "max_travel_detour_distance",
+   "label": "空走绕行最大距离",
+   "tab": "其他",
+   "group": "空走",
+   "studio_zh": "最大空走绕行",
+   "studio_en": "Maximum detour",
+   "hidden": false,
+   "note": ""
+  },
+  "skeleton_infill_density": {
+   "key": "skeleton_infill_density",
+   "label": "骨架填充密度",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "骨架填充密度",
+   "studio_en": "Skeleton infill density",
+   "hidden": false,
+   "note": ""
+  },
+  "skeleton_infill_line_width": {
+   "key": "skeleton_infill_line_width",
+   "label": "骨架填充线宽",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "骨架线宽",
+   "studio_en": "Skeleton line width",
+   "hidden": false,
+   "note": ""
+  },
+  "skin_infill_density": {
+   "key": "skin_infill_density",
+   "label": "皮肤填充密度",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "表皮填充密度",
+   "studio_en": "Skin infill density",
+   "hidden": false,
+   "note": ""
+  },
+  "skin_infill_depth": {
+   "key": "skin_infill_depth",
+   "label": "皮肤填充深度",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "表皮填充深度",
+   "studio_en": "Skin infill depth",
+   "hidden": false,
+   "note": ""
+  },
+  "skin_infill_line_width": {
+   "key": "skin_infill_line_width",
+   "label": "皮肤填充线宽",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "表皮线宽",
+   "studio_en": "Skin line width",
+   "hidden": false,
+   "note": ""
+  },
+  "sparse_infill_lattice_angle_1": {
+   "key": "sparse_infill_lattice_angle_1",
+   "label": "晶格填充角 1",
+   "tab": "强度",
+   "group": "填充",
+   "studio_zh": "网格角度 1",
+   "studio_en": "Lattice angle 1",
+   "hidden": false,
+   "note": ""
+  },
+  "sparse_infill_lattice_angle_2": {
+   "key": "sparse_infill_lattice_angle_2",
+   "label": "晶格填充角 2",
+   "tab": "强度",
+   "group": "填充",
+   "studio_zh": "网格角度 2",
+   "studio_en": "Lattice angle 2",
+   "hidden": false,
+   "note": ""
+  },
+  "locked_skeleton_infill_pattern": {
+   "key": "locked_skeleton_infill_pattern",
+   "label": "骨架填充图案",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "骨架填充图案",
+   "studio_en": "Skeleton infill pattern",
+   "hidden": false,
+   "note": ""
+  },
+  "locked_skin_infill_pattern": {
+   "key": "locked_skin_infill_pattern",
+   "label": "皮肤填充图案",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "表皮填充图案",
+   "studio_en": "Skin infill pattern",
+   "hidden": false,
+   "note": ""
+  },
+  "is_infill_first": {
+   "key": "is_infill_first",
+   "label": "先打填充",
+   "tab": "强度",
+   "group": "填充",
+   "studio_zh": "先打填充",
+   "studio_en": "Infill first",
+   "hidden": false,
+   "note": ""
+  },
+  "modifier_ignore_infill": {
+   "key": "modifier_ignore_infill",
+   "label": "修改器忽略填充",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "修改器忽略填充，界面上没有"
+  },
+  "support_angle": {
+   "key": "support_angle",
+   "label": "支撑角度（旧版）",
+   "tab": "支撑",
+   "group": "角度",
+   "studio_zh": "支撑角度",
+   "studio_en": "Support angle",
+   "hidden": false,
+   "note": ""
+  },
+  "support_bottom_interface_spacing": {
+   "key": "support_bottom_interface_spacing",
+   "label": "支撑底面接触线距",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "底部接触面线距",
+   "studio_en": "Bottom interface spacing",
+   "hidden": false,
+   "note": ""
+  },
+  "support_interface_loop_pattern": {
+   "key": "support_interface_loop_pattern",
+   "label": "接触面环绕图案",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "接触面采用圈形走线。",
+   "studio_en": "Interface use loop pattern",
+   "hidden": false,
+   "note": ""
+  },
+  "support_interface_not_for_body": {
+   "key": "support_interface_not_for_body",
+   "label": "接触面不用于主体",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "支撑界面只用于支撑，界面上没有"
+  },
+  "support_cooling_filter": {
+   "key": "support_cooling_filter",
+   "label": "支撑冷却过滤",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "支撑冷却过滤，界面上没有"
+  },
+  "support_fast_purge_mode": {
+   "key": "support_fast_purge_mode",
+   "label": "支撑快速冲洗模式",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "支撑快速冲刷，界面上没有"
+  },
+  "enable_support_ironing": {
+   "key": "enable_support_ironing",
+   "label": "启用支撑熨烫",
+   "tab": "支撑",
+   "group": "支撑熨烫",
+   "studio_zh": "启用支撑熨烫",
+   "studio_en": "Enable support ironing",
+   "hidden": false,
+   "note": ""
+  },
+  "support_ironing_direction": {
+   "key": "support_ironing_direction",
+   "label": "支撑熨烫方向",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "熨烫方向",
+   "studio_en": "ironing direction",
+   "hidden": false,
+   "note": ""
+  },
+  "support_ironing_inset": {
+   "key": "support_ironing_inset",
+   "label": "支撑熨烫内缩",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "熨烫内缩",
+   "studio_en": "Ironing inset",
+   "hidden": false,
+   "note": ""
+  },
+  "support_ironing_pattern": {
+   "key": "support_ironing_pattern",
+   "label": "支撑熨烫图案",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "熨烫模式",
+   "studio_en": "Ironing Pattern",
+   "hidden": false,
+   "note": ""
+  },
+  "top_z_overrides_xy_distance": {
+   "key": "top_z_overrides_xy_distance",
+   "label": "顶面间隙覆盖 XY 间距",
+   "tab": "支撑",
+   "group": "",
+   "studio_zh": "顶部Z距离",
+   "studio_en": "Top Z distance",
+   "hidden": false,
+   "note": ""
+  },
+  "prime_tower_enable_framework": {
+   "key": "prime_tower_enable_framework",
+   "label": "擦料塔启用框架",
+   "tab": "多材料",
+   "group": "擦料塔",
+   "studio_zh": "骨架",
+   "studio_en": "Framework",
+   "hidden": false,
+   "note": ""
+  },
+  "prime_tower_extra_rib_length": {
+   "key": "prime_tower_extra_rib_length",
+   "label": "擦料塔额外肋长",
+   "tab": "多材料",
+   "group": "",
+   "studio_zh": "斜肋额外的长度",
+   "studio_en": "Extra rib length",
+   "hidden": false,
+   "note": ""
+  },
+  "prime_tower_fillet_wall": {
+   "key": "prime_tower_fillet_wall",
+   "label": "擦料塔圆角墙",
+   "tab": "多材料",
+   "group": "",
+   "studio_zh": "擦料塔外墙倒圆角",
+   "studio_en": "The wall of prime tower will fillet",
+   "hidden": false,
+   "note": ""
+  },
+  "prime_tower_flat_ironing": {
+   "key": "prime_tower_flat_ironing",
+   "label": "擦料塔平面熨烫",
+   "tab": "多材料",
+   "group": "擦料塔",
+   "studio_zh": "平面熨烫",
+   "studio_en": "Flat ironing",
+   "hidden": false,
+   "note": ""
+  },
+  "enable_tower_interface_features": {
+   "key": "enable_tower_interface_features",
+   "label": "擦料塔接触面特性",
+   "tab": "多材料",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "擦料塔界面特性，界面上没有"
+  },
+  "avoid_crossing_wall_includes_support": {
+   "key": "avoid_crossing_wall_includes_support",
+   "label": "避墙时也避支撑",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "避免跨越外墙-包含支撑",
+   "studio_en": "Avoid crossing wall - Includes support",
+   "hidden": false,
+   "note": ""
+  },
+  "draft_shield": {
+   "key": "draft_shield",
+   "label": "挡风罩",
+   "tab": "其他",
+   "group": "其他",
+   "studio_zh": "防风罩",
+   "studio_en": "Draft shield",
+   "hidden": false,
+   "note": ""
+  },
+  "enable_order_independent_overlap_carving": {
+   "key": "enable_order_independent_overlap_carving",
+   "label": "顺序无关重叠切割",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "重叠裁切实验项，界面上没有"
+  },
+  "ooze_prevention": {
+   "key": "ooze_prevention",
+   "label": "防渗料",
+   "tab": "其他",
+   "group": "其他",
+   "studio_zh": "防流涎",
+   "studio_en": "Ooze prevention",
+   "hidden": false,
+   "note": ""
+  },
+  "print_sequence": {
+   "key": "print_sequence",
+   "label": "打印顺序",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "打印顺序",
+   "studio_en": "Print sequence",
+   "hidden": false,
+   "note": ""
+  },
+  "conformal_infill": {
+   "key": "conformal_infill",
+   "label": "共形填充",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "实验性共形填充，界面上没有"
+  },
+  "conformal_pole": {
+   "key": "conformal_pole",
+   "label": "共形填充极点",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "实验性共形填充，界面上没有"
+  },
+  "conformal_ray_count": {
+   "key": "conformal_ray_count",
+   "label": "共形射线数",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "实验性共形填充，界面上没有"
+  },
+  "conformal_hub_radius": {
+   "key": "conformal_hub_radius",
+   "label": "共形轮毂半径",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "实验性共形填充，界面上没有"
+  },
+  "conformal_stagger": {
+   "key": "conformal_stagger",
+   "label": "共形错位",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "实验性共形填充，界面上没有"
+  },
+  "conformal_link_flip_layers": {
+   "key": "conformal_link_flip_layers",
+   "label": "共形连接翻转层",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "实验性共形填充，界面上没有"
+  },
+  "conformal_link_keep_layers": {
+   "key": "conformal_link_keep_layers",
+   "label": "共形连接保持层",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "实验性共形填充，界面上没有"
+  },
+  "interlocking_beam": {
+   "key": "interlocking_beam",
+   "label": "互锁梁",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "互锁梁（新版实验特性），界面上没有"
+  },
+  "interlocking_beam_width": {
+   "key": "interlocking_beam_width",
+   "label": "互锁梁宽度",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "互锁梁宽度",
+   "studio_en": "Interlocking beam width",
+   "hidden": false,
+   "note": ""
+  },
+  "interlocking_beam_layer_count": {
+   "key": "interlocking_beam_layer_count",
+   "label": "互锁梁层数",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "互锁梁（新版实验特性），界面上没有"
+  },
+  "interlocking_depth": {
+   "key": "interlocking_depth",
+   "label": "互锁深度",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "互锁深度",
+   "studio_en": "Interlocking depth",
+   "hidden": false,
+   "note": ""
+  },
+  "interlocking_orientation": {
+   "key": "interlocking_orientation",
+   "label": "互锁取向",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "互锁梁（新版实验特性），界面上没有"
+  },
+  "interlocking_boundary_avoidance": {
+   "key": "interlocking_boundary_avoidance",
+   "label": "互锁边界避让",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "边界留白量",
+   "studio_en": "Interlocking boundary avoidance",
+   "hidden": false,
+   "note": ""
+  },
+  "mmu_segmented_region_interlocking_depth": {
+   "key": "mmu_segmented_region_interlocking_depth",
+   "label": "分段互锁深度",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "多色分区，界面上没有"
+  },
+  "mmu_segmented_region_max_width": {
+   "key": "mmu_segmented_region_max_width",
+   "label": "分段最大宽度",
+   "tab": "强度",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "多色分区，界面上没有"
+  },
+  "start_end_points": {
+   "key": "start_end_points",
+   "label": "走线起终点配置",
+   "tab": "质量",
+   "group": "",
+   "studio_zh": "",
+   "studio_en": "",
+   "hidden": true,
+   "note": "擦嘴/起终点坐标，界面上没有"
+  }
+ }
+}

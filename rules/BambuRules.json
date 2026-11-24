@@ -1,0 +1,4357 @@
+{
+ "meta": {
+  "name": "Bambu Smart Tuner 规则库",
+  "version": "1.0.0",
+  "updated": "2026-11-23",
+  "author": "Bambu Smart Tuner",
+  "note": "本文件是纯数据，改完保存后回到程序点「重新加载规则库」即生效，不需要改代码。所有键名必须存在于 core/schema.py 的参数表中，否则会被忽略并在日志里报警。",
+  "howto": {
+   "defaults": "所有机型/耗材的公共基准（按 0.4 mm 喷嘴 + 均衡取向标定），喷嘴直径会自动等比缩放层高与线宽。",
+   "printers[].baseline": "机型硬件基线：直接覆盖 defaults 里的同名键，用来区分高速机架 / 中端机 / 入门机。",
+   "printers[].limits": "硬上限：max_speed 速度钳制、max_accel 加速度钳制、max_volumetric_speed 体积流量钳制（决定填充/实心速度的真实上限）。",
+   "filaments[].baseline": "耗材基线：冷却、回抽、流量、压力提前、体积流量上限。",
+   "modes[].ops": "模式策略：对当前值做 set/mul/add/min/max/clamp 运算。",
+   "interactions[]": "交叉规则：when 命中后再改参数或输出警告，适合写「小机型 + 软材料」这类组合。"
+  }
+ },
+ "options": {
+  "write_soft_keys": false,
+  "volumetric_speed_guard": true,
+  "nozzle_scaling": true,
+  "write_scopes": [
+   "process"
+  ],
+  "respect_project_values": true,
+  "scope_note": {
+   "process": "切片工艺页：本程序唯一会写入的页面。",
+   "filament": "耗材页：只读。其中的流量上限、标定值仍用来约束工艺参数。",
+   "machine": "机器页：只读。其中的硬件上限、板面尺寸仍用来约束工艺参数。",
+   "meta": "工程元数据：永不写入。"
+  }
+ },
+ "defaults": {
+  "layer_height": 0.2,
+  "initial_layer_print_height": 0.2,
+  "line_width": 0.42,
+  "outer_wall_line_width": 0.42,
+  "inner_wall_line_width": 0.45,
+  "internal_solid_infill_line_width": 0.42,
+  "sparse_infill_line_width": 0.45,
+  "top_surface_line_width": 0.42,
+  "initial_layer_line_width": 0.5,
+  "support_line_width": 0.42,
+  "wall_loops": 2,
+  "top_shell_layers": 5,
+  "bottom_shell_layers": 3,
+  "sparse_infill_density": "15%",
+  "sparse_infill_pattern": "grid",
+  "top_surface_pattern": "monotonicline",
+  "internal_solid_infill_pattern": "zig-zag",
+  "infill_wall_overlap": "15%",
+  "infill_direction": 45.0,
+  "outer_wall_speed": 200.0,
+  "inner_wall_speed": 300.0,
+  "sparse_infill_speed": 270.0,
+  "internal_solid_infill_speed": 250.0,
+  "top_surface_speed": 200.0,
+  "initial_layer_speed": 50.0,
+  "initial_layer_infill_speed": 105.0,
+  "travel_speed": 500.0,
+  "support_speed": 150.0,
+  "bridge_speed": 50.0,
+  "overhang_1_4_speed": 0.0,
+  "overhang_2_4_speed": 50.0,
+  "overhang_3_4_speed": 30.0,
+  "overhang_4_4_speed": 10.0,
+  "enable_overhang_speed": true,
+  "enable_prime_tower": true,
+  "prime_tower_width": 35.0,
+  "prime_tower_brim_width": 3.0,
+  "default_acceleration": 10000.0,
+  "outer_wall_acceleration": 5000.0,
+  "top_surface_acceleration": 2000.0,
+  "initial_layer_acceleration": 500.0,
+  "travel_acceleration": 10000.0,
+  "elefant_foot_compensation": 0.15,
+  "xy_contour_compensation": 0.0,
+  "support_threshold_angle": 30.0,
+  "support_top_z_distance": 0.2,
+  "support_bottom_z_distance": 0.2,
+  "support_object_xy_distance": 0.35,
+  "support_interface_top_layers": 2,
+  "support_base_pattern": "default",
+  "support_type": "tree(auto)",
+  "support_style": "default",
+  "brim_width": 5,
+  "brim_type": "auto_brim",
+  "raft_layers": 0,
+  "ironing_type": "no ironing",
+  "ironing_pattern": "zig-zag",
+  "ironing_flow": "10%",
+  "ironing_spacing": 0.15,
+  "ironing_speed": 30.0,
+  "ironing_inset": 0.21,
+  "ironing_direction": 45,
+  "seam_position": "aligned",
+  "seam_gap": 15,
+  "seam_placement_away_from_overhangs": false,
+  "seam_slope_type": "none",
+  "seam_slope_conditional": true,
+  "seam_slope_entire_loop": false,
+  "seam_slope_gap": 0.0,
+  "seam_slope_min_length": 10.0,
+  "seam_slope_start_height": "10%",
+  "seam_slope_steps": 10,
+  "seam_slope_inner_walls": true,
+  "scarf_angle_threshold": 155.0,
+  "wipe_speed": 80,
+  "wall_sequence": "inner wall/outer wall",
+  "wall_distribution_count": 1,
+  "wall_transition_angle": 10,
+  "wall_transition_length": 100,
+  "wall_transition_filter_deviation": 25,
+  "only_one_wall_first_layer": false,
+  "only_one_wall_top": true,
+  "precise_outer_wall": false,
+  "detect_thin_wall": false,
+  "detect_overhang_wall": true,
+  "ensure_vertical_shell_thickness": "enabled",
+  "alternate_extra_wall": false,
+  "monotonic_travel_into_wall": 45,
+  "min_bead_width": 85,
+  "top_one_wall_type": "all top",
+  "skirt_loops": 0,
+  "skirt_height": 1,
+  "skirt_distance": 2.0,
+  "skirt_per_object": true,
+  "raft_contact_distance": 0.1,
+  "raft_expansion": 1.5,
+  "raft_first_layer_density": 90,
+  "raft_first_layer_expansion": -1,
+  "enable_support": false,
+  "support_expansion": 0.0,
+  "support_base_pattern_spacing": 2.5,
+  "support_interface_spacing": 0.5,
+  "support_interface_pattern": "auto",
+  "support_interface_bottom_layers": 2,
+  "support_interface_speed": 80.0,
+  "support_object_first_layer_gap": 0.2,
+  "support_critical_regions_only": false,
+  "support_on_build_plate_only": false,
+  "support_remove_small_overhang": true,
+  "independent_support_layer_height": true,
+  "enforce_support_layers": 0,
+  "support_ironing_flow": 10,
+  "support_ironing_spacing": 0.15,
+  "support_ironing_speed": 30,
+  "tree_support_branch_angle": 45.0,
+  "tree_support_branch_diameter": 2.0,
+  "tree_support_branch_diameter_angle": 5,
+  "tree_support_branch_distance": 5,
+  "tree_support_wall_count": -1,
+  "fuzzy_skin": "none",
+  "fuzzy_skin_thickness": 0.3,
+  "fuzzy_skin_point_distance": 0.8,
+  "fuzzy_skin_first_layer": false,
+  "fuzzy_skin_mode": "displacement",
+  "fuzzy_skin_noise_type": "classic",
+  "fuzzy_skin_octaves": 4,
+  "fuzzy_skin_persistence": 0.5,
+  "fuzzy_skin_scale": 1,
+  "spiral_mode": false,
+  "spiral_mode_smooth": false,
+  "spiral_mode_max_xy_smoothing": 200,
+  "bridge_angle": 0,
+  "bridge_flow": 1.0,
+  "bridge_no_support": false,
+  "max_bridge_length": 0.0,
+  "thick_bridges": false,
+  "internal_bridge_support_thickness": 0.8,
+  "counterbore_hole_bridging": "none",
+  "overhang_totally_speed": 10.0,
+  "top_surface_density": 100,
+  "bottom_surface_density": 100,
+  "bottom_surface_pattern": "monotonic",
+  "sub_top_surface_pattern": "monotonic",
+  "top_shell_thickness": 1.0,
+  "bottom_shell_thickness": 0.0,
+  "top_area_threshold": 200,
+  "top_solid_infill_flow_ratio": 1.0,
+  "top_color_penetration_layers": 5,
+  "bottom_color_penetration_layers": 3,
+  "infill_rotate_step": 0.0,
+  "infill_shift_step": 0.4,
+  "infill_lock_depth": 1,
+  "minimum_sparse_infill_area": 15.0,
+  "infill_instead_top_bottom_surfaces": false,
+  "sparse_infill_anchor": 400,
+  "sparse_infill_anchor_max": 20,
+  "symmetric_infill_y_axis": false,
+  "gap_infill_speed": 250.0,
+  "small_perimeter_speed": "50%",
+  "small_perimeter_threshold": 0.0,
+  "vertical_shell_speed": "80%",
+  "travel_speed_z": 0.0,
+  "accel_to_decel_enable": false,
+  "accel_to_decel_factor": 50,
+  "initial_layer_travel_acceleration": 6000.0,
+  "travel_short_distance_acceleration": 250,
+  "enable_height_slowdown": 0.0,
+  "slowdown_start_height": 0.0,
+  "slowdown_end_height": 400.0,
+  "slowdown_start_speed": 1000.0,
+  "slowdown_end_speed": 1000.0,
+  "slowdown_start_acc": 100000.0,
+  "slowdown_end_acc": 100000.0,
+  "first_x_layer_fan_speed": 0.0,
+  "pre_start_fan_time": 0.0,
+  "prime_tower_lift_height": -1.0,
+  "prime_tower_lift_speed": 90.0,
+  "prime_tower_max_speed": 90.0,
+  "prime_tower_rib_wall": true,
+  "prime_tower_rib_width": 8,
+  "prime_tower_infill_gap": 150,
+  "prime_tower_skip_points": true,
+  "wipe_tower_no_sparse_layers": false,
+  "flush_into_infill": false,
+  "flush_into_objects": false,
+  "flush_into_support": true,
+  "precise_z_height": false,
+  "slicing_mode": "regular",
+  "slice_closing_radius": 0.049,
+  "resolution": 0.012,
+  "min_feature_size": 25,
+  "enable_arc_fitting": true,
+  "circle_compensation_manual_offset": 0.0,
+  "enable_circle_compensation": false,
+  "initial_layer_infill_line_width": 0.5,
+  "apply_scarf_seam_on_circles": true,
+  "has_scarf_joint_seam": false,
+  "override_filament_scarf_seam_setting": false,
+  "role_base_wipe_speed": true,
+  "embedding_wall_into_infill": false,
+  "detect_floating_vertical_shell": true,
+  "detect_narrow_internal_solid_infill": true,
+  "filter_out_gap_fill": false,
+  "interface_shells": false,
+  "z_direction_outwall_speed_continuous": false,
+  "smooth_speed_discontinuity_area": true,
+  "max_travel_detour_distance": 0.0,
+  "skeleton_infill_density": "15%",
+  "skeleton_infill_line_width": 0.45,
+  "skin_infill_density": "15%",
+  "skin_infill_depth": 2,
+  "skin_infill_line_width": 0.45,
+  "sparse_infill_lattice_angle_1": -45,
+  "sparse_infill_lattice_angle_2": 45,
+  "locked_skeleton_infill_pattern": "zigzag",
+  "locked_skin_infill_pattern": "crosszag",
+  "is_infill_first": false,
+  "modifier_ignore_infill": false,
+  "support_angle": 0,
+  "support_bottom_interface_spacing": 0.5,
+  "support_interface_loop_pattern": false,
+  "support_interface_not_for_body": true,
+  "support_cooling_filter": false,
+  "support_fast_purge_mode": false,
+  "enable_support_ironing": false,
+  "support_ironing_direction": 0,
+  "support_ironing_inset": 0,
+  "support_ironing_pattern": "zig-zag",
+  "top_z_overrides_xy_distance": false,
+  "prime_tower_enable_framework": false,
+  "prime_tower_extra_rib_length": 0,
+  "prime_tower_fillet_wall": true,
+  "prime_tower_flat_ironing": false,
+  "enable_tower_interface_features": false,
+  "avoid_crossing_wall_includes_support": false,
+  "draft_shield": "disabled",
+  "enable_order_independent_overlap_carving": false,
+  "ooze_prevention": false,
+  "print_sequence": "by layer",
+  "conformal_infill": false,
+  "conformal_pole": "layer",
+  "conformal_ray_count": 0,
+  "conformal_hub_radius": 0,
+  "conformal_stagger": "none",
+  "conformal_link_flip_layers": 0,
+  "conformal_link_keep_layers": 1,
+  "interlocking_beam": false,
+  "interlocking_beam_width": 0.8,
+  "interlocking_beam_layer_count": 2,
+  "interlocking_depth": 2,
+  "interlocking_orientation": 22.5,
+  "interlocking_boundary_avoidance": 2,
+  "mmu_segmented_region_interlocking_depth": 0,
+  "mmu_segmented_region_max_width": 0,
+  "reduce_crossing_wall": false,
+  "xy_hole_compensation": 0.0
+ },
+ "printers": {
+  "X1C": {
+   "label": "Bambu Lab X1 Carbon",
+   "group": "X1",
+   "aliases": [
+    "Bambu Lab X1 Carbon",
+    "X1 Carbon",
+    "X1C",
+    "Bambu Lab X1C"
+   ],
+   "limits": {
+    "max_speed": 500,
+    "max_accel": 20000,
+    "max_volumetric_speed": 21,
+    "min_layer_height_ratio": 0.2,
+    "max_layer_height_ratio": 0.7,
+    "max_travel_speed": 500,
+    "max_travel_accel": 9000,
+    "max_jerk": 9,
+    "nozzle_volume": 107,
+    "min_layer_height": 0.08,
+    "max_layer_height": 0.28
+   },
+   "baseline": {
+    "internal_solid_infill_acceleration": 10000,
+    "bridge_acceleration": 5000
+   },
+   "note": "高速机架 + 全金属热端：加速度上限高，允许更激进的墙/填充加速；外壁仍压在 5000 以下保证表面。",
+   "bed": [
+    256,
+    256,
+    256
+   ]
+  },
+  "X1": {
+   "label": "Bambu Lab X1",
+   "group": "X1",
+   "aliases": [
+    "Bambu Lab X1",
+    "X1"
+   ],
+   "limits": {
+    "max_speed": 500,
+    "max_accel": 20000,
+    "max_volumetric_speed": 21,
+    "min_layer_height_ratio": 0.2,
+    "max_layer_height_ratio": 0.7,
+    "max_travel_speed": 500,
+    "max_travel_accel": 9000,
+    "max_jerk": 9,
+    "nozzle_volume": 107,
+    "min_layer_height": 0.08,
+    "max_layer_height": 0.28
+   },
+   "baseline": {
+    "internal_solid_infill_acceleration": 10000,
+    "bridge_acceleration": 5000
+   },
+   "note": "与 X1C 同机架，少了激光雷达；参数基准一致。",
+   "bed": [
+    256,
+    256,
+    256
+   ]
+  },
+  "X1E": {
+   "label": "Bambu Lab X1E",
+   "group": "X1",
+   "aliases": [
+    "Bambu Lab X1E",
+    "X1E"
+   ],
+   "limits": {
+    "max_speed": 500,
+    "max_accel": 20000,
+    "max_volumetric_speed": 24,
+    "min_layer_height_ratio": 0.2,
+    "max_layer_height_ratio": 0.7,
+    "max_travel_speed": 500,
+    "max_travel_accel": 9000,
+    "max_jerk": 9,
+    "nozzle_volume": 107,
+    "min_layer_height": 0.08,
+    "max_layer_height": 0.28
+   },
+   "baseline": {
+    "internal_solid_infill_acceleration": 10000,
+    "bridge_acceleration": 5000
+   },
+   "note": "工程版，腔体加热 + 高温热端，体积流量上限更高（24 mm³/s）。",
+   "bed": [
+    256,
+    256,
+    256
+   ]
+  },
+  "P1S": {
+   "label": "Bambu Lab P1S",
+   "group": "P1",
+   "aliases": [
+    "Bambu Lab P1S",
+    "P1S"
+   ],
+   "limits": {
+    "max_speed": 500,
+    "max_accel": 20000,
+    "max_volumetric_speed": 21,
+    "min_layer_height_ratio": 0.2,
+    "max_layer_height_ratio": 0.7,
+    "max_travel_speed": 500,
+    "max_travel_accel": 9000,
+    "max_jerk": 9,
+    "nozzle_volume": 107,
+    "min_layer_height": 0.08,
+    "max_layer_height": 0.28
+   },
+   "baseline": {
+    "internal_solid_infill_acceleration": 8000,
+    "bridge_acceleration": 5000
+   },
+   "note": "中端封闭机型：加速度上限 10000，外壁/顶面维持 5000 以内抑制振纹。",
+   "bed": [
+    256,
+    256,
+    256
+   ]
+  },
+  "P1P": {
+   "label": "Bambu Lab P1P",
+   "group": "P1",
+   "aliases": [
+    "Bambu Lab P1P",
+    "P1P"
+   ],
+   "limits": {
+    "max_speed": 500,
+    "max_accel": 20000,
+    "max_volumetric_speed": 21,
+    "min_layer_height_ratio": 0.2,
+    "max_layer_height_ratio": 0.7,
+    "max_travel_speed": 500,
+    "max_travel_accel": 9000,
+    "max_jerk": 9,
+    "nozzle_volume": 107,
+    "min_layer_height": 0.08,
+    "max_layer_height": 0.28
+   },
+   "baseline": {
+    "internal_solid_infill_acceleration": 8000,
+    "bridge_acceleration": 5000
+   },
+   "note": "开放式机架，运动系统与 P1S 相同；ABS/ASA 需自行围挡保温。",
+   "bed": [
+    256,
+    256,
+    256
+   ]
+  },
+  "P2S": {
+   "label": "Bambu Lab P2S",
+   "group": "P2",
+   "aliases": [
+    "Bambu Lab P2S",
+    "P2S"
+   ],
+   "limits": {
+    "max_speed": 600,
+    "max_accel": 20000,
+    "max_volumetric_speed": 28,
+    "min_layer_height_ratio": 0.2,
+    "max_layer_height_ratio": 0.7,
+    "max_travel_speed": 600,
+    "max_travel_accel": 10000,
+    "max_jerk": 9,
+    "nozzle_volume": 110,
+    "min_layer_height": 0.08,
+    "max_layer_height": 0.28
+   },
+   "baseline": {
+    "bottom_surface_pattern": "monotonicline",
+    "top_surface_pattern": "monotonic",
+    "travel_speed": 600.0,
+    "outer_wall_acceleration": 6000.0,
+    "internal_solid_infill_acceleration": 12000,
+    "bridge_acceleration": 6000
+   },
+   "note": "新一代运动平台，独立基准：加速度上限 20000，体积流量 28 mm³/s。",
+   "bed": [
+    256,
+    256,
+    256
+   ]
+  },
+  "P2P": {
+   "label": "Bambu Lab P2P",
+   "group": "P2",
+   "aliases": [
+    "Bambu Lab P2P",
+    "P2P"
+   ],
+   "limits": {
+    "max_speed": 600,
+    "max_accel": 20000,
+    "max_volumetric_speed": 28,
+    "min_layer_height_ratio": 0.2,
+    "max_layer_height_ratio": 0.7,
+    "max_travel_speed": 600,
+    "max_travel_accel": 10000,
+    "max_jerk": 9,
+    "nozzle_volume": 110,
+    "min_layer_height": 0.08,
+    "max_layer_height": 0.28
+   },
+   "baseline": {
+    "bottom_surface_pattern": "monotonicline",
+    "top_surface_pattern": "monotonic",
+    "travel_speed": 600.0,
+    "outer_wall_acceleration": 6000.0,
+    "internal_solid_infill_acceleration": 12000,
+    "bridge_acceleration": 6000
+   },
+   "note": "与 P2S 同平台，开放式版本；外壁速度略降一档。",
+   "bed": [
+    256,
+    256,
+    256
+   ]
+  },
+  "A1": {
+   "label": "Bambu Lab A1",
+   "group": "A1",
+   "aliases": [
+    "Bambu Lab A1",
+    "A1"
+   ],
+   "limits": {
+    "max_speed": 500,
+    "max_accel": 12000,
+    "max_volumetric_speed": 18,
+    "min_layer_height_ratio": 0.2,
+    "max_layer_height_ratio": 0.7,
+    "max_travel_speed": 500,
+    "max_travel_accel": 9000,
+    "max_jerk": 9,
+    "nozzle_volume": 92,
+    "min_layer_height": 0.08,
+    "max_layer_height": 0.28
+   },
+   "baseline": {
+    "default_acceleration": 6000.0,
+    "elefant_foot_compensation": 0.075,
+    "travel_speed": 700.0,
+    "internal_solid_infill_acceleration": 5000,
+    "bridge_acceleration": 3000
+   },
+   "note": "床身运动（Bed Slinger）刚性弱：全速度/加速度保守压低，防止丢步与共振纹。",
+   "bed": [
+    256,
+    256,
+    256
+   ]
+  },
+  "A1mini": {
+   "label": "Bambu Lab A1 mini",
+   "group": "A1",
+   "aliases": [
+    "Bambu Lab A1 mini",
+    "A1 mini",
+    "A1mini"
+   ],
+   "limits": {
+    "max_speed": 500,
+    "max_accel": 20000,
+    "max_volumetric_speed": 18,
+    "min_layer_height_ratio": 0.2,
+    "max_layer_height_ratio": 0.7,
+    "max_travel_speed": 500,
+    "max_travel_accel": 9000,
+    "max_jerk": 9,
+    "nozzle_volume": 92,
+    "min_layer_height": 0.08,
+    "max_layer_height": 0.28
+   },
+   "baseline": {
+    "default_acceleration": 6000.0,
+    "elefant_foot_compensation": 0.0,
+    "travel_speed": 700.0,
+    "internal_solid_infill_acceleration": 4000,
+    "bridge_acceleration": 2500
+   },
+   "note": "180×180 小热床 + 床身运动：加速度再降一档，裙边加宽提升首层附着。",
+   "bed": [
+    180,
+    180,
+    180
+   ]
+  },
+  "GENERIC": {
+   "label": "通用（保守）",
+   "group": "GENERIC",
+   "aliases": [],
+   "limits": {
+    "max_speed": 300,
+    "max_accel": 8000,
+    "max_volumetric_speed": 15,
+    "min_layer_height_ratio": 0.2,
+    "max_layer_height_ratio": 0.7,
+    "max_travel_speed": 500,
+    "max_travel_accel": 8000,
+    "max_jerk": 9,
+    "nozzle_volume": 92,
+    "min_layer_height": 0.08,
+    "max_layer_height": 0.28
+   },
+   "baseline": {
+    "internal_solid_infill_acceleration": 4000,
+    "bridge_acceleration": 2500
+   },
+   "note": "识别失败时的兜底基准：宁可慢，也不写出会让机器丢步的参数。",
+   "bed": [
+    220,
+    220,
+    250
+   ]
+  },
+  "H2D": {
+   "label": "Bambu Lab H2D",
+   "group": "H2",
+   "aliases": [
+    "Bambu Lab H2D",
+    "H2D"
+   ],
+   "limits": {
+    "max_speed": 1000,
+    "max_accel": 20000,
+    "max_volumetric_speed": 25,
+    "min_layer_height_ratio": 0.2,
+    "max_layer_height_ratio": 0.7,
+    "max_travel_speed": 1000,
+    "max_travel_accel": 9000,
+    "max_jerk": 9,
+    "nozzle_volume": 130,
+    "min_layer_height": 0.08,
+    "max_layer_height": 0.28
+   },
+   "baseline": {
+    "internal_solid_infill_acceleration": 12000,
+    "bridge_acceleration": 6000,
+    "top_surface_pattern": "monotonic",
+    "bottom_surface_pattern": "monotonicline"
+   },
+   "note": "双喷头大尺寸机架（350×320×325 mm，芯温控制）：官方出厂速度 1000 mm/s、加速度 20000、行程加速度 9000、体积流量 130 mm³；封闭腔体适合 ABS/ASA。",
+   "bed": [
+    350,
+    320,
+    325
+   ]
+  },
+  "H2DP": {
+   "label": "Bambu Lab H2D Pro",
+   "group": "H2",
+   "aliases": [
+    "Bambu Lab H2D Pro",
+    "H2D Pro",
+    "H2DP"
+   ],
+   "limits": {
+    "max_speed": 1000,
+    "max_accel": 20000,
+    "max_volumetric_speed": 25,
+    "min_layer_height_ratio": 0.2,
+    "max_layer_height_ratio": 0.7,
+    "max_travel_speed": 1000,
+    "max_travel_accel": 9000,
+    "max_jerk": 9,
+    "nozzle_volume": 130,
+    "min_layer_height": 0.08,
+    "max_layer_height": 0.28
+   },
+   "baseline": {
+    "internal_solid_infill_acceleration": 12000,
+    "bridge_acceleration": 6000,
+    "top_surface_pattern": "monotonic",
+    "bottom_surface_pattern": "monotonicline"
+   },
+   "note": "H2D 的专业版（同机架同运动学）：与 H2D 共用速度/加速度/流量上限，差异在喷头与耗材系统。",
+   "bed": [
+    350,
+    320,
+    325
+   ]
+  },
+  "H2S": {
+   "label": "Bambu Lab H2S",
+   "group": "H2",
+   "aliases": [
+    "Bambu Lab H2S",
+    "H2S"
+   ],
+   "limits": {
+    "max_speed": 1000,
+    "max_accel": 20000,
+    "max_volumetric_speed": 25,
+    "min_layer_height_ratio": 0.2,
+    "max_layer_height_ratio": 0.7,
+    "max_travel_speed": 1000,
+    "max_travel_accel": 9000,
+    "max_jerk": 9,
+    "nozzle_volume": 145,
+    "min_layer_height": 0.08,
+    "max_layer_height": 0.28
+   },
+   "baseline": {
+    "internal_solid_infill_acceleration": 12000,
+    "bridge_acceleration": 6000,
+    "top_surface_pattern": "monotonic",
+    "bottom_surface_pattern": "monotonicline"
+   },
+   "note": "单喷头高流量版（340×320×340 mm）：热端体积流量 145 mm³ 为全系最高，封腔 + 辅助风扇，ABS/ASA 大件首选。",
+   "bed": [
+    340,
+    320,
+    340
+   ]
+  }
+ },
+ "filaments": {
+  "PLA": {
+   "label": "PLA",
+   "aliases": [
+    "PLA",
+    "PLA Basic",
+    "PLA Matte",
+    "PLA Silk",
+    "PLA-CF",
+    "PLA Metal",
+    "PLA Tough"
+   ],
+   "limits": {
+    "max_volumetric_speed": 21,
+    "flow_ratio": 0.98,
+    "flow_by_printer": {
+     "X1C": 21,
+     "X1": 21,
+     "X1E": 21,
+     "P1S": 21,
+     "P1P": 21,
+     "P2S": 21,
+     "P2P": 21,
+     "A1": 21,
+     "A1mini": 21,
+     "GENERIC": 21,
+     "H2D": 25,
+     "H2DP": 25,
+     "H2S": 25
+    }
+   },
+   "baseline": {},
+   "note": "冷却最强、层间粘合好、翘曲小：可以放心用高风扇压表面与悬垂。"
+  },
+  "PETG": {
+   "label": "PETG",
+   "aliases": [
+    "PETG",
+    "PETG HF",
+    "PETG-CF",
+    "PETG Basic"
+   ],
+   "limits": {
+    "max_volumetric_speed": 8,
+    "flow_ratio": 0.95,
+    "flow_by_printer": {
+     "X1C": 13,
+     "X1": 13,
+     "X1E": 13,
+     "P1S": 8,
+     "P1P": 8,
+     "P2S": 13,
+     "P2P": 13,
+     "A1": 9,
+     "A1mini": 9,
+     "GENERIC": 8,
+     "H2D": 13,
+     "H2DP": 13,
+     "H2S": 13
+    }
+   },
+   "baseline": {
+    "outer_wall_speed": {
+     "mul": 0.95
+    },
+    "inner_wall_speed": {
+     "mul": 0.95
+    },
+    "sparse_infill_speed": {
+     "mul": 0.95
+    },
+    "internal_solid_infill_speed": {
+     "mul": 0.95
+    },
+    "top_surface_speed": {
+     "mul": 0.95
+    },
+    "support_top_z_distance": {
+     "add": 0.05
+    },
+    "support_object_xy_distance": {
+     "add": 0.05
+    }
+   },
+   "note": "官方 Generic PETG 风扇 40~90%、流量上限 12 mm³/s；PETG HF（高流量）可达 21，本程序取保守的 12，若你在自定义耗材里标了更高值会以自定义为准。低风扇防翘边、防层间拉丝。",
+   "mode_ops": {
+    "quality": {
+     "travel_speed": {
+      "mul": 1.1
+     }
+    }
+   }
+  },
+  "ASA": {
+   "label": "ASA",
+   "aliases": [
+    "ASA",
+    "ASA-CF",
+    "ASA Aero"
+   ],
+   "limits": {
+    "max_volumetric_speed": 18,
+    "flow_ratio": 0.95,
+    "flow_by_printer": {
+     "X1C": 18,
+     "X1": 18,
+     "X1E": 18,
+     "P1S": 18,
+     "P1P": 18,
+     "P2S": 18,
+     "P2P": 18,
+     "A1": 18,
+     "A1mini": 18,
+     "GENERIC": 18,
+     "H2D": 20,
+     "H2DP": 20,
+     "H2S": 20
+    }
+   },
+   "baseline": {
+    "outer_wall_speed": {
+     "mul": 0.95
+    },
+    "inner_wall_speed": {
+     "mul": 0.95
+    },
+    "sparse_infill_speed": {
+     "mul": 0.95
+    },
+    "internal_solid_infill_speed": {
+     "mul": 0.95
+    },
+    "top_surface_speed": {
+     "mul": 0.95
+    },
+    "support_top_z_distance": {
+     "add": 0.05
+    }
+   },
+   "note": "中等冷却 + 大收缩：需要腔体保温，环境风直吹会翘边开裂。抗户外老化优于 ABS。"
+  },
+  "ABS": {
+   "label": "ABS",
+   "aliases": [
+    "ABS",
+    "ABS-GF",
+    "ABS Aero"
+   ],
+   "limits": {
+    "max_volumetric_speed": 16,
+    "flow_ratio": 0.95,
+    "flow_by_printer": {
+     "X1C": 16,
+     "X1": 16,
+     "X1E": 16,
+     "P1S": 16,
+     "P1P": 16,
+     "P2S": 16,
+     "P2P": 16,
+     "A1": 16,
+     "A1mini": 16,
+     "GENERIC": 16,
+     "H2D": 20,
+     "H2DP": 20,
+     "H2S": 20
+    }
+   },
+   "baseline": {
+    "outer_wall_speed": {
+     "mul": 0.95
+    },
+    "inner_wall_speed": {
+     "mul": 0.95
+    },
+    "sparse_infill_speed": {
+     "mul": 0.95
+    },
+    "internal_solid_infill_speed": {
+     "mul": 0.95
+    },
+    "top_surface_speed": {
+     "mul": 0.95
+    },
+    "support_top_z_distance": {
+     "add": 0.05
+    }
+   },
+   "note": "极低风扇 + 需要保温：收缩量最大，大件必须封闭腔体 + 宽裙边，否则必然翘角。"
+  },
+  "TPU": {
+   "label": "TPU",
+   "aliases": [
+    "TPU",
+    "TPU 95A",
+    "TPU 90A",
+    "TPU 85A",
+    "TPU for AMS"
+   ],
+   "limits": {
+    "max_volumetric_speed": 3.6,
+    "flow_ratio": 1.0,
+    "flow_by_printer": {
+     "X1C": 3.6,
+     "X1": 3.6,
+     "X1E": 3.6,
+     "P1S": 3.6,
+     "P1P": 3.6,
+     "P2S": 3.6,
+     "P2P": 3.6,
+     "A1": 3.6,
+     "A1mini": 3.6,
+     "GENERIC": 3.6,
+     "H2D": 3.6,
+     "H2DP": 3.6,
+     "H2S": 3.6
+    }
+   },
+   "baseline": {
+    "outer_wall_speed": {
+     "max": 50
+    },
+    "inner_wall_speed": {
+     "max": 60
+    },
+    "sparse_infill_speed": {
+     "max": 60
+    },
+    "internal_solid_infill_speed": {
+     "max": 60
+    },
+    "top_surface_speed": {
+     "max": 40
+    },
+    "initial_layer_speed": {
+     "max": 25
+    },
+    "initial_layer_infill_speed": {
+     "max": 30
+    },
+    "travel_speed": {
+     "max": 150
+    },
+    "support_speed": {
+     "max": 40
+    },
+    "bridge_speed": {
+     "max": 15
+    },
+    "overhang_2_4_speed": {
+     "max": 20
+    },
+    "overhang_3_4_speed": {
+     "max": 12
+    },
+    "overhang_4_4_speed": {
+     "max": 8
+    },
+    "support_base_pattern_spacing": {
+     "min": 3.0
+    },
+    "support_top_z_distance": {
+     "add": 0.05
+    }
+   },
+   "mode_ops": {
+    "strength": {
+     "wall_loops": {
+      "set": 4
+     },
+     "sparse_infill_density": {
+      "set": 25
+     }
+    }
+   },
+   "note": "柔性材料：官方 Bambu TPU 95A 的体积流量上限只有 3.6 mm³/s（不是网传的 6~12），回抽短、速度低，任何高速都会堵料或拉丝。"
+  },
+  "GENERIC": {
+   "label": "通用（保守）",
+   "aliases": [],
+   "limits": {
+    "max_volumetric_speed": 8,
+    "flow_ratio": 0.95,
+    "flow_by_printer": {
+     "X1C": 8,
+     "X1": 8,
+     "X1E": 8,
+     "P1S": 8,
+     "P1P": 8,
+     "P2S": 8,
+     "P2P": 8,
+     "A1": 8,
+     "A1mini": 8,
+     "GENERIC": 8
+    }
+   },
+   "baseline": {},
+   "note": "耗材识别失败时的兜底：中等风扇、中等回抽、保守流量。"
+  }
+ },
+ "modes": {
+  "strength": {
+   "label": "强度优先",
+   "desc": "加厚墙体与壳层、提高填充密度换高强度图案、加宽内壁线宽、降外壁速度与加速度换层间粘合、降风扇减少层间温度差；熨烫关闭、接缝走最近位。允许打印时间上涨 20%~60%。",
+   "ops": {
+    "outer_wall_speed": {
+     "mul": 0.3
+    },
+    "wall_loops": {
+     "min": 6
+    },
+    "sparse_infill_density": {
+     "min": 25
+    },
+    "skeleton_infill_density": {
+     "min": 25
+    },
+    "skin_infill_density": {
+     "min": 25
+    },
+    "top_shell_layers": {
+     "min": 5
+    },
+    "infill_wall_overlap": {
+     "set": 20
+    },
+    "sparse_infill_pattern": {
+     "set": "grid"
+    },
+    "support_threshold_angle": {
+     "max": 30
+    },
+    "inner_wall_acceleration": {
+     "set": 0
+    }
+   },
+   "time_budget_pct": 200,
+   "time_budget_note": "强度档允许明显变慢（加墙、加密度），但不超过 200%"
+  },
+  "quality": {
+   "label": "表面质量优先",
+   "desc": "降层高与线宽、外壁/顶面降速并降加速度与 Jerk、开启减速系数与振纹抑制、接缝用斜切藏在背面、顶面熨烫烫平、单调走线消除层纹。填充略降，外观优先。",
+   "ops": {
+    "default_acceleration": {
+     "mul": 0.4
+    },
+    "inner_wall_speed": {
+     "mul": 0.5
+    },
+    "internal_solid_infill_speed": {
+     "mul": 0.8
+    },
+    "layer_height": {
+     "mul": 0.8
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.4
+    },
+    "outer_wall_speed": {
+     "mul": 0.3
+    },
+    "overhang_1_4_speed": {
+     "set": 60.0
+    },
+    "overhang_2_4_speed": {
+     "mul": 0.6
+    },
+    "overhang_3_4_speed": {
+     "mul": 0.3333
+    },
+    "sparse_infill_speed": {
+     "mul": 0.7407
+    },
+    "support_bottom_z_distance": {
+     "mul": 0.8
+    },
+    "support_top_z_distance": {
+     "mul": 0.8
+    },
+    "top_surface_speed": {
+     "mul": 0.75
+    },
+    "top_shell_layers": {
+     "min": 6
+    },
+    "bottom_shell_layers": {
+     "min": 4
+    },
+    "sparse_infill_pattern": {
+     "set": "gyroid"
+    },
+    "top_surface_pattern": {
+     "set": "monotonic"
+    },
+    "seam_gap": {
+     "set": 12
+    },
+    "support_threshold_angle": {
+     "set": 25
+    },
+    "infill_combination": {
+     "set": true
+    }
+   },
+   "time_budget_pct": 170,
+   "time_budget_note": "质量档允许变慢一倍多，超过就退回部分填充/速度"
+  },
+  "balanced": {
+   "label": "均衡模式",
+   "desc": "对齐官方 0.20mm Standard（层高、墙圈数、填充密度都不动），只做有明确收益的微调：外壁降 15%、外壁加速度 ×0.8、顶面单调、填充重叠 18%、gyroid 填充、开启减速系数。期望时间涨幅 0~20%。",
+   "ops": {
+    "sparse_infill_pattern": {
+     "set": "gyroid"
+    },
+    "infill_wall_overlap": {
+     "set": 18
+    },
+    "outer_wall_speed": {
+     "mul": 0.85
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.8
+    },
+    "top_surface_speed": {
+     "mul": 0.9
+    },
+    "accel_to_decel_enable": {
+     "set": true
+    },
+    "top_surface_pattern": {
+     "set": "monotonic"
+    }
+   },
+   "time_budget_pct": 40,
+   "time_budget_note": "均衡档硬约束：最多慢 40%"
+  },
+  "draft": {
+   "label": "快速草稿",
+   "desc": "只求快出件：层高放到 0.24 mm、内壁与填充提速、支撑判定放宽。对应官方 0.24mm Draft 档。墙层与密度不额外加厚。",
+   "ops": {
+    "gap_infill_speed": {
+     "mul": 0.92
+    },
+    "inner_wall_speed": {
+     "mul": 0.7667
+    },
+    "internal_solid_infill_speed": {
+     "mul": 0.92
+    },
+    "layer_height": {
+     "mul": 1.2
+    },
+    "sparse_infill_speed": {
+     "mul": 0.8519
+    },
+    "top_surface_line_width": {
+     "mul": 1.0714
+    },
+    "support_threshold_angle": {
+     "set": 35
+    }
+   },
+   "time_budget_pct": 10,
+   "time_budget_note": "草稿档是「快」的档，最多慢 10%"
+  },
+  "fine": {
+   "label": "精细",
+   "desc": "外观与层间结合优先：层高 0.12 mm、内壁与填充提速、悬垂面降速、支撑判定收紧到 20°。对应官方 0.12mm Fine 档。打印时间会明显变长。",
+   "ops": {
+    "gap_infill_speed": {
+     "mul": 1.4
+    },
+    "inner_wall_speed": {
+     "mul": 1.1667
+    },
+    "internal_solid_infill_speed": {
+     "mul": 1.4
+    },
+    "layer_height": {
+     "mul": 0.6
+    },
+    "overhang_1_4_speed": {
+     "set": 60
+    },
+    "overhang_2_4_speed": {
+     "mul": 0.6
+    },
+    "overhang_3_4_speed": {
+     "mul": 0.3333
+    },
+    "sparse_infill_speed": {
+     "mul": 1.5926
+    },
+    "support_bottom_z_distance": {
+     "mul": 0.6
+    },
+    "support_top_z_distance": {
+     "mul": 0.6
+    },
+    "bottom_shell_layers": {
+     "min": 5
+    },
+    "bottom_color_penetration_layers": {
+     "min": 5
+    },
+    "support_threshold_angle": {
+     "set": 20
+    }
+   },
+   "time_budget_pct": null,
+   "time_budget_note": "精细档不设时长上限（靠小层高换质量）"
+  },
+  "ultrafine": {
+   "label": "超精细",
+   "desc": "外观拉满：层高 0.08 mm、顶底壳层加厚到 9/7 层、支撑判定收紧到 15°。对应官方 0.08mm Extra Fine 档，打印时间最长。",
+   "ops": {
+    "gap_infill_speed": {
+     "mul": 1.4
+    },
+    "inner_wall_speed": {
+     "mul": 1.1667
+    },
+    "internal_solid_infill_speed": {
+     "mul": 1.4
+    },
+    "layer_height": {
+     "mul": 0.4
+    },
+    "overhang_1_4_speed": {
+     "set": 60
+    },
+    "overhang_2_4_speed": {
+     "mul": 0.6
+    },
+    "overhang_3_4_speed": {
+     "mul": 0.3333
+    },
+    "sparse_infill_speed": {
+     "mul": 1.6667
+    },
+    "support_bottom_z_distance": {
+     "mul": 0.4
+    },
+    "support_top_z_distance": {
+     "mul": 0.4
+    },
+    "top_shell_layers": {
+     "min": 9
+    },
+    "bottom_shell_layers": {
+     "min": 7
+    },
+    "top_color_penetration_layers": {
+     "min": 9
+    },
+    "bottom_color_penetration_layers": {
+     "min": 7
+    },
+    "support_threshold_angle": {
+     "set": 15
+    }
+   },
+   "time_budget_pct": null,
+   "time_budget_note": "超精细档不设时长上限"
+  }
+ },
+ "interactions": [
+  {
+   "id": "asa-needs-enclosure",
+   "when": {
+    "filament": "ASA"
+   },
+   "warn": "ASA 收缩偏大：A1/P1P 这类开放机架建议加围挡，否则大平面件容易翘边。程序无法写机箱温度，请自行控制环境。"
+  },
+  {
+   "id": "abs-needs-enclosure",
+   "when": {
+    "filament": "ABS"
+   },
+   "warn": "ABS 需要保温腔体：开放机型打印大件极易开裂。建议围挡 + 宽裙边，并避免空调直吹。"
+  },
+  {
+   "id": "tpu-on-a1",
+   "when": {
+    "printer_group": "A1",
+    "filament": "TPU"
+   },
+   "set": {
+    "outer_wall_speed": 25,
+    "inner_wall_speed": 40,
+    "sparse_infill_speed": 50,
+    "travel_speed": 120
+   },
+   "warn": "A1 系列 + TPU：近端挤出机对软料回抽敏感，速度已再降一档；建议把耗材张力调松、减少回抽。"
+  },
+  {
+   "id": "tpu-tower",
+   "when": {
+    "filament": "TPU"
+   },
+   "set": {
+    "prime_tower_width": 40
+   }
+  },
+  {
+   "id": "small-nozzle-slow",
+   "when": {
+    "nozzle_le": 0.25
+   },
+   "set": {
+    "outer_wall_speed": 80,
+    "top_surface_speed": 80
+   },
+   "warn": "0.2 mm 喷嘴：线宽/层高已按比例收紧，外壁与顶面速度进一步压低，避免堵头。"
+  },
+  {
+   "id": "big-nozzle",
+   "when": {
+    "nozzle_ge": 0.6
+   },
+   "set": {
+    "wall_loops": 3,
+    "top_shell_layers": 4
+   },
+   "warn": "0.6 mm 以上喷嘴：单层厚、线宽大，墙层数已回调，防止细节糊掉。"
+  },
+  {
+   "id": "strength-ironing-off",
+   "when": {
+    "mode": "strength"
+   },
+   "set": {
+    "ironing_type": "no ironing",
+    "seam_slope_type": "none"
+   },
+   "warn": "强度优先模式下熨烫与斜切都关掉：两者都会削弱表层与接缝的力学性能。"
+  },
+  {
+   "id": "tpu-no-ironing",
+   "when": {
+    "filament": "TPU"
+   },
+   "set": {
+    "ironing_type": "no ironing",
+    "seam_slope_type": "none",
+    "spiral_mode": false
+   },
+   "warn": "TPU 不做熨烫与斜切：软料在熨烫时会堆积、斜切会拉丝。"
+  },
+  {
+   "id": "tpu-no-brim-gap",
+   "when": {
+    "filament": "TPU"
+   },
+   "set": {
+    "brim_type": "outer_only",
+    "skirt_loops": 2,
+    "initial_layer_speed": 20
+   },
+   "warn": "TPU 首层附着力强但易拉伸：用外侧裙边 + 更慢首层速度，避免边缘被扯起。"
+  },
+  {
+   "id": "abs-asa-no-fan",
+   "when": {
+    "filament": "ABS"
+   },
+   "set": {
+    "brim_type": "outer_only",
+    "draft_shield": "enabled"
+   },
+   "warn": "ABS 必须保温：风扇压到 30%、加长层冷却时间、开挡风罩、裙边加宽到 8 mm。"
+  },
+  {
+   "id": "asa-no-fan",
+   "when": {
+    "filament": "ASA"
+   },
+   "set": {
+    "brim_type": "outer_only",
+    "draft_shield": "enabled"
+   },
+   "warn": "ASA 收缩大：风扇压到 40%、开挡风罩、裙边 8 mm，大平面件建议加围挡。"
+  },
+  {
+   "id": "petg-stringing",
+   "when": {
+    "filament": "PETG"
+   },
+   "set": {
+    "seam_slope_type": "none"
+   },
+   "warn": "PETG 层间强度与拉丝主要由耗材页决定，这里给出社区通行结论供你核对：喷嘴 230~250℃、热床 80~90℃、零件风扇 20~50%（超过 50% 层间粘合会明显下降，但低于 20% 悬垂会塌）；空走速度保持机型高速（慢空走会让喷嘴在途中持续出料，越慢越拉丝），治拉丝靠回抽长度/速度、擦嘴、Z hop —— 这几项都在耗材页，本程序只读不改。工艺页这边已把斜切关闭（斜切会挂料）。"
+  },
+  {
+   "id": "spiral-vase-hint",
+   "when": {
+    "mode": "quality",
+    "filament": "PLA"
+   },
+   "set": {
+    "spiral_mode": false
+   },
+   "warn": "单壁花瓶类模型请在 Bambu Studio 里手动开「螺旋花瓶模式」；本程序默认关闭——对实心件开启会得到空壳。"
+  },
+  {
+   "id": "big-nozzle-flow",
+   "when": {
+    "nozzle_ge": 0.6
+   },
+   "set": {
+    "top_surface_density": 100,
+    "bottom_surface_density": 100,
+    "ironing_spacing": 0.2
+   },
+   "warn": "0.6 mm 以上喷嘴：走线宽，顶底必须打满 100% 才不会露填充；熨烫间距也相应加大。"
+  },
+  {
+   "id": "support-default-off",
+   "when": {
+    "mode": "quality"
+   },
+   "set": {
+    "enable_support": true,
+    "support_type": "tree(auto)",
+    "support_style": "tree_slim",
+    "support_density": 10,
+    "support_base_pattern": "default",
+    "support_base_pattern_spacing": 2.5,
+    "support_interface_top_layers": 2,
+    "support_interface_bottom_layers": 2,
+    "support_interface_spacing": 0.5,
+    "support_interface_pattern": "auto",
+    "support_top_z_distance": 0.22,
+    "support_bottom_z_distance": 0.2,
+    "support_object_xy_distance": 0.4,
+    "support_object_first_layer_gap": 0.2,
+    "support_expansion": 0,
+    "support_critical_regions_only": true,
+    "support_remove_small_overhang": true,
+    "support_on_build_plate_only": false,
+    "tree_support_branch_angle": 45,
+    "tree_support_branch_diameter": 2
+   },
+   "warn": "默认把支撑参数成套配好（树状 + 细枝 + 40° 阈值 + 2 层接触面）。模型真的需要支撑时才会生效；Bambu Studio 里勾上「启用支撑」即可直接用这套参数。"
+  },
+  {
+   "id": "support-strength",
+   "when": {
+    "mode": "strength"
+   },
+   "set": {
+    "enable_support": true,
+    "support_type": "tree(auto)",
+    "support_style": "tree_strong",
+    "support_density": 18,
+    "support_base_pattern": "grid",
+    "support_base_pattern_spacing": 2.0,
+    "support_interface_top_layers": 3,
+    "support_interface_bottom_layers": 3,
+    "support_interface_spacing": 0.4,
+    "support_interface_pattern": "grid",
+    "support_top_z_distance": 0.2,
+    "support_bottom_z_distance": 0.2,
+    "support_object_xy_distance": 0.35,
+    "support_object_first_layer_gap": 0.2,
+    "support_expansion": 0.1,
+    "support_critical_regions_only": false,
+    "support_remove_small_overhang": false,
+    "support_on_build_plate_only": false,
+    "tree_support_branch_angle": 40,
+    "tree_support_branch_diameter": 3,
+    "tree_support_wall_count": 2
+   },
+   "warn": "强度优先：支撑按「不塌」配（网格主体 + 3 层接触面 + 18% 密度），拆起来会稍费劲。"
+  },
+  {
+   "id": "cooling-pla-fast",
+   "when": {
+    "filament": "PLA"
+   },
+   "set": {
+    "first_x_layer_fan_speed": 0,
+    "pre_start_fan_time": 2
+   },
+   "warn": "PLA 冷却时序按官方默认：层时间超过 30s 才降速，首层不开风扇，悬垂 95% 触发全速。"
+  },
+  {
+   "id": "cooling-petg-slow",
+   "when": {
+    "filament": "PETG"
+   },
+   "set": {
+    "first_x_layer_fan_speed": 0,
+    "pre_start_fan_time": 3
+   },
+   "warn": "PETG 层冷却时间放宽到 45s、悬垂风扇 90% 触发：过热会塌，过冷会翘边脱层。"
+  },
+  {
+   "id": "cooling-abs-asa",
+   "when": {
+    "filament": "ABS"
+   },
+   "set": {
+    "first_x_layer_fan_speed": 0,
+    "pre_start_fan_time": 5
+   },
+   "warn": "ABS 关掉辅助风扇与悬垂风扇、层冷却放宽到 60s：一切冷风都会加剧翘边分层。"
+  },
+  {
+   "id": "cooling-asa",
+   "when": {
+    "filament": "ASA"
+   },
+   "set": {
+    "first_x_layer_fan_speed": 0,
+    "pre_start_fan_time": 5
+   },
+   "warn": "ASA 同 ABS：关辅助风扇、放宽层冷却时间。"
+  },
+  {
+   "id": "tower-single-color",
+   "when": {
+    "filament": "PLA"
+   },
+   "set": {
+    "enable_prime_tower": true,
+    "prime_tower_width": 35,
+    "prime_tower_rib_wall": true,
+    "prime_tower_rib_width": 8,
+    "prime_tower_infill_gap": 150,
+    "prime_tower_skip_points": true,
+    "prime_tower_lift_height": -1,
+    "prime_tower_max_speed": 90,
+    "wipe_tower_no_sparse_layers": false,
+    "flush_into_infill": false,
+    "flush_into_objects": false,
+    "flush_into_support": true
+   },
+   "warn": "擦料塔按单色保守配置：35 mm 宽、废料冲入支撑。多色工程建议在 Bambu Studio 里把宽度加到 60 mm。"
+  },
+  {
+   "id": "retract-direct-drive",
+   "when": {
+    "printer_group": "X1"
+   },
+   "set": {},
+   "warn": "X1 系列直驱短回抽：0.8 mm / 30 mm/s 是官方验证值，不要为了拉丝盲目加大。"
+  },
+  {
+   "id": "retract-bed-slinger",
+   "when": {
+    "printer_group": "A1"
+   },
+   "set": {},
+   "warn": "A1 系列床身运动：Z hop 用 Auto Lift 避免抬升刮蹭，回抽速度降一档减少齿轮打滑。"
+  },
+  {
+   "id": "z-comp-pla",
+   "when": {
+    "filament": "PLA"
+   },
+   "set": {
+    "xy_contour_compensation": 0,
+    "elefant_foot_compensation": 0.15,
+    "elefant_foot_compensation_layers": 1
+   },
+   "warn": "PLA 收缩小：孔洞补 +0.02 mm 抵消收缩，象脚补偿 0.15 mm 压第一圈外翻。"
+  },
+  {
+   "id": "z-comp-petg",
+   "when": {
+    "filament": "PETG"
+   },
+   "set": {
+    "xy_contour_compensation": 0,
+    "elefant_foot_compensation": 0.2,
+    "elefant_foot_compensation_layers": 2
+   },
+   "warn": "PETG 收缩与粘附都强：孔洞补到 +0.05 mm，象脚补偿 0.2 mm × 2 层（不然第一层会鼓边）。"
+  },
+  {
+   "id": "z-comp-abs-asa",
+   "when": {
+    "filament": "ABS"
+   },
+   "set": {
+    "xy_contour_compensation": 0.02,
+    "elefant_foot_compensation": 0.2,
+    "elefant_foot_compensation_layers": 2
+   },
+   "warn": "ABS 收缩量最大（约 0.8%）：孔洞补 +0.1 mm、轮廓补 +0.02 mm，否则装不进去。"
+  },
+  {
+   "id": "z-comp-asa",
+   "when": {
+    "filament": "ASA"
+   },
+   "set": {
+    "xy_contour_compensation": 0.02,
+    "elefant_foot_compensation": 0.2,
+    "elefant_foot_compensation_layers": 2
+   },
+   "warn": "ASA 收缩略小于 ABS：孔洞补 +0.09 mm，其余同 ABS。"
+  },
+  {
+   "id": "z-comp-tpu",
+   "when": {
+    "filament": "TPU"
+   },
+   "set": {
+    "xy_contour_compensation": 0,
+    "elefant_foot_compensation": 0.1,
+    "elefant_foot_compensation_layers": 1
+   },
+   "warn": "TPU 弹性回缩：孔洞只补 +0.04 mm（补多了装配会松），象脚补偿降到 0.1 mm。"
+  },
+  {
+   "id": "height-slowdown-tall",
+   "when": {
+    "mode": "quality"
+   },
+   "set": {
+    "enable_height_slowdown": 1,
+    "slowdown_start_height": 120,
+    "slowdown_end_height": 260,
+    "slowdown_start_speed": 300,
+    "slowdown_end_speed": 120,
+    "slowdown_start_acc": 6000,
+    "slowdown_end_acc": 2500
+   },
+   "warn": "开启高度分段降速：120 mm 以下正常速度，到 260 mm 降到 120 mm/s / 2500 mm/s²，专门对付高件上部的振纹，比全局降速省时间。"
+  },
+  {
+   "id": "jerk-x1",
+   "when": {
+    "printer_group": "X1"
+   },
+   "set": {},
+   "warn": ""
+  },
+  {
+   "id": "jerk-p1",
+   "when": {
+    "printer_group": "P1"
+   },
+   "set": {},
+   "warn": ""
+  },
+  {
+   "id": "jerk-p2",
+   "when": {
+    "printer_group": "P2"
+   },
+   "set": {},
+   "warn": ""
+  },
+  {
+   "id": "jerk-a1",
+   "when": {
+    "printer_group": "A1"
+   },
+   "set": {},
+   "warn": "A1 组 Jerk 按官方机器预设：8 mm/s。改高会加剧振纹，改低会拖慢转弯；这是官方验证过的平衡点。"
+  },
+  {
+   "id": "ironing-fan-off",
+   "when": {
+    "mode": "quality"
+   },
+   "set": {
+    "ironing_direction": 45
+   },
+   "warn": "熨烫时风扇设为 0：熨烫头需要在半熔状态下抹平，吹风会让表面发白。"
+  },
+  {
+   "id": "support-interface-slow",
+   "when": {
+    "mode": "quality"
+   },
+   "set": {
+    "support_interface_speed": 80,
+    "support_interface_loop_pattern": true,
+    "support_interface_not_for_body": true,
+    "enforce_support_layers": 2,
+    "independent_support_layer_height": true,
+    "support_angle": 0,
+    "tree_support_branch_distance": 5,
+    "tree_support_branch_diameter_angle": 5
+   },
+   "warn": "支撑接触面降到 80 mm/s 并加环绕：接触面平整、拆下来不留疤。"
+  },
+  {
+   "id": "raft-off-hint",
+   "when": {
+    "filament": "PLA"
+   },
+   "set": {
+    "raft_layers": 0,
+    "raft_contact_distance": 0.1,
+    "raft_first_layer_density": 90,
+    "raft_expansion": 1.5,
+    "raft_first_layer_expansion": -1
+   },
+   "warn": "筏板默认关闭（0 层）：只有小接触面高件或严重翘边的料才需要。真要开就在 Bambu Studio 里把「筏板层数」设为 2，其余参数已配好。"
+  },
+  {
+   "id": "tower-fine",
+   "when": {
+    "filament": "PLA"
+   },
+   "set": {
+    "prime_tower_brim_width": 3,
+    "prime_tower_lift_speed": 90,
+    "prime_tower_fillet_wall": true,
+    "prime_tower_flat_ironing": true,
+    "prime_tower_extra_rib_length": 0,
+    "prime_tower_enable_framework": false,
+    "enable_tower_interface_features": false
+   },
+   "warn": "擦料塔细项：圆角墙 + 平面熨烫让塔更容易整块剥落；废料倍率保持 1.0（省料且不堵）。"
+  },
+  {
+   "id": "pa-x1-p2",
+   "when": {
+    "printer_group": "X1"
+   },
+   "set": {},
+   "warn": "X1 系列热端支持压力提前自动标定：保持开启，悬垂处也自适应，转角不会堆料。"
+  },
+  {
+   "id": "pa-p2",
+   "when": {
+    "printer_group": "P2"
+   },
+   "set": {},
+   "warn": "P2 平台同样支持压力提前自适应，保持开启。"
+  },
+  {
+   "id": "seam-detail-quality",
+   "when": {
+    "mode": "quality"
+   },
+   "set": {
+    "seam_slope_entire_loop": false,
+    "seam_slope_gap": 0,
+    "seam_slope_min_length": 10,
+    "seam_slope_start_height": 10,
+    "role_base_wipe_speed": true,
+    "start_end_points": "auto"
+   },
+   "warn": "斜切只在最需要的位置做（不做整圈、最小长度 10 mm）：整圈斜切会让接缝变成一条长疤。"
+  },
+  {
+   "id": "first-layer-adhesion",
+   "when": {
+    "filament": "PLA"
+   },
+   "set": {
+    "skirt_height": 1,
+    "skirt_per_object": true,
+    "initial_layer_infill_line_width": 0.5
+   },
+   "warn": "首层裙边高度 1 层、间隙 0：既能看清挤出是否正常，又不会浪费材料。"
+  },
+  {
+   "id": "speed-bridge-overhang",
+   "when": {
+    "mode": "quality"
+   },
+   "set": {
+    "enable_overhang_speed": true,
+    "overhang_totally_speed": 20,
+    "internal_bridge_support_thickness": 1.0,
+    "max_bridge_length": 0,
+    "bridge_no_support": false,
+    "counterbore_hole_bridging": "partially_filtered",
+    "small_perimeter_threshold": 3
+   },
+   "warn": "悬垂全塌区速度压到 20 mm/s、内部桥接加厚到 1.0 mm；小周长阈值 3 mm（小于它的环自动降速）。"
+  },
+  {
+   "id": "quality-misc",
+   "when": {
+    "mode": "quality"
+   },
+   "set": {
+    "line_width": 0.42,
+    "sparse_infill_line_width": 0.45,
+    "support_line_width": 0.38,
+    "ooze_prevention": false,
+    "print_sequence": "by layer",
+    "avoid_crossing_wall_includes_support": false,
+    "enable_order_independent_overlap_carving": true,
+    "initial_layer_print_height": 0.2
+   },
+   "warn": "质量附加项：支撑线宽收窄到 0.38 mm（好拆）、开启顺序无关重叠切割、打印顺序保持逐层（按对象打印只适合小批量同款）。"
+  },
+  {
+   "id": "accel-first-layer-travel",
+   "when": {
+    "printer_group": "A1"
+   },
+   "set": {
+    "initial_layer_travel_acceleration": 3000
+   },
+   "warn": "A1 系列首层空走加速度压到 3000：床身运动时有助于减少首层错位。"
+  },
+  {
+   "id": "accel-first-layer-travel-x1",
+   "when": {
+    "printer_group": "X1"
+   },
+   "set": {
+    "initial_layer_travel_acceleration": 6000
+   },
+   "warn": ""
+  },
+  {
+   "name": "brim-gap-adhesion",
+   "when": {
+    "key": "brim_width",
+    "op": ">",
+    "value": 0
+   },
+   "ops": {
+    "brim_object_gap": {
+     "set": 0.3
+    }
+   },
+   "why": "有裙边时不贴死模型：留 0.3 mm 间隙，撕裙边不会带下底面首层。",
+   "lock": false
+  }
+ ],
+ "shape_profiles": {
+  "tall_slim": {
+   "balanced": {
+    "outer_wall_speed": {
+     "mul": 0.85
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.7
+    },
+    "travel_acceleration": {
+     "mul": 0.75
+    },
+    "default_acceleration": {
+     "mul": 0.85
+    },
+    "travel_speed": {
+     "mul": 0.9
+    },
+    "wall_loops": {
+     "min": 4
+    },
+    "top_shell_layers": {
+     "min": 4
+    },
+    "bottom_shell_layers": {
+     "min": 4
+    },
+    "sparse_infill_density": {
+     "min": 25
+    },
+    "infill_wall_overlap": {
+     "min": 18
+    },
+    "brim_width": {
+     "set": 8
+    },
+    "skirt_loops": {
+     "min": 3
+    },
+    "elefant_foot_compensation": {
+     "min": 0.1
+    },
+    "support_base_pattern_spacing": {
+     "set": 2.0
+    },
+    "support_threshold_angle": {
+     "max": 42
+    }
+   },
+   "strength": {
+    "outer_wall_speed": {
+     "mul": 0.8
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.65
+    },
+    "default_acceleration": {
+     "mul": 0.8
+    },
+    "travel_acceleration": {
+     "mul": 0.7
+    },
+    "wall_loops": {
+     "min": 5
+    },
+    "top_shell_layers": {
+     "min": 5
+    },
+    "bottom_shell_layers": {
+     "min": 5
+    },
+    "sparse_infill_density": {
+     "min": 35
+    },
+    "infill_wall_overlap": {
+     "min": 22
+    },
+    "brim_width": {
+     "set": 10
+    },
+    "skirt_loops": {
+     "min": 4
+    },
+    "elefant_foot_compensation": {
+     "min": 0.15
+    },
+    "support_base_pattern_spacing": {
+     "set": 1.8
+    },
+    "support_threshold_angle": {
+     "max": 40
+    }
+   },
+   "quality": {
+    "outer_wall_speed": {
+     "mul": 0.85
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.7
+    },
+    "travel_speed": {
+     "mul": 0.9
+    },
+    "wall_loops": {
+     "min": 3
+    },
+    "top_shell_layers": {
+     "min": 4
+    },
+    "layer_height": {
+     "mul": 0.9
+    },
+    "brim_width": {
+     "set": 6
+    },
+    "seam_position": {
+     "set": "aligned"
+    },
+    "support_base_pattern_spacing": {
+     "set": 2.5
+    }
+   }
+  },
+  "small_foot_tower": {
+   "balanced": {
+    "outer_wall_speed": {
+     "mul": 0.8
+    },
+    "travel_speed": {
+     "mul": 0.85
+    },
+    "travel_acceleration": {
+     "mul": 0.75
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.75
+    },
+    "initial_layer_speed": {
+     "mul": 0.85
+    },
+    "initial_layer_acceleration": {
+     "mul": 0.8
+    },
+    "wall_loops": {
+     "min": 4
+    },
+    "brim_width": {
+     "set": 10
+    },
+    "skirt_loops": {
+     "min": 4
+    },
+    "elefant_foot_compensation": {
+     "min": 0.12
+    },
+    "support_base_pattern_spacing": {
+     "set": 2.0
+    }
+   },
+   "strength": {
+    "outer_wall_speed": {
+     "mul": 0.75
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.7
+    },
+    "initial_layer_speed": {
+     "mul": 0.8
+    },
+    "wall_loops": {
+     "min": 5
+    },
+    "sparse_infill_density": {
+     "min": 30
+    },
+    "brim_width": {
+     "set": 12
+    },
+    "skirt_loops": {
+     "min": 5
+    },
+    "elefant_foot_compensation": {
+     "min": 0.15
+    },
+    "support_base_pattern_spacing": {
+     "set": 1.8
+    }
+   },
+   "quality": {
+    "outer_wall_speed": {
+     "mul": 0.8
+    },
+    "travel_speed": {
+     "mul": 0.85
+    },
+    "initial_layer_speed": {
+     "mul": 0.85
+    },
+    "wall_loops": {
+     "min": 3
+    },
+    "layer_height": {
+     "mul": 0.9
+    },
+    "brim_width": {
+     "set": 8
+    },
+    "support_base_pattern_spacing": {
+     "set": 2.5
+    }
+   }
+  },
+  "flat_plate": {
+   "balanced": {
+    "initial_layer_speed": {
+     "mul": 0.85
+    },
+    "initial_layer_acceleration": {
+     "mul": 0.8
+    },
+    "initial_layer_line_width": {
+     "mul": 1.05
+    },
+    "bottom_shell_layers": {
+     "min": 4
+    },
+    "brim_width": {
+     "set": 7
+    },
+    "skirt_loops": {
+     "min": 3
+    },
+    "elefant_foot_compensation": {
+     "min": 0.12
+    }
+   },
+   "strength": {
+    "initial_layer_speed": {
+     "mul": 0.8
+    },
+    "initial_layer_acceleration": {
+     "mul": 0.75
+    },
+    "bottom_shell_layers": {
+     "min": 5
+    },
+    "top_shell_layers": {
+     "min": 5
+    },
+    "sparse_infill_density": {
+     "min": 30
+    },
+    "brim_width": {
+     "set": 8
+    },
+    "elefant_foot_compensation": {
+     "min": 0.15
+    }
+   },
+   "quality": {
+    "initial_layer_speed": {
+     "mul": 0.85
+    },
+    "initial_layer_line_width": {
+     "mul": 1.05
+    },
+    "bottom_shell_layers": {
+     "min": 3
+    },
+    "brim_width": {
+     "set": 6
+    },
+    "elefant_foot_compensation": {
+     "min": 0.1
+    },
+    "seam_position": {
+     "set": "aligned"
+    }
+   }
+  },
+  "thin_wall": {
+   "balanced": {
+    "wall_loops": {
+     "min": 3
+    },
+    "reduce_crossing_wall": {
+     "set": true
+    },
+    "outer_wall_speed": {
+     "mul": 0.9
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.85
+    },
+    "sparse_infill_density": {
+     "max": 25
+    },
+    "top_surface_density": {
+     "max": 25
+    },
+    "layer_height": {
+     "mul": 0.95
+    },
+    "wall_generator": {
+     "set": "arachne"
+    }
+   },
+   "strength": {
+    "wall_loops": {
+     "min": 4
+    },
+    "reduce_crossing_wall": {
+     "set": true
+    },
+    "outer_wall_speed": {
+     "mul": 0.85
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.8
+    },
+    "sparse_infill_density": {
+     "min": 30
+    },
+    "infill_wall_overlap": {
+     "min": 18
+    },
+    "layer_height": {
+     "mul": 0.95
+    },
+    "wall_generator": {
+     "set": "arachne"
+    }
+   },
+   "quality": {
+    "wall_loops": {
+     "min": 3
+    },
+    "outer_wall_speed": {
+     "mul": 0.9
+    },
+    "layer_height": {
+     "mul": 0.9
+    },
+    "outer_wall_line_width": {
+     "mul": 0.95
+    },
+    "seam_position": {
+     "set": "aligned"
+    },
+    "wall_generator": {
+     "set": "arachne"
+    }
+   }
+  },
+  "vase": {
+   "balanced": {
+    "wall_loops": {
+     "min": 3
+    },
+    "outer_wall_speed": {
+     "mul": 0.9
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.85
+    },
+    "spiral_mode_smooth": {
+     "set": true
+    },
+    "top_surface_density": {
+     "max": 30
+    }
+   },
+   "strength": {
+    "wall_loops": {
+     "min": 4
+    },
+    "outer_wall_speed": {
+     "mul": 0.85
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.8
+    },
+    "spiral_mode_smooth": {
+     "set": true
+    },
+    "top_surface_density": {
+     "min": 35
+    }
+   },
+   "quality": {
+    "outer_wall_speed": {
+     "mul": 0.85
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.8
+    },
+    "layer_height": {
+     "mul": 0.85
+    },
+    "spiral_mode_smooth": {
+     "set": true
+    },
+    "seam_position": {
+     "set": "aligned"
+    }
+   }
+  },
+  "long_bar": {
+   "balanced": {
+    "outer_wall_acceleration": {
+     "mul": 0.85
+    },
+    "travel_acceleration": {
+     "mul": 0.85
+    },
+    "wall_loops": {
+     "min": 3
+    },
+    "brim_width": {
+     "set": 6
+    },
+    "sparse_infill_density": {
+     "min": 25
+    }
+   },
+   "strength": {
+    "wall_loops": {
+     "min": 4
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.8
+    },
+    "travel_acceleration": {
+     "mul": 0.8
+    },
+    "sparse_infill_density": {
+     "min": 35
+    },
+    "infill_wall_overlap": {
+     "min": 18
+    },
+    "brim_width": {
+     "set": 7
+    }
+   },
+   "quality": {
+    "outer_wall_speed": {
+     "mul": 0.9
+    },
+    "layer_height": {
+     "mul": 0.9
+    },
+    "wall_loops": {
+     "min": 3
+    },
+    "brim_width": {
+     "set": 5
+    }
+   }
+  },
+  "overhanging": {
+   "balanced": {
+    "overhang_1_4_speed": {
+     "mul": 0.8
+    },
+    "overhang_2_4_speed": {
+     "mul": 0.85
+    },
+    "overhang_3_4_speed": {
+     "mul": 0.9
+    },
+    "overhang_4_4_speed": {
+     "mul": 0.9
+    },
+    "support_top_z_distance": {
+     "add": 0.05
+    },
+    "support_object_xy_distance": {
+     "add": 0.1
+    },
+    "support_base_pattern_spacing": {
+     "set": 2.5
+    },
+    "support_critical_regions_only": {
+     "set": true
+    }
+   },
+   "strength": {
+    "overhang_1_4_speed": {
+     "mul": 0.75
+    },
+    "overhang_2_4_speed": {
+     "mul": 0.8
+    },
+    "support_top_z_distance": {
+     "add": 0.05
+    },
+    "support_object_xy_distance": {
+     "add": 0.1
+    },
+    "support_base_pattern_spacing": {
+     "set": 2.0
+    },
+    "support_critical_regions_only": {
+     "set": true
+    },
+    "wall_loops": {
+     "min": 3
+    }
+   },
+   "quality": {
+    "overhang_1_4_speed": {
+     "mul": 0.75
+    },
+    "overhang_2_4_speed": {
+     "mul": 0.8
+    },
+    "overhang_3_4_speed": {
+     "mul": 0.8
+    },
+    "support_top_z_distance": {
+     "add": 0.05
+    },
+    "support_base_pattern_spacing": {
+     "set": 3.0
+    },
+    "layer_height": {
+     "mul": 0.95
+    }
+   }
+  },
+  "solid_block": {
+   "balanced": {
+    "sparse_infill_density": {
+     "min": 25
+    },
+    "sparse_infill_pattern": {
+     "set": "gyroid"
+    },
+    "wall_loops": {
+     "min": 3
+    },
+    "infill_wall_overlap": {
+     "min": 16
+    }
+   },
+   "strength": {
+    "sparse_infill_density": {
+     "min": 40
+    },
+    "sparse_infill_pattern": {
+     "set": "gyroid"
+    },
+    "wall_loops": {
+     "min": 4
+    },
+    "top_shell_layers": {
+     "min": 5
+    },
+    "infill_wall_overlap": {
+     "min": 20
+    }
+   },
+   "quality": {
+    "sparse_infill_density": {
+     "max": 25
+    },
+    "sparse_infill_pattern": {
+     "set": "grid"
+    },
+    "top_surface_pattern": {
+     "set": "monotonicline"
+    }
+   }
+  },
+  "small_detail": {
+   "balanced": {
+    "outer_wall_speed": {
+     "mul": 0.85
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.85
+    },
+    "gap_infill_speed": {
+     "mul": 0.85
+    },
+    "layer_height": {
+     "mul": 0.85
+    },
+    "initial_layer_speed": {
+     "mul": 0.85
+    },
+    "brim_width": {
+     "set": 6
+    },
+    "wall_loops": {
+     "min": 3
+    },
+    "wall_generator": {
+     "set": "arachne"
+    }
+   },
+   "strength": {
+    "outer_wall_speed": {
+     "mul": 0.85
+    },
+    "outer_wall_acceleration": {
+     "mul": 0.85
+    },
+    "wall_loops": {
+     "min": 3
+    },
+    "sparse_infill_density": {
+     "min": 30
+    },
+    "brim_width": {
+     "set": 6
+    },
+    "wall_generator": {
+     "set": "arachne"
+    }
+   },
+   "quality": {
+    "outer_wall_speed": {
+     "mul": 0.85
+    },
+    "gap_infill_speed": {
+     "mul": 0.85
+    },
+    "layer_height": {
+     "mul": 0.8
+    },
+    "initial_layer_line_width": {
+     "mul": 1.05
+    },
+    "brim_width": {
+     "set": 5
+    },
+    "seam_position": {
+     "set": "aligned"
+    },
+    "wall_generator": {
+     "set": "arachne"
+    }
+   }
+  },
+  "generic": {
+   "balanced": {},
+   "strength": {},
+   "quality": {}
+  }
+ },
+ "shape_profiles_meta": {
+  "desc": "逐件形状原型 → 参数档。键是原型，值是 {模式: {参数键: 操作}}。",
+  "merge_rule": {
+   "min": "取所有对象里最小的（速度/加速度/层高/风扇/回抽）",
+   "max": "取所有对象里最大的（墙层/壳层/密度/裙边）",
+   "keep": "不参与合并（图案类/枚举类）"
+  },
+  "protos": [
+   {
+    "key": "tall_slim",
+    "label": "细高件",
+    "desc": "高瘦、底面小，容易晃动"
+   },
+   {
+    "key": "small_foot_tower",
+    "label": "小脚高塔",
+    "desc": "底部接触面积极小的塔状件，最容易打飞"
+   },
+   {
+    "key": "flat_plate",
+    "label": "扁平板",
+    "desc": "大面积薄板，翘曲风险高"
+   },
+   {
+    "key": "thin_wall",
+    "label": "薄壁/镂空",
+    "desc": "壁薄或镂空，强度与外观都敏感"
+   },
+   {
+    "key": "vase",
+    "label": "花瓶/容器",
+    "desc": "开口容器，层间结合与外观都关键"
+   },
+   {
+    "key": "long_bar",
+    "label": "细长条",
+    "desc": "长径比大的杆件"
+   },
+   {
+    "key": "overhanging",
+    "label": "大悬垂件",
+    "desc": "悬垂面多，支撑与拉丝风险高"
+   },
+   {
+    "key": "solid_block",
+    "label": "实心块",
+    "desc": "实心厚件，强度由填充决定"
+   },
+   {
+    "key": "small_detail",
+    "label": "小细节件",
+    "desc": "小体积、多特征，怕糊"
+   },
+   {
+    "key": "generic",
+    "label": "常规件",
+    "desc": "没有明显偏向"
+   }
+  ],
+  "modes": [
+   "strength",
+   "quality",
+   "balanced",
+   "draft",
+   "fine",
+   "ultrafine"
+  ],
+  "howto": "新增形状原型：先在 core/shape_rules.py 的 PROTOS 里加一行，再在这里加同名节点。改数值直接改本文件即可，不用改代码。"
+ },
+ "support_policy": {
+  "overhang_ratio_enabled": 0.06,
+  "overhang_ratio_critical": 0.18,
+  "overhang_ratio_dense": 0.35,
+  "height_tall_mm": 90.0,
+  "height_very_tall_mm": 160.0,
+  "angle_loose_deg": 45.0,
+  "angle_normal_deg": 40.0,
+  "angle_tight_deg": 35.0,
+  "angle_tiny_deg": 30.0,
+  "angle_draft_deg": 35.0,
+  "angle_precision_deg": 28.0,
+  "angle_ultra_deg": 20.0,
+  "angle_overhang_critical_deg": 38.0,
+  "spacing_normal": 2.5,
+  "spacing_dense": 2.0,
+  "spacing_very_dense": 1.8,
+  "spacing_loose": 3.0,
+  "interface_spacing_normal": 0.5,
+  "interface_spacing_tight": 0.3,
+  "interface_spacing_loose": 0.8,
+  "interface_layers_normal": 3,
+  "interface_layers_strong": 4,
+  "top_z_normal": 0.2,
+  "top_z_tight": 0.1,
+  "top_z_loose": 0.3,
+  "bottom_z_normal": 0.2,
+  "xy_distance_normal": 0.35,
+  "xy_distance_tight": 0.2,
+  "xy_distance_loose": 0.5,
+  "expansion_normal": 0.0,
+  "expansion_wide": 0.2,
+  "branch_angle_normal": 40.0,
+  "branch_diameter_normal": 1.6,
+  "branch_distance_normal": 6.0,
+  "branch_wall_count_normal": 1
+ },
+ "support_policy_meta": {
+  "desc": "支撑策略的判定阈值。支撑参数由模型几何（悬垂占比/高度/贴板情况）推出。",
+  "howto": "改这里的阈值就能改变支撑触发与密度，不用改代码。",
+  "keys": [
+   "angle_draft_deg",
+   "angle_loose_deg",
+   "angle_normal_deg",
+   "angle_overhang_critical_deg",
+   "angle_precision_deg",
+   "angle_tight_deg",
+   "angle_tiny_deg",
+   "angle_ultra_deg",
+   "bottom_z_normal",
+   "branch_angle_normal",
+   "branch_diameter_normal",
+   "branch_distance_normal",
+   "branch_wall_count_normal",
+   "expansion_normal",
+   "expansion_wide",
+   "height_tall_mm",
+   "height_very_tall_mm",
+   "interface_layers_normal",
+   "interface_layers_strong",
+   "interface_spacing_loose",
+   "interface_spacing_normal",
+   "interface_spacing_tight",
+   "overhang_ratio_critical",
+   "overhang_ratio_dense",
+   "overhang_ratio_enabled",
+   "spacing_dense",
+   "spacing_loose",
+   "spacing_normal",
+   "spacing_very_dense",
+   "top_z_loose",
+   "top_z_normal",
+   "top_z_tight",
+   "xy_distance_loose",
+   "xy_distance_normal",
+   "xy_distance_tight"
+  ]
+ },
+ "geometry_rules": [
+  {
+   "key": "layer_height",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "基准层高（几何层不乱改层高）",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "layer_height",
+   "cond": "small_detail",
+   "op": {
+    "mul": 0.85
+   },
+   "reason": "有小体积件，层高压小保细节",
+   "modes": [
+    "quality"
+   ],
+   "priority": 0
+  },
+  {
+   "key": "layer_height",
+   "cond": "big_gt_60cc",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "大件保持基准层高",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "resolution",
+   "cond": "always",
+   "op": {
+    "set": 0.012
+   },
+   "reason": "曲面精度基准值 0.012 mm",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "min_feature_size",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "薄壁件特征很小，最小特征尺寸同步收紧",
+   "modes": [],
+   "priority": 10
+  },
+  {
+   "key": "line_width",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "基准线宽（由喷嘴缩放层处理）",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "outer_wall_line_width",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "外壁线宽跟随基准",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "inner_wall_line_width",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "内壁线宽跟随基准",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "internal_solid_infill_line_width",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "内部实心线宽跟随基准",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "sparse_infill_line_width",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "稀疏填充线宽跟随基准",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "top_surface_line_width",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "顶面线宽跟随基准",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "support_line_width",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "支撑线宽跟随基准",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "initial_layer_line_width",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "mul": 1.05
+   },
+   "reason": "大平板首层加宽，压住翘曲",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "initial_layer_line_width",
+   "cond": "small_lt_10cc",
+   "op": {
+    "mul": 1.05
+   },
+   "reason": "小件首层加宽，贴板更稳",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "initial_layer_print_height",
+   "cond": "flat_lt_0_15",
+   "op": {
+    "mul": 0.85
+   },
+   "reason": "超薄板首层压薄，避免翘边",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "initial_layer_print_height",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "首层高度跟随基准",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "spiral_mode",
+   "cond": "open_top",
+   "op": {
+    "set": true
+   },
+   "reason": "开口容器启用螺旋模式，层间无缝",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "spiral_mode_smooth",
+   "cond": "open_top",
+   "op": {
+    "set": true
+   },
+   "reason": "开口容器启用螺旋 XY 平滑",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "spiral_mode_max_xy_smoothing",
+   "cond": "open_top",
+   "op": {
+    "set": 60
+   },
+   "reason": "螺旋平滑上限收到 60%，避免 XY 抖动",
+   "modes": [],
+   "priority": 10
+  },
+  {
+   "key": "sparse_infill_density",
+   "cond": "solid_gt_0_55",
+   "op": {
+    "min": 30
+   },
+   "reason": "实心厚件靠填充给强度，密度上调",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "sparse_infill_density",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "max": 25
+   },
+   "reason": "薄壁镂空件填充过密反而挤变形，密度上限压住",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "sparse_infill_density",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "填充密度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "sparse_infill_pattern",
+   "cond": "solid_gt_0_55",
+   "op": {
+    "set": "gyroid"
+   },
+   "reason": "实心件用 gyroid，抗剪强度更高",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "internal_solid_infill_pattern",
+   "cond": "solid_gt_0_55",
+   "op": {
+    "set": "concentric"
+   },
+   "reason": "内部实心填充用 concentric，环形闭合抗剪",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "internal_solid_infill_pattern",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "set": "zig-zag"
+   },
+   "reason": "薄壁件用 zig-zag，路径规整不挤壁",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "top_surface_pattern",
+   "cond": "open_top",
+   "op": {
+    "set": "monotonicline"
+   },
+   "reason": "开口件顶面用单调线，表面更整",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "infill_wall_overlap",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "重叠率跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "top_bottom_infill_wall_overlap",
+   "cond": "solid_gt_0_55",
+   "op": {
+    "min": 15
+   },
+   "reason": "实心件顶底与墙重叠加大，防分层",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "infill_direction",
+   "cond": "always",
+   "op": {
+    "set": 45
+   },
+   "reason": "填充走线角度基准 45°",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "minimum_sparse_infill_area",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "mul": 0.6
+   },
+   "reason": "薄壁件忽略小填充区域，减少碎线",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "outer_wall_speed",
+   "cond": "slender_gt_2_5",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "细高件降外壁速度，防晃动",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "outer_wall_speed",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "mul": 0.92
+   },
+   "reason": "薄壁件略降外壁速度，防拉丝",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "outer_wall_speed",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "外壁速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "inner_wall_speed",
+   "cond": "slender_gt_2_5",
+   "op": {
+    "mul": 0.92
+   },
+   "reason": "细高件内壁同步降速",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "inner_wall_speed",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "内壁速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "sparse_infill_speed",
+   "cond": "solid_gt_0_55",
+   "op": {
+    "mul": 0.95
+   },
+   "reason": "实心件填充降速，减少流量尖峰",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "sparse_infill_speed",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "稀疏填充速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "internal_solid_infill_speed",
+   "cond": "solid_gt_0_55",
+   "op": {
+    "mul": 0.95
+   },
+   "reason": "内部实心降速",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "internal_solid_infill_speed",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "内部实心速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "top_surface_speed",
+   "cond": "open_top",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "开口件顶面降速，表面更光",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "top_surface_speed",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "顶面速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "initial_layer_speed",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "mul": 0.85
+   },
+   "reason": "大平板首层降速，贴牢不翘",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "initial_layer_speed",
+   "cond": "small_lt_10cc",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "小件首层降速，粘牢",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "initial_layer_speed",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "首层速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "initial_layer_infill_speed",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "大平板首层填充同步降速",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "initial_layer_infill_speed",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "首层填充速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "travel_speed",
+   "cond": "slender_gt_2_5",
+   "op": {
+    "mul": 0.92
+   },
+   "reason": "细高件空走降速，减小晃动",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "travel_speed",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "空走速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "support_speed",
+   "cond": "overhang_gt_0_22",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "悬垂面多，支撑降速打稳",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "support_speed",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "支撑速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "bridge_speed",
+   "cond": "overhang_gt_0_22",
+   "op": {
+    "mul": 0.85
+   },
+   "reason": "桥接多的件降桥接速度，防断",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "bridge_speed",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "桥接速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "gap_infill_speed",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "薄壁件缝隙填充降速，防糊",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "gap_infill_speed",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "缝隙填充速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "wipe_speed",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "擦嘴速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "overhang_1_4_speed",
+   "cond": "overhang_gt_0_22",
+   "op": {
+    "mul": 0.85
+   },
+   "reason": "悬垂面多，1/4 悬垂降速",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "overhang_2_4_speed",
+   "cond": "overhang_gt_0_22",
+   "op": {
+    "mul": 0.88
+   },
+   "reason": "悬垂面多，1/2 悬垂降速",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "overhang_3_4_speed",
+   "cond": "overhang_gt_0_22",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "悬垂面多，3/4 悬垂降速",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "overhang_4_4_speed",
+   "cond": "overhang_gt_0_22",
+   "op": {
+    "mul": 0.92
+   },
+   "reason": "悬垂面多，接近垂直面降速",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "enable_overhang_speed",
+   "cond": "overhang_gt_0_12",
+   "op": {
+    "set": true
+   },
+   "reason": "悬垂面多，启用分组悬垂降速",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "bridge_angle",
+   "cond": "overhang_gt_0_22",
+   "op": {
+    "set": 45
+   },
+   "reason": "桥接方向统一 45°，最省支撑",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "outer_wall_acceleration",
+   "cond": "slender_gt_2_5",
+   "op": {
+    "mul": 0.85
+   },
+   "reason": "细高件降外壁加速度，防甩",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "outer_wall_acceleration",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "薄壁件降外壁加速度",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "outer_wall_acceleration",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "外壁加速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "internal_solid_infill_acceleration",
+   "cond": "solid_gt_0_55",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "内部实心降加速度",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "top_surface_acceleration",
+   "cond": "open_top",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "开口件顶面降加速度，层纹更轻",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "top_surface_acceleration",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "顶面加速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "initial_layer_acceleration",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "mul": 0.85
+   },
+   "reason": "大平板首层降加速度，贴牢",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "initial_layer_acceleration",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "首层加速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "travel_acceleration",
+   "cond": "slender_gt_2_5",
+   "op": {
+    "mul": 0.88
+   },
+   "reason": "细高件空走降加速度",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "travel_acceleration",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "空走加速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "default_acceleration",
+   "cond": "slender_gt_2_5",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "细高件整体降默认加速度",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "default_acceleration",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "默认加速度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "bridge_acceleration",
+   "cond": "overhang_gt_0_22",
+   "op": {
+    "mul": 0.85
+   },
+   "reason": "桥接降加速度，防断桥",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "xy_contour_compensation",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "set": 0.02
+   },
+   "reason": "薄壁件给一点轮廓外扩，防壁厚偏薄",
+   "modes": [],
+   "priority": 10
+  },
+  {
+   "key": "elefant_foot_compensation_layers",
+   "cond": "small_footprint",
+   "op": {
+    "min": 2
+   },
+   "reason": "底面小的件象脚补偿层数加到 2 层",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "elefant_foot_compensation_layers",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "象脚补偿层数跟随基准",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "brim_type",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "set": "auto_brim"
+   },
+   "reason": "大平板用自动裙边附着，比裙边压得住翘曲",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "brim_type",
+   "cond": "small_footprint",
+   "op": {
+    "set": "auto_brim"
+   },
+   "reason": "底面小的件用自动裙边扩大着地区",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "brim_type",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "裙边类型按几何自动判断",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "brim_width",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "min": 8
+   },
+   "reason": "大平板裙边加宽到 8 mm",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "brim_width",
+   "cond": "small_footprint",
+   "op": {
+    "min": 10
+   },
+   "reason": "小底面积件裙边加宽到 10 mm",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "brim_width",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "裙边宽度跟随形状档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "skirt_height",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "min": 3
+   },
+   "reason": "大平板裙边层数加高",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "skirt_distance",
+   "cond": "multi_object",
+   "op": {
+    "min": 2
+   },
+   "reason": "多件同盘，裙边距离拉开",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "skirt_per_object",
+   "cond": "multi_object",
+   "op": {
+    "set": true
+   },
+   "reason": "多件同盘，每个对象单独裙边，避免互相影响",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "raft_layers",
+   "cond": "flat_lt_0_15",
+   "op": {
+    "min": 3
+   },
+   "reason": "超薄板加筏板，防翘曲",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "raft_contact_distance",
+   "cond": "flat_lt_0_15",
+   "op": {
+    "min": 0.2
+   },
+   "reason": "筏板与模型留 0.2 mm",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "raft_expansion",
+   "cond": "flat_lt_0_15",
+   "op": {
+    "min": 5
+   },
+   "reason": "筏板外扩 5 mm",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "raft_first_layer_density",
+   "cond": "flat_lt_0_15",
+   "op": {
+    "min": 40
+   },
+   "reason": "筏板首层加密到 40%",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "raft_first_layer_expansion",
+   "cond": "flat_lt_0_15",
+   "op": {
+    "min": 5
+   },
+   "reason": "筏板首层外扩 5 mm",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "wall_loops",
+   "cond": "slender_gt_2_5",
+   "op": {
+    "min": 4
+   },
+   "reason": "细高件外壁加到 4 圈，底才不晃",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "wall_loops",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "min": 3
+   },
+   "reason": "薄壁件保 3 圈",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "wall_loops",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "外壁圈数跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "top_shell_layers",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "顶层数跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "bottom_shell_layers",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "min": 4
+   },
+   "reason": "大平板底层加厚，抗翘",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "bottom_shell_layers",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "底层数跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "only_one_wall_top",
+   "cond": "open_top",
+   "op": {
+    "set": false
+   },
+   "reason": "开口件顶面不只打一圈墙，保强度",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "only_one_wall_first_layer",
+   "cond": "small_lt_10cc",
+   "op": {
+    "set": true
+   },
+   "reason": "小件首层只打一圈墙，细节不糊",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "only_one_wall_top",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "顶面单墙按默认（不覆盖模式档）",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "detect_thin_wall",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "set": true
+   },
+   "reason": "薄壁件开启薄壁检测",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "detect_overhang_wall",
+   "cond": "overhang_gt_0_12",
+   "op": {
+    "set": true
+   },
+   "reason": "悬垂面多，开启悬垂墙检测",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "precise_outer_wall",
+   "cond": "open_top",
+   "op": {
+    "set": true
+   },
+   "reason": "开口件外壁走线精确，轮廓更准",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "ensure_vertical_shell_thickness",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "set": "enabled"
+   },
+   "reason": "薄壁件保证垂直外壳厚度",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "alternate_extra_wall",
+   "cond": "solid_gt_0_55",
+   "op": {
+    "set": true
+   },
+   "reason": "实心件交替加墙，均衡壁厚",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "monotonic_travel_into_wall",
+   "cond": "open_top",
+   "op": {
+    "set": 0.3
+   },
+   "reason": "开口件单调线延伸 30% 入墙，壁根更实",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "min_bead_width",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "薄壁件最小挤线宽度放宽",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "wall_sequence",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "墙打印顺序内到外",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "wall_distribution_count",
+   "cond": "multi_object",
+   "op": {
+    "min": 3
+   },
+   "reason": "多件同盘，墙均匀分配数加到 3",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "wall_transition_angle",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "min": 30
+   },
+   "reason": "大平板墙过渡角加大",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "wall_transition_length",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "min": 4
+   },
+   "reason": "大平板墙过渡长度加大",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "wall_transition_filter_deviation",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "min": 0.1
+   },
+   "reason": "大平板墙过渡偏差放宽",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "top_one_wall_type",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "顶面单墙类型保持 top only",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "seam_position",
+   "cond": "open_top",
+   "op": {
+    "set": "aligned"
+   },
+   "reason": "开口件接缝对齐，接缝落在不明显处",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "seam_position",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "接缝位置按默认对齐",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "seam_gap",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "mul": 0.6
+   },
+   "reason": "薄壁件接缝间隙收紧，防漏",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "seam_gap",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "接缝间隙跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "seam_placement_away_from_overhangs",
+   "cond": "overhang_gt_0_12",
+   "op": {
+    "set": true
+   },
+   "reason": "接缝避开悬垂面，悬垂面更干净",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "seam_slope_type",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "set": "none"
+   },
+   "reason": "大平板不启用斜切（贴合更好）",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "seam_slope_type",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "斜切类型默认关闭",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "seam_slope_conditional",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "斜切仅用于外露，默认关（不覆盖模式档）",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "seam_slope_entire_loop",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "斜切覆盖整圈，默认关（不覆盖模式档）",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "seam_slope_gap",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "斜切间隙跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "seam_slope_min_length",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "斜切最小长度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "seam_slope_start_height",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "斜切起始高度跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "seam_slope_steps",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "斜切层数跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "seam_slope_inner_walls",
+   "cond": "thin_lt_1_8",
+   "op": {
+    "set": false
+   },
+   "reason": "薄壁件不做内壁斜切",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "scarf_angle_threshold",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "min": 155
+   },
+   "reason": "大平板斜切角度阈值放宽",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "ironing_type",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "set": "no ironing"
+   },
+   "reason": "大平板不熨烫（熨烫易翘边）",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "ironing_type",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "熨烫类型默认关",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "ironing_pattern",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "set": "rectilinear"
+   },
+   "reason": "熨烫图案用 rectilinear",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "ironing_flow",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "熨烫流量跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "ironing_spacing",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "min": 0.1
+   },
+   "reason": "大平板熨烫间距收紧",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "ironing_speed",
+   "cond": "flat_lt_0_25",
+   "op": {
+    "mul": 0.9
+   },
+   "reason": "大平板熨烫降速",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "ironing_inset",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "熨烫内缩跟随模式档",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "enable_prime_tower",
+   "cond": "multi_object",
+   "op": {
+    "set": true
+   },
+   "reason": "多件同盘开擦料塔，各件之间不互相拉丝",
+   "modes": [],
+   "priority": 0
+  },
+  {
+   "key": "enable_prime_tower",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "擦料塔默认按用户设置（不覆盖模式档）",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "prime_tower_width",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "擦料塔宽度跟随基准",
+   "modes": [],
+   "priority": 99
+  },
+  {
+   "key": "prime_tower_brim_width",
+   "cond": "always",
+   "op": {
+    "mul": 1.0
+   },
+   "reason": "擦料塔底座宽度跟随基准",
+   "modes": [],
+   "priority": 99
+  }
+ ],
+ "geometry_rules_meta": {
+  "desc": "几何驱动细调表：按模型几何事实（细高比/扁平度/壁厚/悬垂占比/高度/体积…）调整切片工艺页参数。cond 是几何条件名，op 是动作（set/mul/min/max/add），priority 越小越先应用，priority>=99 是「跟随模式档」的占位规则。",
+  "conds": {
+   "always": "总是",
+   "never": "从不",
+   "slender_gt_2_5": "模型细高比 ≥ 2.5",
+   "slender_gt_4": "模型细高比 ≥ 4",
+   "flat_lt_0_25": "模型扁平度 < 0.25（大平板）",
+   "flat_lt_0_15": "模型扁平度 < 0.15（超薄板）",
+   "thin_lt_1_8": "平均壁厚 < 1.8 mm（薄壁/镂空）",
+   "thin_lt_1_2": "平均壁厚 < 1.2 mm（极薄）",
+   "solid_gt_0_55": "填充率 > 0.55（实心厚件）",
+   "open_top": "顶面封闭度 < 0.15（开口容器）",
+   "narrow_neck": "中段宽度 / 最大宽度 < 0.6（细腰）",
+   "long_bar": "平面长宽比 < 0.45（细长条）",
+   "overhang_gt_0_12": "悬垂面占比 ≥ 12%",
+   "overhang_gt_0_22": "悬垂面占比 ≥ 22%",
+   "overhang_lt_0_05": "悬垂面占比 < 5%",
+   "tall_gt_90": "模型高度 ≥ 90 mm",
+   "tall_gt_160": "模型高度 ≥ 160 mm",
+   "small_lt_10cc": "单件体积 < 10 cm³",
+   "big_gt_60cc": "单件体积 > 60 cm³",
+   "multi_object": "盘面多于 1 个对象",
+   "not_on_plate": "模型没有贴着平台",
+   "small_footprint": "底面总接触面积 < 1500 mm²",
+   "small_detail": "盘面多件且每件都小（单件 < 20 cm³）"
+  },
+  "howto": [
+   "1. cond 只能取 conds 里列出的条件名。",
+   "2. op 支持 set（直接设值）/ mul（乘）/ min（下限）/ max（上限）/ add（加）。",
+   "3. modes 留空 = 三种模式都生效；填 ['quality'] = 只在表面质量优先生效。",
+   "4. 想让某条规则不生效，把它的 priority 改成 999 或删掉整条。",
+   "5. 改完保存，重新打开软件即可生效（规则库在启动时读取）。"
+  ]
+ },
+ "nozzle_flow": {
+  "note": "官方 filament 预设的 filament_max_volumetric_speed 是「按喷嘴」给的：Bambu PETG Basic 在 X1C 上 0.2 喷嘴只有 1 mm³/s、0.4 是 13、0.8 是 16。换喷嘴不换流量上限，0.2 喷嘴就会按 0.4 的流量算速度，轻则表面糊、重则堵料。本表由 tools/_dump_flow_matrix2.py 从官方预设读出，改喷嘴时引擎按它折算。",
+  "nozzles": [
+   "0.2",
+   "0.4",
+   "0.6",
+   "0.8"
+  ],
+  "by_group": {
+   "X1": {
+    "PLA": {
+     "0.2": 2,
+     "0.4": 21,
+     "0.6": 21,
+     "0.8": 21
+    },
+    "PETG": {
+     "0.2": 1,
+     "0.4": 13,
+     "0.6": 13,
+     "0.8": 16
+    },
+    "ABS": {
+     "0.2": 2,
+     "0.4": 16,
+     "0.6": 16,
+     "0.8": 18
+    },
+    "ASA": {
+     "0.2": 2,
+     "0.4": 18,
+     "0.6": 18,
+     "0.8": 18
+    },
+    "TPU": {
+     "0.2": 3.6,
+     "0.4": 3.6,
+     "0.6": 3.6,
+     "0.8": 3.6
+    }
+   },
+   "P2": {
+    "PLA": {
+     "0.2": 2,
+     "0.4": 21,
+     "0.6": 21,
+     "0.8": 21
+    },
+    "PETG": {
+     "0.2": 1,
+     "0.4": 13,
+     "0.6": 16,
+     "0.8": 16
+    },
+    "ABS": {
+     "0.2": 2,
+     "0.4": 16,
+     "0.6": 16,
+     "0.8": 18
+    },
+    "ASA": {
+     "0.2": 2,
+     "0.4": 18,
+     "0.6": 18,
+     "0.8": 18
+    },
+    "TPU": {
+     "0.2": 3.6,
+     "0.4": 3.6,
+     "0.6": 3.6,
+     "0.8": 3.6
+    }
+   },
+   "A1": {
+    "PLA": {
+     "0.2": 2,
+     "0.4": 21,
+     "0.6": 21,
+     "0.8": 21
+    },
+    "PETG": {
+     "0.2": 1,
+     "0.4": 9,
+     "0.6": 9,
+     "0.8": 12
+    },
+    "ABS": {
+     "0.2": 2,
+     "0.4": 16,
+     "0.6": 16,
+     "0.8": 16
+    },
+    "ASA": {
+     "0.2": 2,
+     "0.4": 18,
+     "0.6": 18,
+     "0.8": 18
+    },
+    "TPU": {
+     "0.2": 3.6,
+     "0.4": 3.6,
+     "0.6": 3.6,
+     "0.8": 3.6
+    }
+   },
+   "H2": {
+    "PLA": {
+     "0.2": 2,
+     "0.4": 25,
+     "0.6": 30,
+     "0.8": 30
+    },
+    "PETG": {
+     "0.2": 1,
+     "0.4": 13,
+     "0.6": 16,
+     "0.8": 16
+    },
+    "ABS": {
+     "0.2": 2,
+     "0.4": 20,
+     "0.6": 25,
+     "0.8": 25
+    },
+    "ASA": {
+     "0.2": 2,
+     "0.4": 20,
+     "0.6": 25,
+     "0.8": 25
+    },
+    "TPU": {
+     "0.2": 3.6,
+     "0.4": 3.6,
+     "0.6": 3.6,
+     "0.8": 3.6
+    }
+   },
+   "GENERIC": {
+    "PLA": {
+     "0.2": 2,
+     "0.4": 15,
+     "0.6": 15,
+     "0.8": 15
+    },
+    "PETG": {
+     "0.2": 1,
+     "0.4": 8,
+     "0.6": 8,
+     "0.8": 10
+    },
+    "ABS": {
+     "0.2": 2,
+     "0.4": 12,
+     "0.6": 12,
+     "0.8": 12
+    },
+    "ASA": {
+     "0.2": 2,
+     "0.4": 12,
+     "0.6": 12,
+     "0.8": 12
+    },
+    "TPU": {
+     "0.2": 3.6,
+     "0.4": 3.6,
+     "0.6": 3.6,
+     "0.8": 3.6
+    }
+   }
+  },
+  "nozzle_volume": {
+   "note": "机器页 nozzle_volume（熔池体积 mm³）随机型，不随喷嘴变；H2D/H2D Pro 有多槽（130/133/145/148 对应不同热端），取第 0 槽。",
+   "X1": 107,
+   "P1": 107,
+   "P2": 110,
+   "A1": 92,
+   "H2": 130,
+   "GENERIC": 0
+  }
+ },
+ "plates": {
+  "note": "板型 → 官方温度键 → 该板上的工艺微调。板型名来自工程 curr_bed_type；温度取自耗材页 *_plate_temp（只读），为 0 表示这条料在该板上不可用。",
+  "items": {
+   "Supertack Plate": {
+    "label": "Supertack 超粘板",
+    "temp_key": "supertack_plate_temp",
+    "aliases": [
+     "Supertack Plate",
+     "Supertack",
+     "超粘板"
+    ],
+    "note": "出厂默认板。附着力极强：PETG/TPU 打完容易连着板一起撕，拆件前必须等降到 40℃ 以下；裙边不需要加宽，加了反而难拆。",
+    "process": {
+     "elefant_foot_compensation": {
+      "min": 0.15
+     }
+    },
+    "advice": "超粘板不需要为附着加宽裙边（越宽越难拆、撕涂层风险越大）；若细高件被形状层加了裙边，那是稳定性优先，打完等降到 40℃ 以下再取件。"
+   },
+   "Textured PEI Plate": {
+    "label": "纹理 PEI 板",
+    "temp_key": "textured_plate_temp",
+    "aliases": [
+     "Textured PEI Plate",
+     "Textured PEI",
+     "纹理板",
+     "PEI 纹理板"
+    ],
+    "note": "纹理面首层实际接触面积比光面小，薄底/高瘦件要多给着地面；PETG 在纹理面粘得很牢，拆件同样要等降温。",
+    "process": {},
+    "advice": "纹理面首层实际接触面积比光面小：薄底/高瘦件建议手动把裙边加到 6~8 mm。"
+   },
+   "Smooth PEI Plate": {
+    "label": "光面 PEI 板",
+    "temp_key": "textured_plate_temp",
+    "aliases": [
+     "Smooth PEI Plate",
+     "Smooth PEI",
+     "光面板"
+    ],
+    "note": "光面板首层接触充分，底面会有镜面效果；温度键与纹理板共用。",
+    "process": {},
+    "advice": "光面板首层接触充分，裙边按形状层给的就行。"
+   },
+   "High Temp Plate": {
+    "label": "高温板",
+    "temp_key": "hot_plate_temp",
+    "aliases": [
+     "High Temp Plate",
+     "High Temperature Plate",
+     "高温板"
+    ],
+    "note": "耐高温板，ABS/ASA 大件首选；PLA 也能用，但降温后件会自己松开。",
+    "process": {},
+    "advice": "高温板降温后会自己松开，不用为拆件改参数。"
+   },
+   "Engineering Plate": {
+    "label": "工程板",
+    "temp_key": "eng_plate_temp",
+    "aliases": [
+     "Engineering Plate",
+     "工程板"
+    ],
+    "note": "工程材料板，ABS/ASA/PC 友好；表面不如 PEI 耐磨，别用金属铲。",
+    "process": {},
+    "advice": "工程板别用金属铲，参数上无需改动。"
+   },
+   "Cool Plate": {
+    "label": "低温板",
+    "temp_key": "cool_plate_temp",
+    "aliases": [
+     "Cool Plate",
+     "Cool Board",
+     "低温板"
+    ],
+    "note": "低温板（出厂多为 PLA 专用）。官方预设里不支持的耗材，该板温度是 0 —— 看到 0 就别在这个板上打这条料。",
+    "process": {},
+    "advice": "低温板基本只适合 PLA；这条料若在官方预设里温度为 0，就不要在这个板上打。"
+   }
+  }
+ },
+ "hotend_flow": {
+  "note": "热端流量类型：标准流量 / 高流量 / E3D 高流量。volumetric_mul 只作用在「体积流量上限」上，且强制 ≥ 1.0（识别不出来也不会把高流量热端压回去）。高流量省下的时间由「流量上限 ↑ → 允许更快的速度」自动体现，不再单独乘速度倍率。",
+  "types": {
+   "standard": {
+    "label": "标准流量",
+    "volumetric_mul": 1.0,
+    "note": "官方 filament_max_volumetric_speed 就是按标准热端标的，直接采用。"
+   },
+   "high": {
+    "label": "高流量",
+    "volumetric_mul": 1.35,
+    "note": "Bambu High Flow 热端熔池更大，官方标称流量约 +30~40%；取 1.35 保守值。高流量热端压力提前通常也要 +10~20%，属耗材页只读，不在此调。"
+   },
+   "e3d": {
+    "label": "E3D 高流量",
+    "volumetric_mul": 1.55,
+    "note": "E3D 结构流量更高（约 +50~60%），取 1.55；但回抽与压力提前对 E3D 更敏感，回抽参数属耗材页只读，不在此调。"
+   }
+  }
+ }
+}

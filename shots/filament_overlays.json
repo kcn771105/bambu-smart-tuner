@@ -1,0 +1,473 @@
+{
+  "_comment": "由 Bambu Smart Tuner 从 Bambu Studio 用户预设自动导出；改这份文件不会影响 Bambu Studio，只影响本程序的自定义耗材表。",
+  "presets": {
+    "PA6-CF三绿": {
+      "label": "PA6-CF三绿",
+      "family": "ABS",
+      "raw_type": "PA6-CF",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\PA6-CF三绿.json",
+      "chain": [
+        "PA6-CF三绿",
+        "Bambu PA6-CF @BBL P2S",
+        "Bambu PA6-CF @base",
+        "fdm_filament_pa",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 8.0
+      },
+      "baseline": {
+        "fan_min_speed": 10.0,
+        "fan_max_speed": 30.0,
+        "overhang_fan_speed": 30.0,
+        "filament_flow_ratio": 0.96,
+        "retraction_speed": 30.0
+      },
+      "nozzle_temperature": 265.0,
+      "density": 1.1,
+      "cost": 245.0,
+      "filament_id": "GFN05"
+    },
+    "Generic PETG @BBL P2S - 拷贝": {
+      "label": "Generic PETG @BBL P2S - 拷贝",
+      "family": "PETG",
+      "raw_type": "PETG",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\Generic PETG @BBL P2S - 拷贝.json",
+      "chain": [
+        "Generic PETG @BBL P2S - 拷贝",
+        "Generic PETG @BBL P2S",
+        "Generic PETG @base",
+        "fdm_filament_pet",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 12.0
+      },
+      "baseline": {
+        "fan_min_speed": 40.0,
+        "fan_max_speed": 90.0,
+        "overhang_fan_speed": 90.0,
+        "filament_flow_ratio": 0.95
+      },
+      "nozzle_temperature": 240.0,
+      "density": 1.27,
+      "cost": 38.0,
+      "filament_id": "GFG99"
+    },
+    "Generic PETG @BBL P2S 彩格": {
+      "label": "Generic PETG @BBL P2S 彩格",
+      "family": "PETG",
+      "raw_type": "PETG",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\Generic PETG @BBL P2S 彩格.json",
+      "chain": [
+        "Generic PETG @BBL P2S 彩格",
+        "Generic PETG @BBL P2S",
+        "Generic PETG @base",
+        "fdm_filament_pet",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 12.0
+      },
+      "baseline": {
+        "fan_min_speed": 40.0,
+        "fan_max_speed": 90.0,
+        "overhang_fan_speed": 90.0,
+        "filament_flow_ratio": 0.95
+      },
+      "nozzle_temperature": 240.0,
+      "density": 1.27,
+      "cost": 38.0,
+      "filament_id": "GFG99"
+    },
+    "R3Dpetg": {
+      "label": "R3Dpetg",
+      "family": "PETG",
+      "raw_type": "PETG",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\R3Dpetg.json",
+      "chain": [
+        "R3Dpetg",
+        "Bambu PETG Basic @BBL P2S 0.4 nozzle",
+        "Bambu PETG Basic @base",
+        "fdm_filament_pet",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 13.0
+      },
+      "baseline": {
+        "fan_min_speed": 10.0,
+        "fan_max_speed": 40.0,
+        "overhang_fan_speed": 40.0,
+        "filament_flow_ratio": 0.94
+      },
+      "nozzle_temperature": 255.0,
+      "density": 1.25,
+      "cost": 24.99,
+      "filament_id": "GFG00"
+    },
+    "多彩屋petg": {
+      "label": "多彩屋petg",
+      "family": "PETG",
+      "raw_type": "PETG",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\多彩屋petg.json",
+      "chain": [
+        "多彩屋petg",
+        "Bambu PETG Basic @BBL P2S 0.4 nozzle",
+        "Bambu PETG Basic @base",
+        "fdm_filament_pet",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 18.0
+      },
+      "baseline": {
+        "fan_min_speed": 40.0,
+        "fan_max_speed": 80.0,
+        "overhang_fan_speed": 80.0,
+        "filament_flow_ratio": 0.95
+      },
+      "nozzle_temperature": 255.0,
+      "density": 1.25,
+      "cost": 50.0,
+      "filament_id": "GFG00"
+    },
+    "通用petg": {
+      "label": "通用petg",
+      "family": "PETG",
+      "raw_type": "PETG",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\通用petg.json",
+      "chain": [
+        "通用petg",
+        "Bambu PETG Basic @BBL P2S 0.4 nozzle",
+        "Bambu PETG Basic @base",
+        "fdm_filament_pet",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 13.0
+      },
+      "baseline": {
+        "fan_min_speed": 40.0,
+        "fan_max_speed": 80.0,
+        "overhang_fan_speed": 80.0,
+        "filament_flow_ratio": 0.99
+      },
+      "nozzle_temperature": 245.0,
+      "density": 1.25,
+      "cost": 50.0,
+      "filament_id": "GFG00"
+    },
+    "Bambu PLA Basic @BBL P2S - 拷贝": {
+      "label": "Bambu PLA Basic @BBL P2S - 拷贝",
+      "family": "PLA",
+      "raw_type": "PLA",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\Bambu PLA Basic @BBL P2S - 拷贝.json",
+      "chain": [
+        "Bambu PLA Basic @BBL P2S - 拷贝",
+        "Bambu PLA Basic @BBL P2S",
+        "Bambu PLA Basic @base",
+        "fdm_filament_pla",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 21.0
+      },
+      "baseline": {
+        "fan_min_speed": 100.0,
+        "fan_max_speed": 100.0,
+        "overhang_fan_speed": 100.0,
+        "filament_flow_ratio": 0.98
+      },
+      "nozzle_temperature": 220.0,
+      "density": 1.26,
+      "cost": 24.99,
+      "filament_id": "GFA00"
+    },
+    "Bambu PLA Basic @BBL P2S 0.2 nozzle - 拷贝": {
+      "label": "Bambu PLA Basic @BBL P2S 0.2 nozzle - 拷贝",
+      "family": "PLA",
+      "raw_type": "PLA",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\Bambu PLA Basic @BBL P2S 0.2 nozzle - 拷贝.json",
+      "chain": [
+        "Bambu PLA Basic @BBL P2S 0.2 nozzle - 拷贝",
+        "Bambu PLA Basic @BBL P2S 0.2 nozzle",
+        "Bambu PLA Basic @base",
+        "fdm_filament_pla",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 2.0
+      },
+      "baseline": {
+        "fan_min_speed": 100.0,
+        "fan_max_speed": 100.0,
+        "overhang_fan_speed": 100.0,
+        "filament_flow_ratio": 0.98,
+        "retraction_length": 0.8
+      },
+      "nozzle_temperature": 220.0,
+      "density": 1.26,
+      "cost": 24.99,
+      "filament_id": "GFA00"
+    },
+    "R3Dpla": {
+      "label": "R3Dpla",
+      "family": "PLA",
+      "raw_type": "PLA",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\R3Dpla.json",
+      "chain": [
+        "R3Dpla",
+        "Bambu PLA Matte @BBL P2S",
+        "Bambu PLA Matte @base",
+        "fdm_filament_pla",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 22.0
+      },
+      "baseline": {
+        "fan_min_speed": 100.0,
+        "fan_max_speed": 100.0,
+        "overhang_fan_speed": 100.0,
+        "filament_flow_ratio": 0.98,
+        "retraction_length": 0.4
+      },
+      "nozzle_temperature": 200.0,
+      "density": 1.32,
+      "cost": 47.74,
+      "filament_id": "GFA01"
+    },
+    "R3Dpla(0.2)": {
+      "label": "R3Dpla(0.2)",
+      "family": "PLA",
+      "raw_type": "PLA",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\R3Dpla(0.2).json",
+      "chain": [
+        "R3Dpla(0.2)",
+        "Bambu PLA Basic @BBL P2S 0.2 nozzle",
+        "Bambu PLA Basic @base",
+        "fdm_filament_pla",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 2.0
+      },
+      "baseline": {
+        "fan_min_speed": 100.0,
+        "fan_max_speed": 100.0,
+        "overhang_fan_speed": 100.0,
+        "filament_flow_ratio": 0.98,
+        "retraction_length": 0.8
+      },
+      "nozzle_temperature": 220.0,
+      "density": 1.26,
+      "cost": 47.74,
+      "filament_id": "GFA00"
+    },
+    "创想三维": {
+      "label": "创想三维",
+      "family": "PLA",
+      "raw_type": "PLA",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\创想三维.json",
+      "chain": [
+        "创想三维",
+        "Bambu PLA Basic @BBL X1C",
+        "Bambu PLA Basic @base",
+        "fdm_filament_pla",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 21.0
+      },
+      "baseline": {
+        "fan_min_speed": 100.0,
+        "fan_max_speed": 100.0,
+        "overhang_fan_speed": 100.0,
+        "filament_flow_ratio": 0.98
+      },
+      "nozzle_temperature": 220.0,
+      "density": 1.26,
+      "cost": 24.99,
+      "filament_id": "GFA00"
+    },
+    "创想三维pla": {
+      "label": "创想三维pla",
+      "family": "PLA",
+      "raw_type": "PLA",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\创想三维pla.json",
+      "chain": [
+        "创想三维pla",
+        "Bambu PLA Basic @BBL P2S",
+        "Bambu PLA Basic @base",
+        "fdm_filament_pla",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 21.0
+      },
+      "baseline": {
+        "fan_min_speed": 100.0,
+        "fan_max_speed": 100.0,
+        "overhang_fan_speed": 100.0,
+        "filament_flow_ratio": 0.98
+      },
+      "nozzle_temperature": 220.0,
+      "density": 1.26,
+      "cost": 24.99,
+      "filament_id": "GFA00"
+    },
+    "创想三维pla(0.2)": {
+      "label": "创想三维pla(0.2)",
+      "family": "PLA",
+      "raw_type": "PLA",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\创想三维pla(0.2).json",
+      "chain": [
+        "创想三维pla(0.2)",
+        "Bambu PLA Basic @BBL P2S 0.2 nozzle",
+        "Bambu PLA Basic @base",
+        "fdm_filament_pla",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 21.0
+      },
+      "baseline": {
+        "fan_min_speed": 100.0,
+        "fan_max_speed": 100.0,
+        "overhang_fan_speed": 100.0,
+        "filament_flow_ratio": 0.98,
+        "retraction_length": 0.8
+      },
+      "nozzle_temperature": 220.0,
+      "density": 1.26,
+      "cost": 24.99,
+      "filament_id": "GFA00"
+    },
+    "多彩屋pla丝绸": {
+      "label": "多彩屋pla丝绸",
+      "family": "PLA",
+      "raw_type": "PLA",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\多彩屋pla丝绸.json",
+      "chain": [
+        "多彩屋pla丝绸",
+        "Bambu PLA Silk @BBL P2S",
+        "Bambu PLA Silk @base",
+        "fdm_filament_pla",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 12.0
+      },
+      "baseline": {
+        "fan_min_speed": 100.0,
+        "fan_max_speed": 100.0,
+        "overhang_fan_speed": 100.0,
+        "filament_flow_ratio": 0.98,
+        "retraction_length": 0.4
+      },
+      "nozzle_temperature": 230.0,
+      "density": 1.32,
+      "cost": 29.99,
+      "filament_id": "GFA05"
+    },
+    "菜多屋pla+": {
+      "label": "菜多屋pla+",
+      "family": "PLA",
+      "raw_type": "PLA",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\菜多屋pla+.json",
+      "chain": [
+        "菜多屋pla+",
+        "Generic PLA @BBL P2S",
+        "Generic PLA @base",
+        "fdm_filament_pla",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 12.0
+      },
+      "baseline": {
+        "fan_min_speed": 100.0,
+        "fan_max_speed": 100.0,
+        "overhang_fan_speed": 100.0,
+        "filament_flow_ratio": 0.98
+      },
+      "nozzle_temperature": 220.0,
+      "density": 1.24,
+      "cost": 48.0,
+      "filament_id": "GFL99"
+    },
+    "菜多屋pla+ Flow Rate Calibrated": {
+      "label": "菜多屋pla+ Flow Rate Calibrated",
+      "family": "PLA",
+      "raw_type": "PLA",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\菜多屋pla+ Flow Rate Calibrated.json",
+      "chain": [
+        "菜多屋pla+ Flow Rate Calibrated",
+        "Generic PLA @BBL P2S",
+        "Generic PLA @base",
+        "fdm_filament_pla",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 12.0
+      },
+      "baseline": {
+        "fan_min_speed": 100.0,
+        "fan_max_speed": 100.0,
+        "overhang_fan_speed": 100.0,
+        "filament_flow_ratio": 0.9702
+      },
+      "nozzle_temperature": 255.0,
+      "density": 1.24,
+      "cost": 40.0,
+      "filament_id": "GFL99"
+    },
+    "菜多屋pla+ Flow Rate Calibrated完美版全部设置": {
+      "label": "菜多屋pla+ Flow Rate Calibrated完美版全部设置",
+      "family": "PLA",
+      "raw_type": "PLA",
+      "source": "bambu",
+      "path": "C:\\Users\\teng\\AppData\\Roaming\\BambuStudio\\user\\1047486624\\filament\\菜多屋pla+ Flow Rate Calibrated完美版全部设置.json",
+      "chain": [
+        "菜多屋pla+ Flow Rate Calibrated完美版全部设置",
+        "Generic PLA @BBL P2S",
+        "Generic PLA @base",
+        "fdm_filament_pla",
+        "fdm_filament_common"
+      ],
+      "limits": {
+        "max_volumetric_speed": 13.5
+      },
+      "baseline": {
+        "fan_min_speed": 25.0,
+        "fan_max_speed": 100.0,
+        "overhang_fan_speed": 100.0,
+        "filament_flow_ratio": 0.9702,
+        "retraction_length": 0.6,
+        "retraction_speed": 25.0,
+        "deretraction_speed": 0.1
+      },
+      "nozzle_temperature": 215.0,
+      "density": 1.26,
+      "cost": 40.0,
+      "filament_id": "GFL99"
+    }
+  }
+}
