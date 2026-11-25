@@ -83,6 +83,7 @@ if (Test-Path 'data\studio_ui.json') {
 if (Test-Path 'assets\donate.png') {
     New-Item -ItemType Directory -Force -Path 'dist\assets' | Out-Null
     Copy-Item 'assets\donate.png' 'dist\assets\donate.png' -Force
+        if (Test-Path 'assets\app.png') { Copy-Item 'assets\app.png' 'dist\assets\app.png' -Force }
 }
 
 $exe = Get-Item 'dist\BambuSmartTuner.exe'

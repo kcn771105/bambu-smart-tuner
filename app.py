@@ -42,8 +42,10 @@ def main() -> int:
     app.setApplicationVersion(APP_VERSION)
     app.setOrganizationName("Bambu Smart Tuner")
 
+    from ui import icon as app_icon
     from ui import style
     style.apply_theme(app)
+    app_icon.apply(app)          # 窗口与任务栏图标（exe 文件图标由 spec 里 icon= 负责）
 
     from core import rules_engine
     try:
