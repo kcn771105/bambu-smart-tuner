@@ -24,11 +24,12 @@ Copy-Item "rules\BambuRules.json" (Join-Path $stage "rules")
 Copy-Item "data\studio_ui.json" (Join-Path $stage "data")
 Copy-Item "README.md" $stage
 Copy-Item "docs\收件人须知.txt" $stage
-# 收款码：放进去收件人也能换（不换就用 EXE 内置那张）
+# 收款码 + 窗口图标：放进去收件人也能换（不换就用 EXE 内置那张）
 if (Test-Path "assets\donate.png") {
     New-Item -ItemType Directory -Force -Path (Join-Path $stage "assets") | Out-Null
     Copy-Item "assets\donate.png" (Join-Path $stage "assets")
 }
+if (Test-Path "assets\app.png") { Copy-Item "assets\app.png" (Join-Path $stage "assets") }
 
 if (Test-Path $zip) { Remove-Item $zip -Force }
 Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zip -CompressionLevel Optimal
