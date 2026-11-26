@@ -47,15 +47,16 @@ class TestOverlayIntegration(unittest.TestCase):
         }
         res = ENGINE.optimize(self.proj.settings, printer_key="X1C", filament_key="PETG",
                               nozzle=0.4, mode_key="balanced", filament_overlay=overlay)
-        # 耗材页 / 机器页的键：算出��覆盖值，但一个字都不写
+        # 风扇/热床自 v1.2 起是可写的耗材页键（天冷翘边就靠调节这两项），
+        # 回抽/流量比仍然只读不改。
         self.assertAlmostEqual(res.values["fan_max_speed"], 75, places=3)
-        self.assertNotIn("fan_max_speed", res.write_values)
+        self.assertIn("fan_max_speed", res.write_values)
         self.assertNotIn("retraction_length", res.write_values)
         self.assertTrue(any("彩格petg" in n for n in res.notes))
         # 有 overlay 的理由要出现在对应行的 reason 里
         row = next(r for r in res.rows if r.key == "fan_max_speed")
         self.assertIn("自定义耗材", row.reason)
-        self.assertFalse(row.will_write)
+        self.assertTrue(row.will_write)
 
     def test_overlay_volumetric_cap(self):
         overlay = {"label": "慢料", "family": "PETG",

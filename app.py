@@ -18,7 +18,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 APP_NAME = "Bambu Smart Tuner"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.2.2"
 
 
 def _fatal(title: str, detail: str) -> None:

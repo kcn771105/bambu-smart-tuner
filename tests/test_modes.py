@@ -148,10 +148,12 @@ class TestModeEffects(unittest.TestCase):
         self.assertNotEqual(balanced.changed_count, 0)
 
     def test_mode_only_writes_process_scope(self):
+        """模式层只写工艺页；thermal（热床/风速）由独立推导层负责。"""
         for mode in ALL_MODES:
             res = self._run(mode)
             for key in res.write_values:
-                self.assertEqual(scope_of(key), "process", f"{mode} 写了非工艺页键 {key}")
+                self.assertIn(scope_of(key), ("process", "thermal"),
+                              f"{mode} 写了非工艺页键 {key}")
 
 
 def scope_of(key: str) -> str:

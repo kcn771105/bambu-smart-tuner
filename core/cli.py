@@ -18,8 +18,9 @@ from pathlib import Path
 if __package__ in (None, ""):                       # 允许 python cli.py 直接跑
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from core import (bambu_profiles, detector, hardware, model_analysis, preset_diff,  # noqa: E402
-                  report, rules_engine, schema, threemf)
+from core import (bambu_profiles, detector, hardware, machine_sync,  # noqa: E402
+                  model_analysis, preset_diff, report, rules_engine, schema,
+                  seam_plan, support_model, thermal, threemf)
 
 
 def _fmt(v) -> str:
@@ -77,7 +78,12 @@ def _do_optimize(path: Path, a, engine, overlay: dict | None, rules) -> tuple[th
         model_profile=profile, time_cap_pct=None if a.no_cap else a.cap,
         hardware_info=hw,
         nozzle_explicit=bool(a.nozzle),
-        support_mode=getattr(a, "support", "auto"))
+        support_mode=getattr(a, "support", "auto"),
+        support_ease=getattr(a, "ease", "standard"),
+        room_temp_c=getattr(a, "room", None),
+        bed_type=getattr(a, "bed", "") or "",
+        fan_trim=getattr(a, "fan_trim", 0),
+        seam_smooth=not getattr(a, "no_seam", False))
     return proj, det, res, profile
 
 
@@ -95,9 +101,24 @@ def cmd_optimize(a) -> int:
         overlay = bambu_profiles.to_overlay(match)
 
     proj, det, res, profile = _do_optimize(Path(a.file), a, engine, overlay, rules)
-    written, skipped = proj.apply(res.write_values)
-    preset_diff.apply_to_project(proj, also=list(res.write_values.keys()))
+    written, skipped = proj.apply(
+        res.write_values,
+        allow_missing=(thermal.STANDARD_KEYS | machine_sync.SYNC_KEYS
+                       | seam_plan.STANDARD_KEYS
+                       | support_model.SUPPORT_KEYS))
+    # v1.2：机型和界面不一致时同步机器页，否则 Studio 打开会按旧机型覆盖回来
+    mp = machine_sync.plan(rules, printer_key=det.printer_key if a.printer is None else a.printer,
+                           nozzle=res.nozzle, detected_key=det.printer_key,
+                           current=proj.settings)
+    if mp.ops:
+        proj.apply(mp.ops, allow_missing=machine_sync.SYNC_KEYS)
+    preset_diff.apply_to_project(
+        proj, also=list(res.write_values.keys()) + list(mp.ops.keys()))
     out = proj.save_as(a.out) if a.out else proj.save_copy()
+    for n in mp.notes:
+        print(f"机型同步  : {n}")
+    for w in mp.warnings:
+        print(f"  ⚠ {w}")
 
     print(f"源工程    : {proj.path}")
     print(f"输出      : {out}")
@@ -151,7 +172,10 @@ def cmd_batch(a) -> int:
                 md_name = outdir / f"{f.stem}_optimized.md"
                 md_name.write_text(md, encoding="utf-8")
                 report.rows_to_csv(res.rows, md_name.with_suffix(".csv"))
-            proj.apply(res.write_values)
+            proj.apply(res.write_values,
+                       allow_missing=(thermal.STANDARD_KEYS | machine_sync.SYNC_KEYS
+                                      | seam_plan.STANDARD_KEYS
+                                      | support_model.SUPPORT_KEYS))
             preset_diff.apply_to_project(proj, also=list(res.write_values.keys()))
             proj.save_as(target)
             print(f"  ✓ {f.name:40s} {res.changed_count:3d} 项改动  {res.time.delta_pct:+6.1f}%")
@@ -202,6 +226,13 @@ def cmd_rules(a) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Windows 控制台默认 cp936，遇到 mm³/s、⚠ 这类字符会直接 UnicodeEncodeError 崩掉。
+    # 改为 UTF-8 + replace，宁可显示成 ? 也不要让整条命令挂掉。
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
     ap = argparse.ArgumentParser(
         prog="bambu-smart-tuner",
         description="Bambu Smart Tuner 命令行：分析 / 优化 Bambu Studio 工程 3mf")
@@ -224,8 +255,18 @@ def main(argv: list[str] | None = None) -> int:
                        help="用已同步的某支自定义耗材（名字要完全一致）")
         p.add_argument("--cap", type=float, default=25.0, help="时长涨幅上限 %%，默认 25")
         p.add_argument("--no-cap", action="store_true", help="不限制时长涨幅")
-    p.add_argument("--support", choices=("auto", "on", "off"), default="auto",
-                   help="支撑开关：auto=按模型判断（默认）、on=强制开启、off=强制关闭")
+        p.add_argument("--support", choices=("auto", "on", "off"), default="auto",
+                       help="支撑开关：auto=按模型判断（默认）、on=强制开启、off=强制关闭")
+        p.add_argument("--bed", default=None,
+                       help="打印板类型，如 \"Textured PEI Plate\"（默认读工程里的 curr_bed_type）")
+        p.add_argument("--room", type=float, default=None,
+                       help="室温 °C（给热床/风扇做冷天补偿；不给则按工程/默认）")
+        p.add_argument("--fan-trim", type=int, default=0,
+                       help="风扇整体偏置百分点，负数更保守（防翘边），如 -10")
+        p.add_argument("--ease", choices=("standard", "easy", "max"), default="standard",
+                       help="支撑好拆程度：standard/easy/max，默认 standard")
+        p.add_argument("--no-seam", action="store_true",
+                       help="关闭接缝/斜接缝自动调整")
         p.add_argument("--no-shape", action="store_true", help="关闭按模型形状微调")
         p.add_argument("--md", nargs="?", const="auto", default=None,
                        help="同时导出 Markdown 报告（auto=与输出同名）")

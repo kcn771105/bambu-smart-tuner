@@ -27,8 +27,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from . import (adhesion, estimator, hardware, hotend, nozzle_flow,
-               support_model, wall_compat, modes as modes_registry, schema, scope)
+from . import (adhesion, estimator, hardware, hotend, nozzle_flow, seam_plan, thermal,
+               support_model, support_plan, wall_compat,
+               modes as modes_registry, schema, scope)
 
 
 # ------------------------------------------------------------------ 数据结构
@@ -82,6 +83,21 @@ class OptResult:
     #: 打印板同步结果（板型 / 温度 / 板面 / 兼容性），给 UI 与报告展示
     plate: str = ""
     hotend: str = ""
+    #: 热床温度与风速的推导明细（指标 / 实测 / 公式 / 结论）
+    thermal_rows: list[dict] = field(default_factory=list)
+    #: 热床与风速的一句话说明
+    thermal: str = ""
+    #: 室温联动的一句话（「室温 12°C：热床 70→78°C、风扇再降 10 个百分点」）
+    room_note: str = ""
+    #: 接缝（含斜接缝）的一句话说明
+    seam: str = ""
+    #: 机型同步计划里的一句话说明（保存前由 UI 填）
+    machine_sync_note: str = ""
+    #: 支撑好拆档位（standard / easy / max）
+    support_ease: str = "standard"
+    #: 每个最终写入的键「最后是被哪一层改的」。用来回答
+    #: 「这是按我的模型算的，还是套预设」——按层名分组即可给出比例。
+    sources: dict[str, str] = field(default_factory=dict)
 
     @property
     def changed_count(self) -> int:
@@ -183,6 +199,13 @@ class RulesEngine:
         # 按模型实测尺寸的定量推导明细
         self._derivations: list[dict] = []
         self._plate_info: str = ""
+        self._sources: dict[str, str] = {}
+        self._shape_keys: set[str] = set()
+        self._thermal_rows: list[dict] = []
+        self._room_note = ""
+        self._thermal_text: str = ""
+        self._seam_text: str = ""
+        self._machine_text: str = ""
         self._project_for_plate = None
         self._hotend = hotend.HotendInfo()
         self._hotend_detected = hotend.HotendInfo()
@@ -252,13 +275,23 @@ class RulesEngine:
                  hardware_info: hardware.HardwareInfo | None = None,
                  nozzle_explicit: bool = False,
                  hotend_flow: str | None = None,
-                 support_mode: str = "auto") -> OptResult:
+                 support_mode: str = "auto",
+                 support_ease: str = "standard",
+                 room_temp_c: float | None = None,
+                 bed_type: str = "",
+                 fan_trim: int = 0,
+                 seam_smooth: bool = True) -> OptResult:
         """filament_overlay：来自 Bambu Studio 用户预设的覆盖层（bambu_profiles.to_overlay）。
         model_profile：core.model_analysis.ModelProfile，按模型形状做最后一层微调。
         time_cap_pct：时长涨幅上限（%）。给了就把算出结果往回调，直到落在上限内。
                       强度优先模式通常不设限，交给调用方决定。
         hardware_info：core.hardware.HardwareInfo，从工程读出的真机上限/喷嘴/板面，
                       用来把工艺参数钳制在这台机器真实能力之内。
+        support_ease：支撑好拆程度 standard/easy/max（顶面 Z 间隙与接触面）。
+        room_temp_c：室温（°C）。与 bed_type、filament_key 一起推导热床温度与风速。
+        bed_type：打印板类型；留空则从工程 curr_bed_type 读。
+        fan_trim：用户对风扇整体转速的偏置（百分点，正数更猛、负数更保守）。
+        seam_smooth：是否对圆柱/细高件启用斜接缝（让外壁接缝几乎看不见）。
         """
         pnode = self.printer(printer_key)
         fnode = self.filament(filament_key)
@@ -272,6 +305,12 @@ class RulesEngine:
         self._gain = {}                   # 叠乘总闸的累计倍率，每次优化重置
         self._derivations = []
         self._plate_info = ""
+        self._sources = {}
+        self._shape_keys = set()
+        self._thermal_rows = []
+        self._room_note = ""
+        self._thermal_text = ""
+        self._seam_text = ""
         self._project_for_plate = current
         # 热端流量类型：UI 传了就用传的，没传就按工程自动识别
         self._hotend_detected = hotend.detect(current)
@@ -298,7 +337,6 @@ class RulesEngine:
 
         write_soft = bool(self.options.get("write_soft_keys", False))
         policy = scope.ScopePolicy.from_rules(self.rules)
-
         # ---- 真机同步：把喷嘴/流量/机器上限对齐到工程里的真实值
         hw = hardware_info
         nozzle = float(nozzle)
@@ -427,6 +465,11 @@ class RulesEngine:
                 if ops:
                     self._apply_ops(values, reasons, ops, "逐件形状自适应", warnings,
                                    allow_preserve=True, respect_locked=True)
+                # 记下形状层动过的键：后面几何层/推导层不得对同一个键再乘一次，
+                # 否则「首层慢一点」会被三家各乘 0.85 连乘成 0.61（用户实测
+                # 一个普通盒子的首层速度被 50 → 36，就是这么叠出来的）。
+                self._shape_keys = {k for k, v in self._sources.items()
+                                    if v == "逐件形状自适应"}
                 notes.extend(mnotes)
                 tags = model_profile.tags()
                 if tags:
@@ -457,7 +500,8 @@ class RulesEngine:
                 gops, gnotes = geom_rules.apply(gctx, mode=mode_key, rules=grules)
                 if gops:
                     self._apply_ops(values, reasons, gops, "几何驱动细调", warnings,
-                                   allow_preserve=True, respect_locked=True)
+                                   allow_preserve=True, respect_locked=True,
+                                   no_remul=self._shape_keys)
                 notes.extend(gnotes)
                 self._geom_ctx = gctx
             except Exception as exc:            # 几何层出错不能影响主流程
@@ -510,6 +554,72 @@ class RulesEngine:
         except Exception as exc:            # 板层出错不能影响主流程
             warnings.append(f"打印板适配计算失败（已跳过该项）：{exc}")
 
+        # ---- 7.85：热床温度与风速（耗材 × 板子 × 室温）
+        # 用户反馈第 2 条：「不同耗材、不同板子、不同室温下设置的热床温度和风速，
+        # 要不然有的模型在天冷了会翘边」。
+        # 这三件事必须一起看：板子决定基线温度、耗材决定风扇档位、室温决定加温量。
+        # 输出写的是**耗材页**的键（*_plate_temp / fan_*），所以必须走耗材槽声明，
+        # 否则 Studio 会用耗材预设把它们覆盖回去（见 core/preset_diff.py）。
+        try:
+            from . import thermal as thermal_mod
+            th = thermal_mod.derive(
+                self.rules, current,
+                filament_key=filament_key,
+                bed_type=bed_type or "",
+                room_temp_c=room_temp_c,
+                printer_key=printer_key,
+                fan_trim=fan_trim)
+            if th.ops:
+                # 用户在自己预设里标定过的键（覆盖层 baseline）优先，本层不翻它
+                ov_keys = set((filament_overlay or {}).get("baseline") or {})
+                if ov_keys:
+                    kept = {k: v for k, v in th.ops.items() if k not in ov_keys}
+                    dropped = sorted(set(th.ops) - set(kept))
+                    if dropped:
+                        notes.append("热床与风速：" + "、".join(dropped)
+                                     + " 沿用你在耗材预设里标定的值，没有覆盖。")
+                    th.ops = kept
+            if th.ops:
+                # 单项 op 格式是 {"set": v}，转成 _apply_ops 认的 dict
+                self._apply_ops(values, reasons, th.ops, "热床与风速（耗材×板子×室温）",
+                                warnings, allow_preserve=True, respect_locked=False)
+            if th.rows:
+                self._thermal_rows = [r.as_dict() for r in th.rows]
+                self._room_note = getattr(th, "room_note", "") or ""
+                for r in th.rows:
+                    self._derivations.append(r.as_dict())
+            notes.extend(th.notes)
+            if th.ops:
+                self._thermal_text = (
+                    f"热床与风速已按「{filament_key} × {thermal_mod.bed_type_of(current) if not bed_type else bed_type}"
+                    f" × 室温 {room_temp_c:g}°C」推导 {len(th.ops)} 项"
+                    if room_temp_c is not None else
+                    f"热床与风速已按「{filament_key} × {bed_type or thermal_mod.bed_type_of(current)}」推导 {len(th.ops)} 项")
+        except Exception as exc:            # 热床层出错不能影响主流程
+            warnings.append(f"热床与风速计算失败（已跳过该项）：{exc}")
+
+        # ---- 7.86：接缝与斜接缝（圆柱体接缝光滑）
+        # 用户反馈第 4 条：「可以让圆柱体的接缝光滑吗」。
+        # 圆件没有棱角藏接缝，只能靠斜接缝（scarf）把竖线斜过去；
+        # apply_scarf_seam_on_circles 是官方那条开关，很多工程里被拷成 0。
+        try:
+            sp = seam_plan.plan(model_profile, layer_height=float(values.get("layer_height", 0.2) or 0.2),
+                                current=current, enabled=bool(seam_smooth))
+            if sp.ops:
+                se_ops = {k: {"set": v} for k, v in sp.ops.items()}
+                self._apply_ops(values, reasons, se_ops, "接缝与斜接缝",
+                                warnings, allow_preserve=True, respect_locked=False)
+            notes.extend(sp.notes)
+            if sp.rows:
+                for r in sp.rows:
+                    self._derivations.append(r)
+            if sp.ops:
+                self._seam_text = ("斜接缝已开启（圆形轮廓也做斜接），"
+                                   "圆柱侧面那条竖线会被斜面盖住。" if "seam_slope_type" in sp.ops
+                                   else "接缝位置已按几何调整。")
+        except Exception as exc:
+            warnings.append(f"接缝策略计算失败（已跳过该项）：{exc}")
+
         # ---- 7.75：裙边定量（小件 / 底面小 / 易倒 → 加宽裙边）
         # 「倒不倒」用倾覆指数算：高 ÷ √底面积 ×(1+重心偏移比)
         if model_profile is not None:
@@ -553,6 +663,46 @@ class RulesEngine:
             self._apply_ops(values, reasons, {"enable_support": {"set": True}},
                             "你选择强制开启支撑", warnings, allow_preserve=True)
             notes.append("支撑：按你的选择强制开启。")
+        # 7.761：自动档先按几何决定「要不要开支撑、判定角多少」。
+        # 不做这一步，「支撑根据模型调」只调了密度/形态，开关却一直不动 ——
+        # 有悬垂的件照样一张支撑都不长，用户看到的就是「支撑还是不对」。
+        if model_profile is not None and _support_mode == "auto":
+            try:
+                from . import support_plan as _sp
+
+                def _ang(v):
+                    try:
+                        if isinstance(v, (list, tuple)):
+                            v = v[0] if v else None
+                        return float(str(v).strip().rstrip("%")) if v is not None else None
+                    except (TypeError, ValueError):
+                        return None
+
+                dec = _sp.decide(
+                    model_profile, mode=mode_key,
+                    policy=self.rules.get("support_policy"),
+                    user_threshold_angle=_ang((current or {}).get("support_threshold_angle")),
+                    user_enable_support=(_support_in_project if current
+                                         and "enable_support" in current else None),
+                    has_model=True)
+                if dec.ops:
+                    self._support_allowed |= set(dec.ops)
+                    self._apply_ops(values, reasons, dec.ops, "支撑按模型几何",
+                                    warnings, allow_preserve=True, respect_locked=False)
+                notes.extend(dec.reasons[:3])
+                if dec.enable and not _support_before:
+                    self._support_allowed.add("enable_support")
+                    self._apply_ops(values, reasons, {"enable_support": {"set": True}},
+                                    "支撑按模型几何（有悬垂）", warnings,
+                                    allow_preserve=True, respect_locked=False)
+                    warnings.append(
+                        "模型有悬垂，已按几何自动开启支撑：请到 Bambu Studio 里看一眼支撑落点，"
+                        "不该有支撑的位置用「阻止支撑」刷子刷掉，或在「支撑」下拉里选「强制关闭」。")
+                elif not dec.enable and _support_before and not _support_in_project:
+                    pass   # 用户/工程里本来就开着，几何说不用也不擅自关
+            except Exception as exc:
+                warnings.append(f"支撑开关的几何判断失败（已保留原设置）：{exc}")
+
         if model_profile is not None:
             try:
                 def _as_num(v, default=None):
@@ -571,7 +721,8 @@ class RulesEngine:
                     judge_angle=_as_num(values.get("support_threshold_angle")),
                     nozzle=float(nozzle or 0.4),
                     line_width=_as_num(values.get("line_width")),
-                    max_speed=(hw.max_speed if hw else None))
+                    max_speed=(hw.max_speed if hw else None),
+                    ease=support_ease)
                 # 支撑参数的唯一决策者是 core/support_model.py：
                 # 这里只登记「本层允许写哪些键」，真正的清理在块外无条件执行
                 self._support_allowed |= set(su.ops)
@@ -690,7 +841,12 @@ class RulesEngine:
             changed = not _same(s, old_val, new_val)
 
             exists = key in current
-            will_write = exists or write_soft
+            # 热床温度 / 风速 / 接缝是工程文件的标准键：老工程里可能没存这几行，
+            # 但补写进去 Studio 认，不补就等于「热床风扇接缝怎么设都不生效」。
+            will_write = (exists or write_soft
+                          or key in thermal.STANDARD_KEYS
+                          or key in seam_plan.STANDARD_KEYS
+                          or key in support_model.SUPPORT_KEYS)
             skip_reason = ""
             if not will_write:
                 skip_reason = "当前工程未存储该参数（机型/版本差异），已跳过写入"
@@ -762,6 +918,13 @@ class RulesEngine:
             project_nozzle=(hw.nozzle_diameter if hw else None),
             plate=self._plate_info,
             hotend=self._hotend.summary_line(),
+            thermal_rows=list(self._thermal_rows),
+            room_note=self._room_note,
+            thermal=self._thermal_text,
+            seam=self._seam_text,
+            support_ease=support_ease,
+            sources={k: self._sources.get(k, "保持工程原值（无需改动）")
+                     for k in write_values},
         )
         # 复原分槽全局（只在本次 optimize 内生效）
         try:
@@ -969,12 +1132,18 @@ class RulesEngine:
                    allow_preserve: bool = False,
                    respect_locked: bool = False,
                    lock: bool = False,
-                   band: bool = True) -> None:
+                   band: bool = True,
+                   no_remul: set[str] | frozenset[str] = frozenset()) -> None:
         """band=False：这一层的倍率是**作者意图**（如模式档把层高 ×0.4），
         不参与叠乘总闸；只有「在别人结果上再打折」的层才需要闸。"""
         for key, op in ops.items():
             s = self._lookup(key)
             if s is None:
+                continue
+            if no_remul and key in no_remul and "mul" in op:
+                # 上层（形状层）已经因为同一个理由调过这个键的量级，
+                # 这里再乘一次就是重复扣分（用户感知为「降速严重」）。
+                reasons[key].append(f"{why}：{why.split('（')[0]}已按形状意图调过，不再叠乘")
                 continue
             if respect_locked and "set" in op and key in self._locked:
                 # 上层（模式档 / 交叉规则）已经用绝对值定过这个键：
@@ -1001,6 +1170,7 @@ class RulesEngine:
                     nv = _coerce(s, op["set"])
                     if nv is not None and nv != cur:
                         values[key] = nv
+                        self._sources[key] = why
                         if lock:
                             self._locked.add(key)
                         reasons[key].append(f"{why}：{cur} → {nv}")
@@ -1027,6 +1197,7 @@ class RulesEngine:
                 nv = int(round(nv))
             if not _same(s, cur, nv):
                 values[key] = nv
+                self._sources[key] = why
                 reasons[key].append(f"{why}：{schema.display(s, cur)} → {schema.display(s, nv)}")
 
     def _match(self, when: dict, ctx: dict) -> bool:

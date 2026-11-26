@@ -80,6 +80,8 @@ class ObjectProfile:
     volume: float = 0.0
     surface: float = 0.0
     overhang_area: float = 0.0
+    overhang_hi_area: float = 0.0   # 落在上部 40% 高度里的悬垂面积
+    max_bridge_span: float = 0.0    # 最长的一条悬垂边（mm）：越大越像「一大片悬空」
     centre_offset: float = 0.0
     bands: list[BandProfile] = field(default_factory=list)
 
@@ -136,6 +138,18 @@ class ObjectProfile:
         return self.overhang_area / self.surface if self.surface > 1e-9 else 0.0
 
     @property
+    def overhang_top_ratio(self) -> float:
+        """悬垂里有多大比例挤在上部（>60% 高度）。
+
+        下部悬垂多半能被下面的实体自己撑住，上部悬垂才是真的会塌——
+        同样是 5% 悬垂，位置不同该给的支撑强度也不同。
+        """
+        total = self.overhang_area
+        if total <= 1e-9:
+            return 0.0
+        return min(1.0, self.overhang_hi_area / total)
+
+    @property
     def top_cap_ratio(self) -> float:
         """顶盖占比：最高一段里水平朝上面积占该段包围盒的比例。
 
@@ -158,6 +172,39 @@ class ObjectProfile:
         if mx <= 1e-9:
             return 1.0
         return min(widths) / mx
+
+    @property
+    def circle_score(self) -> float:
+        """圆柱度：横截面「真实朝上面积 / 包围盒面积」，圆 ≈ 0.785，方 ≈ 1.0。
+
+        用户反馈第 4 条问「这个软件可以让圆柱体的接缝光滑吗」——
+        要回答它，先得知道这件到底是不是圆柱/圆管。判据只看几何：
+
+            圆截面   π r² / (2r)² = π/4 ≈ 0.785
+            方截面   1.0
+            带圆角的方  0.85~0.95
+
+        取全部有数据的层段里最接近「圆」的那一段（最细处常常是圆柱销/圆管），
+        再配合平面长宽比 ≥0.9（圆的包围盒近似正方形）判圆。
+
+        返回值 0 = 明显不是圆；越接近 1 越像圆。
+        """
+        scores: list[float] = []
+        for b in self.bands:
+            if b.bbox_area <= 1e-9 or b.up_area <= 1e-9:
+                continue
+            scores.append(b.up_area / b.bbox_area)
+        if not scores:
+            return 0.0
+        # 只信任「接近 0.785」的那一段：距 π/4 越远分越低
+        best = min(scores, key=lambda r: abs(r - 0.7854))
+        if self.plan_aspect < 0.9:            # 包围盒不是方的，谈不上圆
+            return 0.0
+        if abs(best - 0.7854) <= 0.06:
+            return 1.0
+        if abs(best - 0.7854) <= 0.12:
+            return 0.6
+        return 0.0
 
     @property
     def mid_width(self) -> float:
@@ -197,6 +244,8 @@ class ObjectProfile:
             out.append("带收腰")
         if self.plan_aspect < 0.5:
             out.append("细长条")
+        if self.circle_score >= 0.6:
+            out.append("圆柱/圆管")
         if self.centre_offset > 0.35:
             out.append("质心偏置")
         return out
@@ -228,6 +277,20 @@ class ModelProfile:
     @property
     def height(self) -> float:
         return self.size_z
+
+    @property
+    def overhang_top_ratio(self) -> float:
+        """整盘悬垂里挤在上部的比例（按面积加权）。"""
+        tot = sum(o.overhang_area for o in self.objects)
+        if tot <= 1e-9:
+            return 0.0
+        hi = sum(o.overhang_hi_area for o in self.objects)
+        return min(1.0, hi / tot)
+
+    @property
+    def max_bridge_span(self) -> float:
+        """整盘最长的一条悬垂边。"""
+        return max((o.max_bridge_span for o in self.objects), default=0.0)
 
     @property
     def support_ratio(self) -> float:
@@ -266,6 +329,17 @@ class ModelProfile:
     def object_count(self) -> int:
         return len(self.objects)
 
+    @property
+    def circle_score(self) -> float:
+        """盘面上最像圆柱的那一件的圆柱度（0 = 没有圆形件）。"""
+        best = 0.0
+        for o in self.objects:
+            try:
+                best = max(best, o.circle_score)
+            except Exception:
+                continue
+        return best
+
     def tags(self) -> list[str]:
         out: list[str] = []
         if self.objects:
@@ -284,7 +358,10 @@ class ModelProfile:
             out.append("大体积")
         if self.flatness < 0.25:
             out.append("扁平板件")
-        if self.thickness_index > 9.5:
+        # 用「平均壁厚 + 填充率」判薄壁，不能用 thickness_index(S/V^(2/3))：
+        # 那个量对**平板**同样很大（160×120×8 的实心盒算出来 15），
+        # 结果普通盒子被贴上「薄壁/镂空」，连带吃到一串降速规则。
+        if any(0 < o.wall_thickness < 1.8 and o.fill_ratio < 0.6 for o in self.objects):
             out.append("薄壁/镂空")
         if self.support_ratio > 0.18:
             out.append(f"支撑重（{self.support_ratio*100:.0f}%）")
@@ -293,6 +370,8 @@ class ModelProfile:
         if (self.footprint > 0 and self.footprint < 900
                 and self.size_z > 60):
             out.append("小脚高塔")
+        if self.circle_score >= 0.6:
+            out.append("圆柱/圆管（可做斜接缝）")
         return out
 
     def summary(self) -> str:
@@ -373,6 +452,8 @@ def _analyse_object(oid: str, index: int, verts, tris, m, t, *,
     vol = 0.0
     surf = 0.0
     over = 0.0
+    over_hi = 0.0
+    bridge = 0.0
     cx = cy = 0.0
 
     # 先定 Z 范围，才能分高度段
@@ -416,6 +497,16 @@ def _analyse_object(oid: str, index: int, verts, tris, m, t, *,
         # 朝下且够平 → 需要支撑。但贴床的底面不算悬垂（落在热床上）。
         if unit_nz < -overhang_cos and max(z0, z1, z2) > min_z_guard:
             over += area
+            # 悬垂落在哪一层，决定要不要加强支撑：上部悬垂下面没东西可撑。
+            if (z0 + z1 + z2) / 3.0 > zmin + 0.6 * (zmax - zmin):
+                over_hi += area
+            # 悬垂面上最长的一条投影边 ≈ 这段是「悬空的一大片还是一窄条」。
+            # 一窄条靠自身冷却能扛，一大片得降桥接速度、加接触层。
+            e = max(math.hypot(x1 - x0, y1 - y0),
+                    math.hypot(x2 - x1, y2 - y1),
+                    math.hypot(x0 - x2, y0 - y2))
+            if e > bridge:
+                bridge = e
 
         # 有符号体积（散度定理，对闭合网格正确）
         v6 = (x0 * (y1 * z2 - z1 * y2)
@@ -466,6 +557,8 @@ def _analyse_object(oid: str, index: int, verts, tris, m, t, *,
     obj.volume = abs(vol)
     obj.surface = surf
     obj.overhang_area = over
+    obj.overhang_hi_area = over_hi
+    obj.max_bridge_span = bridge
     obj.size_x = maxv[0] - minv[0]
     obj.size_y = maxv[1] - minv[1]
     obj.size_z = maxv[2] - minv[2]

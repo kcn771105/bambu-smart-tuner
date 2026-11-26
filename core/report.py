@@ -6,7 +6,7 @@ import csv
 from datetime import datetime
 from pathlib import Path
 
-from . import schema, shape_rules, studio_ui
+from . import brief, schema, shape_rules, studio_ui
 from .detector import Detection
 from .rules_engine import OptResult
 from .scope import SCOPE_LABEL
@@ -73,6 +73,24 @@ def build_markdown(project_path: str, det: Detection, result: OptResult,
             add(f"- {n}")
         add("")
 
+    # 结论卡：先讲「这样调完会怎样」，参数表放后面（用户反馈：参数值太多看不懂）
+    try:
+        card = brief.build(
+            result,
+            thermal_rows=getattr(result, "thermal_rows", None),
+            machine_note=getattr(result, "machine_sync_note", ""),
+            support_ease=getattr(result, "support_ease", "standard"))
+    except Exception:
+        card = []
+    if card:
+        add("## 一句话结论")
+        add("")
+        add(f"**{card[0]}**")
+        add("")
+        for line in card[1:]:
+            add(f"- {line}")
+        add("")
+
     add("## 参数对比")
     add("")
     current_group = None
@@ -92,6 +110,46 @@ def build_markdown(project_path: str, det: Detection, result: OptResult,
             f"{SCOPE_LABEL.get(row.scope, row.scope)} | "
             f"{row.old_display} | {row.new_display} | {write} | {reason} |")
     add("")
+
+    thermal_rows = getattr(result, "thermal_rows", None) or []
+    thermal_text = getattr(result, "thermal", "") or ""
+    if thermal_rows or thermal_text:
+        add("## 热床与风速（耗材 × 板子 × 室温）")
+        add("")
+        if thermal_text:
+            add(f"- {thermal_text}")
+            add("")
+        add("热床温度按「耗材 × 板子」查基线，再按室温补偿；风扇按耗材基线给，"
+            "冷天自动再降一档。这两类是**耗材页**的键，写入时会在耗材槽里声明为"
+            "「与预设不同」，否则 Bambu Studio 会按预设把它们盖回默认值。")
+        add("")
+        if thermal_rows:
+            add("| 指标 | 现在 | 公式 | 结论 |")
+            add("| --- | --- | --- | --- |")
+            for d in thermal_rows:
+                add(f"| {d.get('metric', '')} | {d.get('measured', '')} | "
+                    f"{str(d.get('formula', '')).replace('|', '／')} | "
+                    f"{str(d.get('conclusion', '')).replace('|', '／')} |")
+            add("")
+
+    seam = getattr(result, "seam", None) or ""
+    if seam:
+        add("## 接缝与斜接缝")
+        add("")
+        add("圆柱 / 细长件的竖直接缝会在同一侧连成一条线，最显眼。这里把接缝对齐到"
+            "背面并打开斜接缝（scarf joint），让收尾处沿层高方向搭接过渡。"
+            "具体按什么算出来的，见下一节「按模型实测尺寸推导」里的 `接缝位置 seam_position`"
+            " 与 `斜接缝 scarf` 两行。")
+        add("")
+        add(f"- {seam}")
+        add("")
+
+    machine_note = getattr(result, "machine_sync_note", "")
+    if machine_note:
+        add("## 机型同步")
+        add("")
+        add(f"- {machine_note}")
+        add("")
 
     if model_profile is not None and getattr(model_profile, "objects", None):
         add("## 逐件调参明细")
@@ -207,7 +265,10 @@ def write_markdown(text: str, path: str | Path) -> Path:
 
 LIMITATIONS = [
     "只修改 3mf 里的 `Metadata/project_settings.config`；几何、对象级个性化设置（model_settings.config）不动。",
-    "喷头温度、热床温度、腔体温度属于耗材预设，本版不改（不同耗材/环境差异太大，改错会废件）。",
+    "喷头温度、热床温度按「耗材 × 板子 × 室温」推导后写入耗材槽（v1.2 起）；"
+    "腔体温度、压力提前量等仍沿用耗材预设，本版不改。",
+    "热床/风扇参数写在耗材槽，一份工程只按第一种耗材的基线推导；"
+    "多耗材工程里其他耗材如需同步，请分别在软件里按该耗材再导一次。",
     "Bambu Studio 的「工程设置」窗口里若手动再改，可能覆盖本次优化，请优化完直接切片。",
     "部分参数（摩擦补偿、支撑样式、辅助风扇等）在新版才有；工程里没有该键时程序只给推荐值不写入。",
     "打印时长是相对指数估算（±3% 量级误差），不是精确值；精确时长以 Bambu Studio 切片结果为准。",

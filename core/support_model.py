@@ -152,11 +152,65 @@ def is_support_key(key: str) -> bool:
     return key.startswith(SUPPORT_KEYS_PREFIXES)
 
 
+#: 支撑「好拆程度」档位 → 分离间隙放宽系数 / 接触面层数调整 / 线距放宽系数。
+#: 用户反馈第 4 条：「急需多一个功能，支撑 Z 面调参，方便拆卸」。
+#: 这里的三个档都是「往好拆的方向」单调推进：
+#:   标准 standard  —— 官方折中值，先保证不塌
+#:   好拆 easy      —— 顶间隙 ×1.5、底间隙 ×1.3、接触面少一层、线距放宽 1.2 倍
+#:   极好拆 max     —— 顶间隙 ×2.0、底间隙 ×1.6、接触面各少一层、线距放宽 1.4 倍
+#: 代价写在 EASE_NOTE 里，UI 与报告都会带上（免得用户以为白拿）。
+# 支撑相关键：老工程/被裁过的工程里经常整段缺失，apply(skip_missing=True) 会
+# 静默跳过 —— 用户看到的就是「支撑怎么调都没变」。这几个键按标准键处理。
+SUPPORT_KEYS = frozenset({
+    "support_interface_layers",
+    "support_interface_top_layers",
+    "support_top_z_distance",
+    "support_bottom_z_distance",
+    "support_base_pattern_spacing",
+    "support_object_xy_distance",
+    "support_line_width",
+    "bridge_speed",
+    "enable_support",
+    "support_threshold_angle",
+    "support_type",
+    "support_style",
+    "support_interface_spacing",
+    "support_speed",
+})
+
+EASE_FACTOR = {
+    "standard": (1.0, 1.0, 0, 1.0),
+    "easy": (1.5, 1.3, -1, 1.2),
+    "max": (2.0, 1.6, -1, 1.4),
+}
+EASE_NOTE = {
+    "standard": "支撑按官方折中值：先保证撑得住，拆的时候需要一点力。",
+    "easy": "支撑按「好拆」调：顶面分离间隙放大到 1.5 倍、接触面减一层，"
+            "拆的时候明显省力；代价是接触面附近表面略粗、极小悬垂可能撑得不够实。",
+    "max": "支撑按「极好拆」调：顶面间隙放大到 2 倍、接触面层数与线距都往少里调，"
+           "基本一掰就掉；代价是模型接触面的痕迹会更明显，超薄悬垂有轻微下垂风险。",
+}
+
+
+def normalize_ease(mode: str | None) -> str:
+    m = str(mode or "").strip().lower()
+    if m in ("easy", "easy_remove", "好拆"):
+        return "easy"
+    if m in ("max", "max_easy", "极好拆"):
+        return "max"
+    return "standard"
+
+
 def tune(profile, *, layer_height: float = 0.2, mode: str = "balanced",
          values: dict | None = None, judge_angle: float | None = None,
          nozzle: float = 0.4, line_width: float | None = None,
-         max_speed: float | None = None) -> SupportTune:
-    """按模型实测尺寸给支撑参数。values 是当前值（判断支撑有没有开）。"""
+         max_speed: float | None = None,
+         ease: str = "standard") -> SupportTune:
+    """按模型实测尺寸给支撑参数。values 是当前值（判断支撑有没有开）。
+
+    ease：支撑好拆程度（standard / easy / max），只影响 Z 面间隙与接触面，
+          不改变「要不要开支撑」的判定。
+    """
     out = SupportTune()
     if profile is None:
         return out
@@ -164,31 +218,46 @@ def tune(profile, *, layer_height: float = 0.2, mode: str = "balanced",
     if not _truthy(vals.get("enable_support")):
         return out        # 没开支撑就一个键都不写
 
+    ease_key = normalize_ease(ease)
+    zf_top, zf_bot, layer_cut, spacing_mul = EASE_FACTOR[ease_key]
+
     overhang_area = _total(profile, "overhang_area")
     height, foot, slender = _geom(profile)
 
     # ---- 1 密度
     spacing, why = spacing_for(overhang_area)
+    spacing = round(spacing * spacing_mul, 2)
     out.ops["support_base_pattern_spacing"] = {"set": spacing}
-    out.reasons.append(f"{why} → 支撑线距 {spacing:g} mm。")
+    out.reasons.append(f"{why} → 支撑线距 {spacing:g} mm"
+                       + (f"（好拆档 ×{spacing_mul:g}）" if spacing_mul != 1.0 else "") + "。")
     out.rows.append(SupportRow(
         "支撑密度 support_base_pattern_spacing",
         f"悬垂面积 {overhang_area:.0f} mm² ／ 模型高 {height:.0f} mm",
-        "≥4000→1.6、≥1500→2.0、≥400→2.5、其余 3.0 mm",
+        "≥4000→1.6、≥1500→2.0、≥400→2.5、其余 3.0 mm"
+        + (f"，好拆档 ×{spacing_mul:g}" if spacing_mul != 1.0 else ""),
         f"取 {spacing:g} mm"))
 
-    # ---- 2 间隙（顶/底）
-    top_z = _round2(max(0.12, min(0.30, layer_height * 0.7)))
-    bot_z = _round2(max(0.15, min(0.35, layer_height * 1.0)))
+    # ---- 2 间隙（顶/底）—— 这是「方便拆卸」最直接的一档
+    top_z = _round2(max(0.12, min(0.30, layer_height * 0.7)) * zf_top)
+    bot_z = _round2(max(0.15, min(0.35, layer_height * 1.0)) * zf_bot)
+    # 官方上限：顶间隙超过 0.6 mm 支撑就基本不接触了，没有意义
+    top_z = _round2(min(0.60, top_z))
+    bot_z = _round2(min(0.60, bot_z))
     out.ops["support_top_z_distance"] = {"set": top_z}
     out.ops["support_bottom_z_distance"] = {"set": bot_z}
     out.reasons.append(
-        f"支撑间隙按层高 {layer_height:g} mm 算：顶 {top_z:g} mm（×0.7）、底 {bot_z:g} mm（×1.0）。")
+        f"支撑间隙按层高 {layer_height:g} mm 算：顶 {top_z:g} mm、底 {bot_z:g} mm"
+        + (f"（好拆档：顶 ×{zf_top:g}、底 ×{zf_bot:g}）" if ease_key != "standard" else "")
+        + "。")
     out.rows.append(SupportRow(
-        "支撑分离间隙",
-        f"层高 {layer_height:g} mm",
-        "顶 = 层高×0.7 夹 0.12~0.30；底 = 层高×1.0 夹 0.15~0.35",
+        "支撑分离间隙（Z 面）",
+        f"层高 {layer_height:g} mm ／ 好拆档 {ease_key}",
+        "顶 = 层高×0.7 夹 0.12~0.30；底 = 层高×1.0 夹 0.15~0.35"
+        + (f"；好拆档再乘 顶×{zf_top:g} 底×{zf_bot:g}（上限 0.60）"
+           if ease_key != "standard" else ""),
         f"顶 {top_z:g} mm ／ 底 {bot_z:g} mm"))
+    if ease_key != "standard":
+        out.reasons.append(EASE_NOTE[ease_key])
 
     # ---- 3 水平间距
     xy = 0.5
@@ -206,9 +275,18 @@ def tune(profile, *, layer_height: float = 0.2, mode: str = "balanced",
 
     # ---- 4 接触面：层数 / 线距 / 线宽
     big = overhang_area >= 1500
+    # 悬垂挤在上部（>60% 高度）时下面没有实体帮它顶，接触面得多给一层才压得平
+    top_heavy = _num(getattr(profile, "overhang_top_ratio", 0.0)) >= 0.6
     top_layers = 3 if big else 2
+    if top_heavy:
+        top_layers = min(4, top_layers + 1)
     bot_layers = 3 if big else 2
+    if layer_cut:
+        top_layers = max(1, top_layers + layer_cut)
+        bot_layers = max(1, bot_layers + layer_cut)
     iface = 0.5 if big else 0.7
+    if spacing_mul != 1.0:
+        iface = _round2(min(1.0, iface * spacing_mul))
     lw = _round2((line_width or nozzle * 1.05) * 0.9)
     out.ops["support_interface_top_layers"] = {"set": top_layers}
     out.ops["support_interface_bottom_layers"] = {"set": bot_layers}
@@ -216,11 +294,15 @@ def tune(profile, *, layer_height: float = 0.2, mode: str = "balanced",
     out.ops["support_line_width"] = {"set": lw}
     out.reasons.append(
         f"接触面：顶/底各 {top_layers}/{bot_layers} 层、线距 {iface:g} mm、线宽 {lw:g} mm"
-        f"（{'大面积悬垂求平整' if big else '零星悬垂求好撕'}）。")
+        f"（{'大面积悬垂求平整' if big else '零星悬垂求好撕'}"
+        + ("；悬垂集中在上部，顶层再加一层" if top_heavy else "") + "）"
+        + (f"；好拆档接触面减层、线距放宽到 ×{spacing_mul:g}" if ease_key != "standard" else "")
+        + "。")
     out.rows.append(SupportRow(
         "支撑接触面",
         f"悬垂面积 {overhang_area:.0f} mm² ／ 线宽基准 {line_width or nozzle * 1.05:.2f} mm",
-        "层数 大面积3/零星2；线距 0.5/0.7；线宽 = 线宽基准 ×0.9",
+        "层数 大面积3/零星2，上部悬垂顶层+1；线距 0.5/0.7；线宽 = 线宽基准 ×0.9"
+        + (f"；好拆档层数各 −1、线距 ×{spacing_mul:g}" if ease_key != "standard" else ""),
         f"{top_layers} 层 ／ 线距 {iface:g} ／ 线宽 {lw:g} mm"))
 
     # ---- 5 形态

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+import json
 import os
 import traceback
 from datetime import datetime
@@ -10,19 +11,63 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QColor, QDesktopServices, QFont, QPixmap, QTextCursor
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
-    QButtonGroup, QCheckBox, QComboBox, QDialog, QFileDialog, QGridLayout,
+    QAbstractSpinBox, QButtonGroup, QCheckBox, QComboBox, QDialog, QFileDialog,
+    QGridLayout,
     QGroupBox, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMainWindow,
     QMessageBox, QToolButton,
-    QFrame, QMenu, QPushButton, QRadioButton, QScrollArea, QSplitter,
+    QFrame, QMenu, QPushButton, QRadioButton, QScrollArea, QSpinBox, QSplitter,
     QTableWidget, QTableWidgetItem,
     QTabWidget, QTextBrowser, QTextEdit, QTreeWidget, QTreeWidgetItem,
     QVBoxLayout, QWidget,
 )
 
-from core import (bambu_profiles, detector, hardware, hotend, model_analysis,
+def _same_value(a, b) -> bool:
+    """比较「表格里的值」与「文件里的值」。
+
+    文件里的值是 JSON 字符串（`["0.4"]` / `[0.4]` / `"70"`），表格里是显示文本。
+    先按 JSON 解一次，逐元素比；解不开再按数值/原文比。否则 `[0.4]` 和 `["0.4"]`
+    会被当成两回事，核对页上凭空多出一条「不一致」。
+    """
+    def _norm(v):
+        if isinstance(v, (list, tuple)):
+            return [_norm(x) for x in v]
+        txt = str(v).strip()
+        try:
+            return _norm(json.loads(txt))
+        except Exception:
+            pass
+        try:
+            return float(txt.split()[0])
+        except (TypeError, ValueError, IndexError):
+            return txt
+    na, nb = _norm(a), _norm(b)
+    if isinstance(na, list) and isinstance(nb, list):
+        return len(na) == len(nb) and all(_norm(x) == _norm(y) for x, y in zip(na, nb))
+    if isinstance(na, float) and isinstance(nb, float):
+        return abs(na - nb) < 1e-6
+    return na == nb
+
+
+def _same_num(a, b) -> bool:
+    """文件里的值可能是 '70'、'70.0'、'["70"]'，表格里是 '70 °C'，按数值/原文都比一次。"""
+    def _num(v):
+        try:
+            return float(str(v).strip().split()[0])
+        except (TypeError, ValueError, IndexError):
+            return None
+    na, nb = _num(a), _num(b)
+    if na is not None and nb is not None:
+        return abs(na - nb) < 1e-6
+    return str(a).strip() == str(b).strip()
+
+
+from core import (bambu_profiles, brief, detector, hardware, hotend,
+                  machine_sync, model_analysis,
                   modes as modes_reg, preset_diff, report, rules_engine, safety,
-                  schema, scope, shape_rules, studio_ui, threemf)
+                  schema, scope, seam_plan, shape_rules, studio_ui,
+                  support_model, thermal, threemf, user_presets)
 from html import escape as html_escape
 
 # 模式顺序与提示统一放在 core/modes.py（新增模式只改那里 + 规则库）
@@ -237,10 +282,103 @@ class MainWindow(QMainWindow):
         self.chk_shape.setEnabled(False)
         d.addWidget(self.chk_shape, 3, 0, 1, 7)
 
+        # ---- 热床 / 风速 / 支撑好拆 / 接缝 / 方案预设（v1.2）
+        # 用户反馈：天冷翘边要按「耗材 × 板子 × 室温」给热床温度和风速；
+        # 支撑要按好拆程度调 Z 面；圆柱接缝要光滑；并且要能存几套自己的方案。
+        self.cmb_bed = QComboBox()
+        # 第一项是「跟随工程」：不指定就按 3mf 里 curr_bed_type 记的板子算，
+        # 免得默认选中 Supertack 把 Textured PEI 工程的板温和板型一起写错。
+        self.cmb_bed.addItem("（跟随工程）", "")
+        # 显示中文名，写进工程的仍是英文板型串（Studio 只认那六个）
+        for label, key in thermal.plate_options():
+            self.cmb_bed.addItem(label, key)
+        self.cmb_bed.setMinimumWidth(170)
+
+        self.sp_room = QSpinBox()
+        self.sp_room.setRange(0, 45)
+        self.sp_room.setValue(0)
+        self.sp_room.setSpecialValueText("不指定（点这里输入）")
+        self.sp_room.setSuffix(" °C")
+        # 不要上下小箭头：用户希望「点一下直接输数字」
+        self.sp_room.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.sp_room.setToolTip(
+            "房间温度。给了就按「低温加温、高温减温」修正热床；\n"
+            "低于 18°C 时风扇也会自动降一档，防止冷天翘边。")
+
+        self.sp_fan = QSpinBox()
+        self.sp_fan.setRange(-30, 30)
+        self.sp_fan.setSingleStep(5)
+        self.sp_fan.setValue(0)
+        self.sp_fan.setSuffix(" %")
+        self.sp_fan.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.sp_fan.setToolTip(
+            "风扇整体偏置：负数更保守（更不容易翘边、拉丝更少），\n"
+            "正数更猛（悬垂和桥接更好看）。首层关风不受影响。")
+
+        self.cmb_ease = QComboBox()
+        self.cmb_ease.addItem("标准", "standard")
+        self.cmb_ease.addItem("好拆（推荐）", "easy")
+        self.cmb_ease.addItem("极好拆（支撑会明显变松）", "max")
+        self.cmb_ease.setMinimumWidth(150)
+        self.cmb_ease.setToolTip(
+            "支撑好拆程度：只改支撑顶面 Z 间隙、接触面层数与接触线距，\n"
+            "让支撑用手一掰就掉；不会改支撑落在哪里（那要在 Studio 里看）。")
+
+        d.addWidget(QLabel("打印板"), 4, 0)
+        d.addWidget(self.cmb_bed, 4, 1)
+        d.addWidget(QLabel("室温"), 4, 2)
+        d.addWidget(self.sp_room, 4, 3)
+        d.addWidget(QLabel("风扇强弱"), 4, 4)
+        d.addWidget(self.sp_fan, 4, 5)
+        d.addWidget(QLabel("支撑好拆"), 4, 6)
+        d.addWidget(self.cmb_ease, 4, 7)
+
+        self.cmb_bed.currentIndexChanged.connect(lambda *_: self._reoptimize())
+        self.cmb_ease.currentIndexChanged.connect(lambda *_: self._reoptimize())
+        self.sp_room.valueChanged.connect(lambda *_: self._reoptimize())
+        self.sp_fan.valueChanged.connect(lambda *_: self._reoptimize())
+
+        # 圆柱 / 圆管的接缝：斜接缝（scarf）把竖线斜过去
+        self.chk_seam = QCheckBox("圆柱/圆管接缝做斜接（外壁能看出来一条竖线的件）")
+        self.chk_seam.setChecked(True)
+        self.chk_seam.setToolTip(
+            "圆件没有棱角能藏接缝，只能靠斜接缝把竖线斜切过去。\n"
+            "只对判定为圆柱/细高的件生效，其它件不受影响。")
+        self.chk_seam.stateChanged.connect(lambda *_: self._reoptimize())
+        d.addWidget(self.chk_seam, 5, 0, 1, 4)
+
+        # 方案预设：几套参数存下来一键切换
+        self.cmb_preset = QComboBox()
+        self.cmb_preset.setMinimumWidth(220)
+        self.btn_preset_save = QPushButton("存为方案")
+        self.btn_preset_save.setToolTip("把当前这一屏的选择（机型/耗材/板子/室温/风扇/支撑/接缝…）存成一套方案，下次一键选回来。")
+        self.btn_preset_save.clicked.connect(self.on_preset_save)
+        self.btn_preset_del = QPushButton("删除")
+        self.btn_preset_del.clicked.connect(self.on_preset_delete)
+        self.cmb_preset.currentIndexChanged.connect(self._on_preset_picked)
+        d.addWidget(QLabel("方案"), 5, 4)
+        d.addWidget(self.cmb_preset, 5, 5)
+        d.addWidget(self.btn_preset_save, 5, 6)
+        d.addWidget(self.btn_preset_del, 5, 7)
+        self._preset_values: dict[str, dict] = {}
+        # 套用方案之前的界面状态。用户把方案切回「（不套方案）」时要能一键撤销，
+        # 否则方案关掉了、参数却还留在方案里（用户反馈：「方案关了」）。
+        self._pre_preset_values: dict | None = None
+        self._refresh_presets()
+
+        # 新增那两行控件的一句话解释（用户反馈：不要一屏参数值，先给「这是什么」）
+        self.lbl_newhint = QLabel(
+            "打印板 × 室温 → 定热床温度与首层温度（天冷翘边就治这两项）；"
+            "风扇强弱 = 在算好的风速上整体加减；"
+            "支撑好拆只改拆的难易，不改支撑落在哪。")
+        self.lbl_newhint.setObjectName("muted")
+        self.lbl_newhint.setWordWrap(True)
+        d.addWidget(self.lbl_newhint, 6, 0, 1, 8)
+
         self.lbl_raw = QLabel("原始值：—")
         self.lbl_raw.setObjectName("muted")
         self.lbl_raw.setWordWrap(True)
-        d.addWidget(self.lbl_raw, 4, 0, 1, 7)
+        d.addWidget(self.lbl_raw, 7, 0, 1, 8)
 
         # 逐件调参明细：每个对象判成什么形状原型、依据是什么、会被怎么调
         self.obj_box = QGroupBox("逐件调参明细（按对象判形状原型，按最保守者合并成全局值）")
@@ -261,7 +399,7 @@ class MainWindow(QMainWindow):
         self.obj_tree.setMinimumHeight(96)
         self.obj_tree.setMaximumHeight(170)
         ov.addWidget(self.obj_tree)
-        d.addWidget(self.obj_box, 5, 0, 1, 7)
+        # obj_box 放到下方「逐件明细」页签（见 _build_work_tab 底部）
 
         # 按模型实测尺寸推导：每条都是「实测值 ÷ 公式 = 结论」，可复核
         self.deriv_box = QGroupBox("按模型实测尺寸推导（每条都能手算复核）")
@@ -281,7 +419,7 @@ class MainWindow(QMainWindow):
         self.deriv_tree.setMinimumHeight(96)
         self.deriv_tree.setMaximumHeight(230)
         dv.addWidget(self.deriv_tree)
-        d.addWidget(self.deriv_box, 6, 0, 1, 7)
+        # deriv_box 放到下方「推导复核」页签
 
         # 真机同步清单（喷嘴 / 流量 / 机器上限 / 板面，全部来自工程，只读）
         self.hw_box = QGroupBox("真机同步（来自工程文件，只读不写，用于约束工艺参数）")
@@ -291,13 +429,13 @@ class MainWindow(QMainWindow):
         self.lbl_hw.setObjectName("muted")
         self.lbl_hw.setWordWrap(True)
         hv.addWidget(self.lbl_hw)
-        d.addWidget(self.hw_box, 7, 0, 1, 7)
+        # hw_box 放到下方「真机同步」页签
 
         self.lbl_warn = QLabel()
         self.lbl_warn.setObjectName("warn")
         self.lbl_warn.setWordWrap(True)
         self.lbl_warn.setVisible(False)
-        d.addWidget(self.lbl_warn, 8, 0, 1, 7)
+        d.addWidget(self.lbl_warn, 8, 0, 1, 8)
         d.setColumnStretch(1, 1)
         d.setColumnStretch(3, 1)
         root_top.addWidget(box_det)
@@ -353,7 +491,21 @@ class MainWindow(QMainWindow):
 
         self.radios["balanced"].setChecked(True)
         self.mode_group.idToggled.connect(self._on_mode_toggled)
+
         root_top.addWidget(box_mode)
+
+        # 结论卡：用户最想知道「这样调整后的结果」，不看参数值。
+        # 固定在下方页签区最上面（不随 ①②③ 一起滚走），一眼就能看到。
+        self.brief_box = QGroupBox("结论：这样调整之后会变成什么样")
+        bl = QVBoxLayout(self.brief_box)
+        bl.setContentsMargins(8, 4, 8, 6)
+        self.lbl_brief = QLabel("优化后会显示成一段人话结论：整体是不是更快/更结实、表面与附着变化、热床与风速、支撑好不好拆。")
+        self.lbl_brief.setObjectName("muted")
+        self.lbl_brief.setWordWrap(True)
+        self.lbl_brief.setTextFormat(Qt.TextFormat.RichText)
+        self.lbl_brief.setMaximumHeight(146)
+        bl.addWidget(self.lbl_brief)
+        self.brief_box.setMaximumHeight(176)
 
         # ---- ⑥ 操作按钮
         bar = QHBoxLayout()
@@ -413,8 +565,8 @@ class MainWindow(QMainWindow):
         self.table.setRootIsDecorated(True)
         self.table.setMinimumHeight(300)
         self.table.setColumnWidth(0, 208)
-        self.table.setColumnWidth(1, 146)
-        self.table.setColumnWidth(2, 58)
+        self.table.setColumnWidth(1, 168)
+        self.table.setColumnWidth(2, 76)
         self.table.setColumnWidth(3, 96)
         self.table.setColumnWidth(4, 96)
         self.table.setColumnWidth(5, 44)
@@ -429,7 +581,38 @@ class MainWindow(QMainWindow):
         hdr.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)
         self.table.itemDoubleClicked.connect(self._on_table_double_click)
         lv.addWidget(self.table, 1)
-        self.split.addWidget(left)
+        # 参数对比 / 逐件明细 / 推导复核 / 真机同步 收进页签：
+        # 默认只给「参数对比」，其余三块留给想复核的人，界面不至于一屏堆满。
+        self.detail_tabs = QTabWidget()
+        self.detail_tabs.setDocumentMode(True)
+        self.detail_tabs.addTab(left, "参数对比")
+        self.detail_tabs.addTab(self.obj_box, "逐件明细")
+        self.detail_tabs.addTab(self.deriv_box, "推导复核")
+        self.detail_tabs.addTab(self.hw_box, "真机同步")
+        # 写入核对：保存后把「表格里的值 → 新 3mf 里实际存的值」逐键比对，
+        # 一眼看出哪些真进了文件、哪些没有（用户要「验证是否都在切片软件应用了」）。
+        self.verify_page = QWidget()
+        vv = QVBoxLayout(self.verify_page)
+        vv.setContentsMargins(8, 8, 8, 8)
+        vv.setSpacing(6)
+        self.lbl_verify = QLabel("还没有保存。点「保存为 3mf」后，这里会逐键核对"
+                                 "「表格里的值」和「文件里实际存的值」。")
+        self.lbl_verify.setObjectName("muted")
+        self.lbl_verify.setWordWrap(True)
+        vv.addWidget(self.lbl_verify)
+        self.verify_tree = QTreeWidget()
+        self.verify_tree.setRootIsDecorated(False)
+        self.verify_tree.setAlternatingRowColors(True)
+        self.verify_tree.setColumnCount(4)
+        self.verify_tree.setHeaderLabels(["参数", "表格里的值", "文件里的值", "结果"])
+        vh = self.verify_tree.header()
+        vh.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        vh.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        vh.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        vh.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        vv.addWidget(self.verify_tree, 1)
+        self.detail_tabs.addTab(self.verify_page, "写入核对")
+        self.split.addWidget(self.detail_tabs)
 
         right = QWidget()
         rv = QVBoxLayout(right)
@@ -444,6 +627,7 @@ class MainWindow(QMainWindow):
         self.split.setStretchFactor(0, 3)
         self.split.setStretchFactor(1, 2)
         self.split.setSizes([880, 460])
+        root_bot.addWidget(self.brief_box)
         root_bot.addWidget(self.split, 1)
         self.top_scroll = QScrollArea()
         self.top_scroll.setWidgetResizable(True)
@@ -927,6 +1111,30 @@ class MainWindow(QMainWindow):
             self._log("形状标签：" + "、".join(tags))
         self._render_objects()
 
+    def _render_brief(self, res=None) -> None:
+        """结论卡：用户最想看的「这样调整后的结果」（不列参数值）。"""
+        if not hasattr(self, "lbl_brief"):
+            return
+        res = res if res is not None else self.result
+        if not res:
+            self.lbl_brief.setText("优化后会显示成一段人话结论。")
+            return
+        try:
+            lines = brief.build(
+                res,
+                thermal_rows=getattr(res, "thermal_rows", None),
+                machine_note=getattr(res, "machine_sync_note", "") or "",
+                support_ease=getattr(res, "support_ease", "standard") or "standard")
+        except Exception:
+            self.lbl_brief.setText("结论卡生成失败（不影响优化结果，详情见日志）。")
+            self._log("结论卡生成失败：\n" + traceback.format_exc(), "warn")
+            return
+        head = lines[0] if lines else ""
+        rest = lines[1:]
+        html_parts = [f"<b>{html.escape(head)}</b>"]
+        html_parts += [f"· {html.escape(x)}" for x in rest]
+        self.lbl_brief.setText("<br>".join(html_parts))
+
     def _render_derivations(self, res=None) -> None:
         """把「按模型实测尺寸推导」的每一条填进表格。"""
         if not hasattr(self, "deriv_tree"):
@@ -990,6 +1198,16 @@ class MainWindow(QMainWindow):
         self.hotend_info = hotend.detect(self.original_settings or {})
         hidx = self.cmb_hotend.findData(self.hotend_info.key)
         self.cmb_hotend.setCurrentIndex(hidx if hidx >= 0 else 0)
+        # 板子：工程里写了就默认选它；没写就留在「跟随工程」
+        try:
+            raw_bed = (self.original_settings or {}).get("curr_bed_type")
+            if isinstance(raw_bed, list):
+                raw_bed = raw_bed[0] if raw_bed else ""
+            if str(raw_bed or "").strip():
+                bidx = self.cmb_bed.findData(thermal.bed_type_of(self.original_settings))
+                self.cmb_bed.setCurrentIndex(bidx if bidx >= 0 else 0)
+        except Exception:
+            pass
         self._suppress = False
         if hasattr(self, "cmb_hotend") and self.original_settings:
             self._log("热端流量：" + self.hotend_info.summary_line(),
@@ -1016,9 +1234,17 @@ class MainWindow(QMainWindow):
 
     def _default_output(self) -> Path:
         if not self.project:
-            return Path.home() / "optimized.3mf"
+            return Path.home() / "optimized_v2.3mf"
         src = self.project.path
-        return src.with_name(f"{src.stem}_optimized_{datetime.now():%Y%m%d_%H%M%S}.3mf")
+        # 用户要求「出第二版同时保留第一版」：输出名带 v2 且带时间戳，
+        # 不同次优化各存一份，永不覆盖上一版和原工程。
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        cand = src.with_name(f"{src.stem}_optimized_v2_{stamp}.3mf")
+        n = 2
+        while cand.exists():
+            cand = src.with_name(f"{src.stem}_optimized_v2_{stamp}_{n}.3mf")
+            n += 1
+        return cand
 
     # ================================================================ 识别/模式
 
@@ -1036,6 +1262,160 @@ class MainWindow(QMainWindow):
             if rb.isChecked():
                 return key
         return "balanced"
+
+    # ---- v1.2 新增的几个维度（热床/风速/支撑/接缝/方案）
+    def _current_bed(self) -> str:
+        return self.cmb_bed.currentData() or ""
+
+    def _current_room(self) -> float | None:
+        v = int(self.sp_room.value())
+        return float(v) if v > 0 else None
+
+    def _current_fan_trim(self) -> int:
+        return int(self.sp_fan.value())
+
+    def _current_ease(self) -> str:
+        return self.cmb_ease.currentData() or "standard"
+
+    def _current_seam(self) -> bool:
+        return bool(self.chk_seam.isChecked())
+
+    def _collect_preset_values(self) -> dict:
+        """把当前这一屏的选择收成一套方案值。"""
+        return {
+            "printer": self._current_printer(),
+            "filament": self._current_filament(),
+            "nozzle": self._current_nozzle(),
+            "mode": self._current_mode(),
+            "bed_type": self._current_bed(),
+            "room_c": self._current_room(),
+            "fan_trim": self._current_fan_trim(),
+            "support_ease": self._current_ease(),
+            "support_mode": self.cmb_support.currentData() or "auto",
+            "shape": bool(self.chk_shape.isChecked()),
+            "seam_smooth": self._current_seam(),
+            "machine_sync": True,
+            "time_cap": bool(self.chk_timecap.isChecked()),
+        }
+
+    def _apply_preset_values(self, vals: dict) -> None:
+        """把一套方案值填回界面（填完只重算一次）。"""
+        self._suppress = True
+        try:
+            for key, attr in (("printer", self.cmb_printer), ("filament", self.cmb_filament),
+                              ("mode", None)):
+                if key == "mode":
+                    m = vals.get("mode")
+                    if m in self.radios:
+                        self.radios[m].setChecked(True)
+                    continue
+                idx = attr.findData(vals.get(key))
+                if idx >= 0:
+                    attr.setCurrentIndex(idx)
+            nz = vals.get("nozzle")
+            if nz is not None:
+                idx = self.cmb_nozzle.findData(float(nz))
+                if idx >= 0:
+                    self.cmb_nozzle.setCurrentIndex(idx)
+            bed = vals.get("bed_type")
+            if bed:
+                idx = self.cmb_bed.findData(bed)
+                if idx >= 0:
+                    self.cmb_bed.setCurrentIndex(idx)
+            room = vals.get("room_c")
+            self.sp_room.setValue(int(room) if room else 0)
+            self.sp_fan.setValue(int(vals.get("fan_trim") or 0))
+            idx = self.cmb_ease.findData(vals.get("support_ease") or "standard")
+            if idx >= 0:
+                self.cmb_ease.setCurrentIndex(idx)
+            idx = self.cmb_support.findData(vals.get("support_mode") or "auto")
+            if idx >= 0:
+                self.cmb_support.setCurrentIndex(idx)
+            if vals.get("shape") is not None:
+                self.chk_shape.setChecked(bool(vals.get("shape")))
+            if vals.get("seam_smooth") is not None:
+                self.chk_seam.setChecked(bool(vals.get("seam_smooth")))
+            if vals.get("time_cap") is not None:
+                self.chk_timecap.setChecked(bool(vals.get("time_cap")))
+        finally:
+            self._suppress = False
+        self._reoptimize()
+
+    def _refresh_presets(self) -> None:
+        """重新读方案库并填下拉（内置三套 + 用户自己存的）。"""
+        try:
+            presets = user_presets.load_all()
+        except Exception as exc:
+            try:
+                self._log(f"读取方案库失败：{exc}", "warn")
+            except Exception:
+                pass
+            presets = []
+        self._preset_values = {p.name: dict(p.values) for p in presets}
+        self.cmb_preset.blockSignals(True)
+        self.cmb_preset.clear()
+        self.cmb_preset.addItem("（不套方案）", "")
+        for p in presets:
+            self.cmb_preset.addItem(("★ " if p.builtin else "") + p.name, p.name)
+        self.cmb_preset.setCurrentIndex(0)
+        self.cmb_preset.blockSignals(False)
+
+    def _on_preset_picked(self, *_args) -> None:
+        name = self.cmb_preset.currentData()
+        if not name:
+            # 切回「（不套方案）」= 撤销：回到套用方案之前那一屏设置
+            if self._pre_preset_values is not None:
+                back = self._pre_preset_values
+                self._pre_preset_values = None
+                self._apply_preset_values(back)
+                self._log("已关闭方案，参数回到套用之前的设置。", "ok")
+            return
+        vals = self._preset_values.get(name)
+        if not vals:
+            return
+        # 只在第一次套用时快照，之后在方案之间来回切换仍以「你自己的设置」为撤销点
+        if self._pre_preset_values is None:
+            self._pre_preset_values = self._collect_preset_values()
+        self._apply_preset_values(vals)
+        self._log(f"已套用方案「{name}」：机型/耗材/板子/室温/风扇/支撑/接缝一并切好"
+                  f"（切回「不套方案」即可还原）。", "ok")
+
+    def on_preset_save(self) -> None:
+        name = self.cmb_preset.currentText().strip()
+        if not name or name.startswith("（") or name.startswith("★"):
+            name = ""
+        from PySide6.QtWidgets import QInputDialog
+        name, ok = QInputDialog.getText(self, "存为方案", "方案名（例：PETG 冷天不翘边）:", text=name)
+        if not ok or not name.strip():
+            return
+        try:
+            user = [p for p in user_presets.load_all() if not p.builtin]
+            user = user_presets.upsert(
+                user, user_presets.from_values(self._collect_preset_values(), name.strip()))
+            user_presets.save_all(user)
+        except Exception as exc:
+            QMessageBox.critical(self, "保存方案失败", str(exc))
+            return
+        self._refresh_presets()
+        idx = self.cmb_preset.findData(name.strip())
+        if idx >= 0:
+            self.cmb_preset.setCurrentIndex(idx)
+        self._log(f"方案「{name.strip()}」已保存。", "ok")
+
+    def on_preset_delete(self) -> None:
+        name = self.cmb_preset.currentData()
+        if not name:
+            QMessageBox.information(self, "先选方案", "下拉里先选一个要删的方案。")
+            return
+        if self.cmb_preset.currentText().startswith("★"):
+            QMessageBox.information(self, "内置方案不能删", "内置方案是随程序来的，删不掉；你可以另存一套自己的。")
+            return
+        if QMessageBox.question(self, "删除方案", f"删除方案「{name}」？") != QMessageBox.StandardButton.Yes:
+            return
+        user = [p for p in user_presets.load_all() if not p.builtin]
+        user_presets.save_all(user_presets.remove(user, name))
+        self._refresh_presets()
+        self._log(f"方案「{name}」已删除。")
 
     def _current_custom(self) -> bambu_profiles.FilamentPreset | None:
         name = self.cmb_custom.currentData()
@@ -1247,7 +1627,12 @@ class MainWindow(QMainWindow):
                 hardware_info=self.hw, nozzle_explicit=nozzle_explicit,
                 hotend_flow=((self.cmb_hotend.currentData() or None)
                              if getattr(self, "_hotend_touched", False) else None),
-                support_mode=(self.cmb_support.currentData() or "auto"))
+                support_mode=(self.cmb_support.currentData() or "auto"),
+                support_ease=self._current_ease(),
+                room_temp_c=self._current_room(),
+                bed_type=self._current_bed(),
+                fan_trim=self._current_fan_trim(),
+                seam_smooth=self._current_seam())
         except Exception:
             self._busy(False)
             self._log("优化时出错：\n" + traceback.format_exc(), "err")
@@ -1261,6 +1646,7 @@ class MainWindow(QMainWindow):
         self._render_hw()
         self._render_objects()
         self._render_derivations(res)
+        self._render_brief(res)
 
         changed = res.changed_count if hasattr(res, "changed_count") else sum(1 for r in res.rows if r.changed)
         delta = res.time.delta_pct if res.time else 0.0
@@ -1407,10 +1793,28 @@ class MainWindow(QMainWindow):
         self._busy(True)
         try:
             fp_before = safety.fingerprint()
-            written, skipped = self.project.apply(self.result.write_values)
-            # 关键：告诉 Studio「这些工艺键不是预设值，别用预设覆盖」
+            written, skipped = self.project.apply(
+                self.result.write_values,
+                allow_missing=(thermal.STANDARD_KEYS | machine_sync.SYNC_KEYS
+                                  | seam_plan.STANDARD_KEYS
+                                  | support_model.SUPPORT_KEYS))
+            # v1.2：同步机器页（机型/工艺前缀/板面尺寸/机器上限）。
+            # 不做这一步，Studio 打开时按机器页认机型，会把参数按机器预设盖回默认值
+            # —— 这正是用户说的「选了机型后 3mf 不对应 / 手选机型参数变回默认」。
+            mp = machine_sync.plan(
+                self.engine.rules, printer_key=self._current_printer(),
+                nozzle=self._current_nozzle(),
+                detected_key=(getattr(self.det, "printer_key", "") if self.det else ""),
+                current=self.project.settings)
+            machine_written = 0
+            if mp.ops:
+                mv, _ms = self.project.apply(mp.ops, allow_missing=machine_sync.SYNC_KEYS)
+                machine_written = len(mv)
+            # 关键：告诉 Studio「这些键不是预设值，别用预设覆盖」
+            # 三槽都要声明：工艺 → 槽0，耗材+热床/风速 → 槽1，机器 → 槽2
             diff_info = preset_diff.apply_to_project(
-                self.project, also=list(self.result.write_values.keys()))
+                self.project,
+                also=list(self.result.write_values.keys()) + list(mp.ops.keys()))
             # 工艺档名默认不动（用户要求只改工艺参数）；
             # 只有在勾选「标为自定义」时才改这一行元数据
             renamed = ""
@@ -1418,7 +1822,11 @@ class MainWindow(QMainWindow):
                 renamed = self.project.mark_custom_process()
             out = self.project.save_as(target)
             # 保存后自检：重新打开新 3mf，核对写进去的值 == UI 里显示的值
-            problems = safety.self_check(out, self.result.write_values)
+            expected = dict(self.result.write_values)
+            for k, v in mp.ops.items():
+                expected.setdefault(k, v if isinstance(v, str) else json.dumps(v, ensure_ascii=False)
+                                    if isinstance(v, (list, dict)) else str(v))
+            problems = safety.self_check(out, expected)
             fp_changed = safety.diff_fingerprint(fp_before, safety.fingerprint())
         except threemf.ThreeMfError as exc:
             self._busy(False)
@@ -1436,8 +1844,15 @@ class MainWindow(QMainWindow):
 
         # 让下一次优化以「已写入文件」为基准，避免重复点保存时基准错位
         self.original_settings = dict(self.project.settings)
-        self._log(f"已写入 {len(written)} 项参数，跳过 {len(skipped)} 项（工程里无此键）。", "ok")
-        self._log(f"已声明工艺差异 {diff_info} —— Studio 只对声明过的键采用文件里的值。", "info")
+        self._log(f"已写入 {len(written)} 项工艺参数，跳过 {len(skipped)} 项（工程里无此键）。", "ok")
+        if machine_written:
+            self._log(f"已同步机器页 {machine_written} 项（机型 / 板面尺寸 / 机器上限）。", "ok")
+        for n in mp.notes:
+            self._log("· " + n)
+        for w in mp.warnings:
+            self._log("⚠ " + w, "warn")
+        self._log(f"已声明预设差异 {diff_info} —— Studio 只对声明过的键采用文件里的值。", "info")
+        self._render_verify(out, expected, problems)
         if renamed:
             self._log(f"工艺档已标为自定义：print_settings_id = {renamed}"
                       f"（Studio 会采用文件里的参数，不会再回退到同名系统预设）", "info")
@@ -1456,6 +1871,54 @@ class MainWindow(QMainWindow):
             f"已另存：\n{out}\n\n写入 {len(written)} 项参数。\n"
             "用 Bambu Studio 打开这个新文件，直接切片即可。\n"
             "原工程文件没有被修改。")
+
+    def _render_verify(self, path, expected: dict, problems: list[str]) -> None:
+        """保存后核对：表格里显示的值 vs 新文件里实际存的值。
+
+        用户要的是「怎么确认参数真的进了切片软件」，所以这里给的是**逐键对照**，
+        不是一句「保存成功」。Studio 那边还有一层「预设会不会盖回来」，
+        所以声明槽位的结果也一并写进标题。
+        """
+        tree = getattr(self, "verify_tree", None)
+        if tree is None:
+            return
+        tree.clear()
+        try:
+            back = threemf.ThreeMfProject.load(str(path))
+            got = back.settings
+        except Exception as exc:                     # 读不回来就说清楚，别假装核对过
+            self.lbl_verify.setText(f"核对失败：新文件读不回来（{exc}）")
+            self._log(f"⚠ 核对失败：{exc}", "err")
+            return
+
+        ok = bad = 0
+        for key in sorted(expected):
+            want = expected[key]
+            have = got.get(key, "")
+            same = _same_value(want, have) if key in got else False
+            if same:
+                ok += 1
+            else:
+                bad += 1
+            item = QTreeWidgetItem([key, str(want), str(have) if key in got else "（文件里没有这个键）",
+                                    "✅ 已写入" if same else "⚠ 不一致"])
+            if not same:
+                for col in range(4):
+                    item.setForeground(col, QColor("#c0392b"))
+            tree.addTopLevelItem(item)
+
+        if problems:
+            self.lbl_verify.setText(
+                f"写入 {len(expected)} 项：一致 {ok} 项，不一致 {bad} 项。"
+                f"另外自检报了 {len(problems)} 处问题（见日志）。")
+        else:
+            self.lbl_verify.setText(
+                f"写入 {len(expected)} 项：一致 {ok} 项，不一致 {bad} 项。"
+                "文件里存的和你看到的一致；Studio 若仍显示旧值，多半是「预设差异槽」没声明，"
+                "看日志里那行「已声明预设差异」。")
+        self.detail_tabs.setCurrentWidget(self.verify_page)
+        self._log(f"写入核对：{ok}/{len(expected)} 项一致" + (f"，{bad} 项不一致" if bad else ""),
+                  "ok" if not bad else "err")
 
     def on_export_report(self) -> None:
         if not self.project or not self.result:

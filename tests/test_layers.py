@@ -51,11 +51,15 @@ RULES = rules_engine.load_rules()
 ENGINE = rules_engine.RulesEngine(RULES)
 
 #: 耗材页键（只读）
-FILAMENT_KEYS = ("fan_min_speed", "pressure_advance", "filament_flow_ratio")
+FILAMENT_KEYS = ("pressure_advance", "filament_flow_ratio")
 #: 机器页键（只读）
 MACHINE_KEYS = ("retraction_length", "z_hop", "wipe")
-#: 两种页面的全部键
+#: 两种页面的全部键（v1.2 起 fan_* 归 thermal 档，可写，故不在其中）
 FOREIGN_KEYS = FILAMENT_KEYS + MACHINE_KEYS
+#: v1.2 可写范围：工艺页 + 热床/风速（thermal）
+WRITABLE_SCOPES = (scope.PROCESS, scope.THERMAL)
+#: thermal 档代表键（可写，用户明确要求写回）
+THERMAL_KEYS = ("fan_min_speed", "fan_max_speed")
 
 
 # ------------------------------------------------------------------ 夹具
@@ -131,12 +135,20 @@ class TestScopePolicyGate(unittest.TestCase):
         self.assertEqual(policy.reason("layer_height"), "")
 
     def test_filament_keys_blocked(self):
-        """耗材页键（fan_min_speed / pressure_advance / filament_flow_ratio）不允许写。"""
+        """耗材页键（pressure_advance / filament_flow_ratio）不允许写。"""
         policy = scope.ScopePolicy()
         for key in FILAMENT_KEYS:
             with self.subTest(key=key):
                 self.assertEqual(scope.scope_of(key), scope.FILAMENT)
                 self.assertFalse(policy.allows(key))
+
+    def test_thermal_keys_writable_under_default_policy(self):
+        """v1.2：fan_* 归 thermal 档，规则库 write_scopes 放行后必须可写。"""
+        policy = scope.ScopePolicy.from_rules(RULES)
+        for key in THERMAL_KEYS:
+            with self.subTest(key=key):
+                self.assertEqual(scope.scope_of(key), scope.THERMAL)
+                self.assertTrue(policy.allows(key))
 
     def test_machine_keys_blocked(self):
         """机器页键（retraction_length / z_hop / wipe）不允许写。"""
@@ -163,16 +175,16 @@ class TestScopePolicyGate(unittest.TestCase):
     def test_scope_policy_from_rules_reads_write_scopes(self):
         """从规则库构造策略时，options.write_scopes 决定可写范围。"""
         policy = scope.ScopePolicy.from_rules(RULES)
-        self.assertEqual(policy.allowed, (scope.PROCESS,))
+        self.assertEqual(policy.allowed, WRITABLE_SCOPES)
         wider = scope.ScopePolicy.from_rules(
             {"options": {"write_scopes": ["process", "filament"]}})
-        self.assertTrue(wider.allows("fan_min_speed"))
+        self.assertTrue(wider.allows("pressure_advance"))
         self.assertFalse(wider.allows("z_hop"))
 
-    def test_scope_summary_covers_four_pages(self):
-        """统计口径覆盖四个归属，工艺页数量最多。"""
+    def test_scope_summary_covers_five_pages(self):
+        """统计口径覆盖五个归属（v1.2 新增 thermal），工艺页数量最多。"""
         summary = scope.ScopePolicy().summary()
-        self.assertEqual(len(summary), 4)
+        self.assertEqual(len(summary), 5)
         counts = {label: n for label, n, _note in summary}
         self.assertEqual(sum(counts.values()), len(scope.SCOPE))
 
@@ -191,7 +203,7 @@ class TestEngineScopeGate(unittest.TestCase):
     def test_write_values_exclude_foreign_pages(self):
         """write_values 里不允许出现任何耗材页 / 机器页归属的键。"""
         foreign = [k for k in self.result.write_values
-                   if scope.scope_of(k) != scope.PROCESS]
+                   if scope.scope_of(k) not in WRITABLE_SCOPES]
         self.assertEqual(foreign, [], f"越权写入：{foreign}")
 
     def test_blocked_rows_carry_foreign_keys(self):
@@ -231,14 +243,16 @@ class TestEngineScopeGate(unittest.TestCase):
     def test_process_keys_still_written(self):
         """闸门不能把工艺页也一起拦掉——工艺页该写的还得写。"""
         self.assertTrue(self.result.write_values)
-        self.assertTrue(all(scope.scope_of(k) == scope.PROCESS
+        self.assertTrue(all(scope.scope_of(k) in WRITABLE_SCOPES
+                            for k in self.result.write_values))
+        self.assertTrue(any(scope.scope_of(k) == scope.PROCESS
                             for k in self.result.write_values))
         self.assertGreater(self.result.changed_count, 0)
 
     def test_policy_attached_to_result(self):
         """结果里带着策略对象，UI 可以据此说明为什么某些键没写。"""
         self.assertIsInstance(self.result.policy, scope.ScopePolicy)
-        self.assertEqual(self.result.policy.allowed, (scope.PROCESS,))
+        self.assertEqual(self.result.policy.allowed, WRITABLE_SCOPES)
 
 
 # ================================================================== 3）规则库纯净度
@@ -308,10 +322,12 @@ class TestRulesLayerPurity(unittest.TestCase):
         found = self._rule_library_keys()
         meta = sorted(k for k in found if scope.scope_of(k) == scope.META)
         self.assertEqual(meta, [], f"规则库里出现了元数据页的键：{meta}")
+        # 非 process 的键必须落在已知的可写/只读档里（filament / thermal / machine）
         foreign = sorted(k for k in found if scope.scope_of(k) != scope.PROCESS)
         for key in foreign:
             with self.subTest(key=key):
-                self.assertIn(scope.scope_of(key), (scope.FILAMENT, scope.MACHINE))
+                self.assertIn(scope.scope_of(key),
+                              (scope.FILAMENT, scope.THERMAL, scope.MACHINE))
 
     def test_listed_layers_are_process_pure(self):
         """任务点名的那些节点里，所有键都必须属于切片工艺页（scope == process）。
@@ -341,10 +357,11 @@ class TestRulesLayerPurity(unittest.TestCase):
                     foreign.append(f"{node}.{key}({scope.scope_of(key)})")
         print("[规则库纯净度现状] 非 process 键引用 %d 处：%s"
               % (len(foreign), foreign[:10]))
-        # 不变量：这些键都必须在归属表里被标成 filament / machine
+        # 不变量：这些键都必须在归属表里被标成 filament / thermal / machine
         for item in foreign:
             key = item.split("(")[0].rsplit(".", 1)[-1]
-            self.assertIn(scope.scope_of(key), (scope.FILAMENT, scope.MACHINE))
+            self.assertIn(scope.scope_of(key),
+                          (scope.FILAMENT, scope.THERMAL, scope.MACHINE))
 
     def test_engine_gate_covers_all_foreign_rule_keys(self):
         """兜底：越界键到了引擎这一层也必须被挡住，绝不能进 write_values。
@@ -355,7 +372,7 @@ class TestRulesLayerPurity(unittest.TestCase):
         保证「闸门生效」这件事在任何规则库状态下都被验到。
         """
         found = self._rule_library_keys()
-        foreign = {k for k in found if scope.scope_of(k) != scope.PROCESS}
+        foreign = {k for k in found if scope.scope_of(k) not in WRITABLE_SCOPES}
         foreign |= set(FOREIGN_KEYS)
         # 假工程里必须包含这些键，闸门才有机会判它们
         current = _fake_current()
@@ -363,7 +380,8 @@ class TestRulesLayerPurity(unittest.TestCase):
             current.setdefault(key, "0")
         result = ENGINE.optimize(current, printer_key="X1C", filament_key="PLA",
                                  nozzle=0.4, mode_key="balanced")
-        written = [k for k in result.write_values if scope.scope_of(k) != scope.PROCESS]
+        written = [k for k in result.write_values
+                   if scope.scope_of(k) not in WRITABLE_SCOPES]
         self.assertEqual(written, [], f"越权写入：{written}")
         blocked = {row.key for row in result.blocked}
         # 只要工程里存了这个键，它就应该出现在 blocked 里

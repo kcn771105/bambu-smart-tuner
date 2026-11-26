@@ -37,6 +37,15 @@ class ThreeMfError(Exception):
     """3mf 文件结构不符合预期时抛出，消息直接可展示给用户。"""
 
 
+#: 这些键在 project_settings.config 里必须是数组（不是字符串）。
+#: 原工程缺这几行、我们要补写时，得先把类型登记成数组。
+_ARRAY_KEYS = frozenset({
+    "different_settings_to_system", "printable_area", "wrapping_exclude_area",
+    "nozzle_diameter", "extruder_type", "extruder_variant",
+    "filament_settings_id", "default_filament_profile",
+})
+
+
 def _norm(name: str) -> str:
     return name.replace("\\", "/").lower()
 
@@ -142,21 +151,44 @@ class ThreeMfProject:
     def has(self, key: str) -> bool:
         return key in self.settings
 
+    #: 这几类键在 project_settings.config 里必须是**数组**。原工程没有这个键时
+    #: 我们补写它，必须先登记成数组类型，否则会写成 JSON 文本，Studio 认不出。
+    ARRAY_KEYS = frozenset({"different_settings_to_system"})
+
+    def ensure_array_key(self, key: str, length: int = 3) -> None:
+        """把某个键登记为「数组型」，补写新键前先调一下。"""
+        self.kinds[key] = "list"
+        self.elem_kinds.setdefault(key, "str")
+        self.list_lens[key] = length
+
     # ------------------------------------------------------------ 写回
 
-    def apply(self, new_values: dict[str, str], *, skip_missing: bool = True) -> tuple[dict[str, str], list[str]]:
+    def apply(self, new_values: dict[str, str], *, skip_missing: bool = True,
+              allow_missing: set[str] | frozenset[str] | None = None) -> tuple[dict[str, str], list[str]]:
         """把 {键: 已格式化字符串} 写进内存中的 settings。
 
         返回 (实际写入的键值, 被跳过的键)。skip_missing=True 时，
         工程里原本不存在的键不新增（Bambu Studio 对未知键容忍度不一，
         宁可不写也不要引入脏键）。
+
+        allow_missing 里列出的键是例外：它们是 Studio 工程文件的标准键
+        （热床温度 *_plate_temp、风扇 fan_* 等），老工程里可能没存这一行，
+        但补进去 Studio 认；不补就等于「热床和风扇怎么设都不生效」。
         """
         written: dict[str, str] = {}
         skipped: list[str] = []
+        exempt = allow_missing or frozenset()
         for k, v in new_values.items():
-            if k not in self.settings and skip_missing:
+            if k not in self.settings and skip_missing and k not in exempt:
                 skipped.append(k)
                 continue
+            if k not in self.settings and k in _ARRAY_KEYS:
+                # 补写数组型键（printable_area 等）前先登记类型，否则会写成纯文本
+                try:
+                    n = len(json.loads(v)) if str(v).strip().startswith("[") else 1
+                except (ValueError, TypeError):
+                    n = 1
+                self.ensure_array_key(k, n)
             if self.settings.get(k) == v:
                 continue
             self.settings[k] = v

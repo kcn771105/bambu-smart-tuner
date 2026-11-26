@@ -233,6 +233,34 @@ _PARAM_LIST: list[ParamSpec] = [
     P("brim_width", "裙边宽度", "adhesion", FLOAT, 0, 30, 1, "mm", decimals=0, preserve=True),
     P("brim_object_gap", "裙边与模型间距", "adhesion", FLOAT, 0, 1, 0.01, "mm", preserve=True),
     P("raft_layers", "筏板层数", "adhesion", INT, 0, 10, 1, "层", soft=True),
+
+    # ---------------- 热床温度与风速（耗材×板子×室温） ----------------
+    # 这些键在官方预设里分布在耗材页/机器页，但用户明确要求本程序按
+    # 耗材、板子、室温自动设置热床温度与风速，所以统一登记成可写的规格，
+    # 归属改由 core/scope_data.py 的 thermal 组标记。
+    P("supertack_plate_temp", "Supertack 板温度", "thermal", ARRAY_FLOAT, 0, 120, 5, "°C", decimals=0),
+    P("supertack_plate_temp_initial_layer", "Supertack 板首层温度", "thermal", ARRAY_FLOAT, 0, 120, 5, "°C", decimals=0),
+    P("textured_plate_temp", "纹理板温度", "thermal", ARRAY_FLOAT, 0, 120, 5, "°C", decimals=0),
+    P("textured_plate_temp_initial_layer", "纹理板首层温度", "thermal", ARRAY_FLOAT, 0, 120, 5, "°C", decimals=0),
+    P("hot_plate_temp", "高温板温度", "thermal", ARRAY_FLOAT, 0, 120, 5, "°C", decimals=0),
+    P("hot_plate_temp_initial_layer", "高温板首层温度", "thermal", ARRAY_FLOAT, 0, 120, 5, "°C", decimals=0),
+    P("cool_plate_temp", "冷板温度", "thermal", ARRAY_FLOAT, 0, 120, 5, "°C", decimals=0),
+    P("cool_plate_temp_initial_layer", "冷板首层温度", "thermal", ARRAY_FLOAT, 0, 120, 5, "°C", decimals=0),
+    P("eng_plate_temp", "工程板温度", "thermal", ARRAY_FLOAT, 0, 120, 5, "°C", decimals=0),
+    P("eng_plate_temp_initial_layer", "工程板首层温度", "thermal", ARRAY_FLOAT, 0, 120, 5, "°C", decimals=0),
+    P("nozzle_temperature", "喷嘴温度", "thermal", ARRAY_FLOAT, 150, 350, 5, "°C", decimals=0),
+    P("nozzle_temperature_initial_layer", "喷嘴首层温度", "thermal", ARRAY_FLOAT, 150, 350, 5, "°C", decimals=0),
+    P("curr_bed_type", "板子类型", "thermal", ENUM, 0, 0, 1, "",
+      choices=("Supertack Plate", "Textured PEI Plate", "Smooth PEI Plate",
+               "High Temp Plate", "Engineering Plate", "Cool Plate")),
+
+    # ---------------- 支撑接触面 / 易拆卸 ----------------
+    P("support_interface_layers", "支撑接触面层数", "support", INT, 0, 8, 1, "层"),
+    P("support_interface_top_layers", "支撑顶接触面层数", "support", INT, 0, 8, 1, "层"),
+    P("support_interface_bottom_layers", "支撑底接触面层数", "support", INT, 0, 8, 1, "层"),
+    P("support_base_pattern_spacing", "支撑本体线间距", "support", FLOAT, 0.1, 4.0, 0.1, "mm"),
+    P("support_ironing_spacing", "支撑熨烫线间距", "support", FLOAT, 0.05, 1.0, 0.05, "mm"),
+
 ]
 
 PARAMS: dict[str, ParamSpec] = {p.key: p for p in _PARAM_LIST}

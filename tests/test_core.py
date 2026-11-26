@@ -214,10 +214,11 @@ class TestOptimize(unittest.TestCase):
         self.assertLessEqual(v["outer_wall_speed"], 60)   # TPU 上限 + A1 交叉规则
 
     def test_filament_page_keys_are_not_written(self):
-        """耗材页 / 机器页的键只读不改：不出现在 write_values 里。"""
+        """耗材页 / 机器页的键只读不改；只有工艺页与 thermal 档可以写。"""
         res = self._run("strength", printer="A1mini", filament="TPU", nozzle=0.4)
+        writable = (scope.PROCESS, scope.THERMAL)
         foreign = [k for k in res.write_values
-                   if scope.scope_of(k) not in (scope.PROCESS,)]
+                   if scope.scope_of(k) not in writable]
         self.assertEqual(foreign, [], f"越权写入耗材页/机器页：{foreign}")
         # 压力提前属于耗材页，引擎里不再有它的取值
         self.assertNotIn("pressure_advance", res.values)

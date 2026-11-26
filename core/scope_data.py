@@ -20,6 +20,7 @@ SCOPE_LABEL: dict[str, str] = {
     "filament": "耗材页",
     "machine": "机器页",
     "meta": "工程元数据",
+    "thermal": "热床与风速",
 }
 
 SCOPE_NOTE: dict[str, str] = {
@@ -27,6 +28,7 @@ SCOPE_NOTE: dict[str, str] = {
     "filament": "属于耗材页参数（冷却/回抽/流量/AMS 槽位），按要求不改。",
     "machine": "属于机器页参数（硬件上限/喷嘴/板面/起始 G-code），按要求不改。",
     "meta": "工程身份信息（机型/耗材标识/继承关系），不可改。",
+    "thermal": "热床温度与风扇转速（按耗材/板子/室温自动设置，允许写入）。",
 }
 
 # 键 → scope
@@ -322,6 +324,7 @@ SCOPE: dict[str, str] = {
     "support_filament": "filament",
     "support_interface_bottom_layers": "process",
     "support_interface_filament": "filament",
+    "support_interface_layers": "process",
     "support_interface_loop_pattern": "process",
     "support_interface_not_for_body": "process",
     "support_interface_pattern": "process",
@@ -396,4 +399,25 @@ SCOPE: dict[str, str] = {
     "z_hop": "machine",
     "z_hop_types": "machine",
     "z_offset": "machine",
+
+    "supertack_plate_temp": "thermal",
+    "supertack_plate_temp_initial_layer": "thermal",
+    "textured_plate_temp": "thermal",
+    "textured_plate_temp_initial_layer": "thermal",
+    "hot_plate_temp": "thermal",
+    "hot_plate_temp_initial_layer": "thermal",
+    "cool_plate_temp": "thermal",
+    "cool_plate_temp_initial_layer": "thermal",
+    "eng_plate_temp": "thermal",
+    "eng_plate_temp_initial_layer": "thermal",
+    "nozzle_temperature": "thermal",
+    "nozzle_temperature_initial_layer": "thermal",
+    "curr_bed_type": "thermal",
+    "bed_temperature_formula": "thermal",
+    "fan_min_speed": "thermal",
+    "fan_max_speed": "thermal",
+    "first_x_layer_fan_speed": "thermal",
+    "close_fan_the_first_x_layers": "thermal",
+    "fan_cooling_layer_time": "thermal",
+    "overhang_fan_speed": "thermal",
 }

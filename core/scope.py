@@ -44,7 +44,7 @@ from .scope_data import SCOPE, SCOPE_LABEL, SCOPE_NOTE
 
 __all__ = [
     "SCOPE", "SCOPE_LABEL", "SCOPE_NOTE",
-    "PROCESS", "FILAMENT", "MACHINE", "META",
+    "PROCESS", "FILAMENT", "MACHINE", "META", "THERMAL",
     "scope_of", "is_writable", "writable_keys", "readonly_keys",
     "group_by_scope", "scope_summary", "ScopePolicy",
 ]
@@ -53,6 +53,7 @@ PROCESS = "process"
 FILAMENT = "filament"
 MACHINE = "machine"
 META = "meta"
+THERMAL = "thermal"
 
 #: 默认允许写入的归属。用户可在规则库 options.write_scopes 里改。
 DEFAULT_WRITABLE = (PROCESS,)
@@ -76,7 +77,7 @@ def readonly_keys(allowed: tuple[str, ...] = DEFAULT_WRITABLE) -> list[str]:
 
 
 def group_by_scope(keys) -> dict[str, list[str]]:
-    out: dict[str, list[str]] = {PROCESS: [], FILAMENT: [], MACHINE: [], META: []}
+    out: dict[str, list[str]] = {PROCESS: [], FILAMENT: [], MACHINE: [], META: [], THERMAL: []}
     for k in keys:
         out.setdefault(scope_of(k), []).append(k)
     return out
@@ -84,14 +85,12 @@ def group_by_scope(keys) -> dict[str, list[str]]:
 
 def scope_summary(allowed: tuple[str, ...] = DEFAULT_WRITABLE) -> list[tuple[str, int, str]]:
     """给 UI 用的统计：(归属, 数量, 说明)。"""
-    counts = {PROCESS: 0, FILAMENT: 0, MACHINE: 0, META: 0}
+    counts = {PROCESS: 0, FILAMENT: 0, MACHINE: 0, META: 0, THERMAL: 0}
     for k in SCOPE:
         counts[scope_of(k)] = counts.get(scope_of(k), 0) + 1
     out = []
-    for sc in (PROCESS, FILAMENT, MACHINE, META):
-        if sc == PROCESS:
-            note = SCOPE_NOTE[PROCESS]
-        elif sc in allowed:
+    for sc in (PROCESS, THERMAL, FILAMENT, MACHINE, META):
+        if sc in (PROCESS, THERMAL) or sc in allowed:
             note = "本程序允许写入这一页。"
         else:
             note = SCOPE_NOTE.get(sc, "")
@@ -116,7 +115,7 @@ class ScopePolicy:
             return cls(DEFAULT_WRITABLE)
         if isinstance(raw, str):
             raw = [raw]
-        allowed = tuple(str(x) for x in raw if str(x) in (PROCESS, FILAMENT, MACHINE, META))
+        allowed = tuple(str(x) for x in raw if str(x) in (PROCESS, FILAMENT, MACHINE, META, THERMAL))
         return cls(allowed or DEFAULT_WRITABLE)
 
     # -------------------------------------------------- 查询

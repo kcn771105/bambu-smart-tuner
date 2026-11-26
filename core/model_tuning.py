@@ -228,6 +228,54 @@ def derive(profile, *, nozzle: float = 0.4, line_width: float | None = None,
                 formula="25%（强度档基线）+ 8%（细高）+ 5%（大体积）",
                 conclusion=f"下限 {base + add:.0f}%"))
 
+    # ---------------- R7 悬垂跨度：要降桥接速度、加接触层 ----------------
+    # 悬垂面积占比是「有多少要撑」，悬垂边上最长那条（span）是「撑得有多悬」。
+    # 一大片悬空（跨度 ≥ 20 mm 且占比 ≥ 3%）时，全速跑桥接会垂丝、贴合差，
+    # 必须把桥接速度压下来，接触面也多给一层，让上面那层有东西压着。
+    span = _num(getattr(profile, "max_bridge_span", 0.0))
+    sup_ratio = _num(getattr(profile, "support_ratio", 0.0))
+    if span >= 20.0 and sup_ratio >= 0.03:
+        br = _num(cur.get("bridge_speed"), 30.0) or 30.0
+        cap_br = min(br, 30.0)
+        out.ops.setdefault("bridge_speed", {"max": cap_br})
+        why = (f"最长悬垂边 {span:.0f} mm、悬垂占比 {sup_ratio * 100:.1f}%："
+               f"这是一大片悬空，桥接压到 {cap_br:.0f} mm/s（接触面层数由支撑层另算）。")
+        out.notes.append("悬垂：" + why)
+        out.rows.append(DerivationRow(
+            metric="悬垂跨度 → 桥接速度 bridge_speed",
+            measured=f"最长悬垂边 {span:.1f} mm ／ 悬垂占比 {sup_ratio * 100:.1f}%",
+            formula="跨度 ≥ 20 mm 且占比 ≥ 3% → 桥接 ≤ 30 mm/s",
+            conclusion=f"桥接上限 {cap_br:.0f} mm/s"))
+    else:
+        out.rows.append(DerivationRow(
+            metric="悬垂跨度 → 桥接速度 bridge_speed",
+            measured=f"最长悬垂边 {span:.1f} mm ／ 悬垂占比 {sup_ratio * 100:.1f}%",
+            formula="跨度 ≥ 20 mm 且占比 ≥ 3%",
+            conclusion="没到门槛，桥接速度按档位走"))
+
+    # ---------------- R8 站得稳不稳：细高 + 脚小 → 加宽裙边 ----------------
+    footprint = _num(getattr(profile, "footprint", 0.0))
+    slender = _num(getattr(profile, "slender", 0.0))
+    if slender >= 3.0 and 0 < footprint < 2500.0:
+        wide = max(6.0, _num(cur.get("brim_width"), 0.0) or 0.0)
+        out.ops.setdefault("brim_width", {"min": wide})
+        out.ops.setdefault("brim_type", {"set": "outer_only"})
+        out.ops.setdefault("initial_layer_speed", {"max": 40.0})
+        why = (f"细高比 {slender:.2f}、脚底接触 {footprint:.0f} mm²："
+               f"重心高、接触小，裙边加到 {wide:.0f} mm，首层压到 40 mm/s 换附着力。")
+        out.notes.append("稳定性：" + why)
+        out.rows.append(DerivationRow(
+            metric="脚底接触 → 裙边/首层速度",
+            measured=f"细高比 {slender:.2f} ／ 脚底 {footprint:.0f} mm²",
+            formula="细高比 ≥ 3 且脚底 < 2500 mm² → 裙边 ≥ 6 mm、首层 ≤ 40 mm/s",
+            conclusion=f"裙边 {wide:.0f} mm（outer_only）、首层上限 40 mm/s"))
+    else:
+        out.rows.append(DerivationRow(
+            metric="脚底接触 → 裙边/首层速度",
+            measured=f"细高比 {slender:.2f} ／ 脚底 {footprint:.0f} mm²",
+            formula="细高比 ≥ 3 且脚底 < 2500 mm²",
+            conclusion="站得稳，裙边按形状判定走"))
+
     # ---------------- R6 接缝位置：扁平度 / 尖端比 ----------------
     flat = _num(getattr(profile, "flatness", 0.0))
     neck = _num(getattr(profile, "neck_ratio", 1.0))
