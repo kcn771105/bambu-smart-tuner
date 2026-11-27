@@ -1962,7 +1962,9 @@ class MainWindow(QMainWindow):
                 text, colour = "⚠ 被切片器改成别的值", QColor("#c0392b")
                 over += 1
             else:
-                text, colour = "· 不参与切片（这类键不进 gcode 配置）", None
+                text, colour = ("· 切片器内部开关（不进 gcode，正常）"
+                                 if key in slice_check.KNOWN_NO_GCODE else
+                                 "· 不参与切片（这类键不进 gcode 配置）"), None
             item = QTreeWidgetItem([key, str(want), str(got) if got else "—", text])
             if colour is not None:
                 for col in range(4):
@@ -1970,7 +1972,8 @@ class MainWindow(QMainWindow):
             tree.addTopLevelItem(item)
 
         ok_n = getattr(res, "effective_ok", 0)
-        absent = getattr(res, "effective_absent", []) or []
+        absent = [k for k in (getattr(res, "effective_absent", []) or [])
+                  if k not in slice_check.KNOWN_NO_GCODE]
         tail = (f"全量核对：写入 {len(all_rows)} 项 → 切片器采用一致的 {ok_n} 项"
                 f"，被改成别的值 {over} 项，不参与切片 {len(absent)} 项")
         self._log(tail, "ok" if over == 0 else "err")

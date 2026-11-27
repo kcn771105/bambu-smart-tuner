@@ -895,6 +895,25 @@ class RulesEngine:
                                  project_nozzle=(hw.nozzle_diameter if hw else None),
                                  filament_key=filament_key)
 
+        # ---- 7.89：螺旋（花瓶）模式的配套项
+        # 螺旋模式在 Studio 里不是一个孤立开关：它要求单壁、无填充、无顶面、无支撑。
+        # 只把 spiral_mode 打开、别的留着，切片器直接报
+        # 「Param values in 3mf/config error」拒绝切片（实测 4 种组合）。
+        # 填充与顶面层由切片器自己按模式强制（schema 下限也不允许写 0），
+        # 所以这里只配套两件必须由我们写的事：单壁墙 + 关支撑。
+        if special.truthy(values.get("spiral_mode")):
+            sp_ops = {"wall_loops": {"set": 1}, "enable_support": {"set": 0}}
+            need = {k: v for k, v in sp_ops.items()
+                    if str(values.get(k, "")).strip() not in (str(v["set"]).strip(),)}
+            if need:
+                self._apply_ops(values, reasons, need, "螺旋（花瓶）模式的配套项",
+                                warnings, allow_preserve=False, respect_locked=False)
+                msg = ("你选了螺旋（花瓶）模式：这个模式只能单壁、无填充、无顶面、不能加支撑，"
+                       "已自动配套「墙层数 1 + 关支撑」；填充/顶面层由切片器按该模式强制，"
+                       "不配套会直接切不了片。")
+                warnings.append(msg)
+                notes.append(msg)
+
         # ---- 耗材页处理方式（keep / file / new）
         _fil_mode = filament_write.normalize(filament_mode)
         if _fil_mode == "keep":

@@ -77,6 +77,14 @@ def options(rules: dict | None = None) -> list[dict]:
     return [dict(x) for x in _FALLBACK]
 
 
+def truthy(value) -> bool:
+    """`1` / `"1"` / `"true"` / `"开"` / `True` 都算开。"""
+    if isinstance(value, bool):
+        return value
+    text = str(value if value is not None else "").strip().lower()
+    return text in ("1", "true", "on", "yes", "开", "开启", "是")
+
+
 def _norm(kind: str, value) -> tuple[bool, object]:
     """把界面上拿到的字符串转成要写进工程的值。返回 (是否合法, 值)。"""
     txt = str(value).strip()

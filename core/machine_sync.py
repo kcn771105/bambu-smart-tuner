@@ -47,6 +47,13 @@ SYNC_KEYS = frozenset({
     "machine_max_speed_x", "machine_max_speed_y",
     "machine_max_acceleration_x", "machine_max_acceleration_y",
     "machine_max_acceleration_travel", "machine_max_jerk_x", "machine_max_jerk_y",
+    # 换机型时**必须一起换**的预设名：Bambu Studio 切片前会校验
+    # 「工艺/耗材预设的 compatible_printers 里有没有这台机器」，
+    # 只改机器页不改预设名 → 直接报 `process not compatible with printer`，一张图都不出。
+    "print_settings_id", "default_print_profile",
+    "filament_settings_id", "default_filament_profile",
+    # 工程里抄了一份「这个工艺预设能配哪些机器」，换机型必须一起改
+    "print_compatible_printers",
 })
 
 
@@ -57,6 +64,31 @@ class MachinePlan:
     notes: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     changed: bool = False
+
+
+def _as_list(v: Any) -> list[str]:
+    """`["a","b"]` / `'["a","b"]'` / `"a"` 一律摊成 list[str]。"""
+    if isinstance(v, (list, tuple)):
+        return [str(x) for x in v]
+    if isinstance(v, str) and v.strip().startswith("["):
+        try:
+            data = json.loads(v)
+            if isinstance(data, list):
+                return [str(x) for x in data]
+        except (TypeError, ValueError):
+            pass
+    if v is None or str(v).strip() == "":
+        return []
+    return [str(v)]
+
+
+def _first_str(v: Any) -> str:
+    items = _as_list(v)
+    return items[0] if items else ""
+
+
+def _slots(v: Any) -> int:
+    return max(1, len(_as_list(v)))
 
 
 def _area_points(bed: list[float]) -> list[str]:
@@ -134,8 +166,27 @@ def plan(rules: dict, printer_key: str, *, nozzle: float = 0.4,
                 f"机型同步：界面选的机型与工程里识别到的相同（{printer_key}），"
                 f"喷嘴 {want} mm 也一致，机器页保持原样不动。")
             return out
-        # 只补喷嘴相关的三个键，别的机器参数一个都不碰
+        # 只补喷嘴相关的键，别的机器参数一个都不碰
         out.ops["printer_settings_id"] = f"{label} {want} nozzle"
+        # 换喷嘴也等于换机器预设名（`Bambu Lab P2S 0.4 nozzle` → `… 0.6 nozzle`），
+        # 工程里抄的工艺兼容列表不改，Studio 会判「工艺预设不认这台机器」拒绝切片。
+        out.ops["print_compatible_printers"] = json.dumps(
+            [f"{label} {want} nozzle"], ensure_ascii=False)
+        # 换喷嘴后「0.20mm Standard」这个工艺预设在新喷嘴上可能不存在，
+        # 挑一个这台机器 + 这个喷嘴认的、层高最接近的（0.6 喷嘴 → 0.30mm Standard）。
+        try:
+            from . import preset_names
+            proc_new = preset_names.remap(
+                cur.get("print_settings_id"), f"{label} {want} nozzle", "process")
+        except Exception:                          # noqa: BLE001 - 没装 Studio 就不换
+            proc_new = None
+        if proc_new and proc_new != str(cur.get("print_settings_id") or "").strip():
+            out.ops["print_settings_id"] = proc_new
+            if cur.get("default_print_profile"):
+                out.ops["default_print_profile"] = proc_new
+            out.notes.append(
+                f"机型同步：工艺预设换成「{proc_new}」（{want} mm 喷嘴上没有原预设，"
+                "选了同机器、层高最接近的那个）。")
         if not same_noz:
             cnt = 1
             raw = cur.get("nozzle_diameter")
@@ -193,6 +244,43 @@ def plan(rules: dict, printer_key: str, *, nozzle: float = 0.4,
             out.ops[f"machine_max_jerk_{axis}"] = str(int(jk)) if jk == int(jk) else f"{jk:g}"
     if vol:
         out.ops["nozzle_volume"] = str(int(vol)) if vol == int(vol) else f"{vol:g}"
+
+    # ---- 工艺 / 耗材预设名也要一起换
+    # Studio 切片前先校验「预设的 compatible_printers 里有没有这台机器」，
+    # 不匹配就报 `process not compatible with printer`，一张图都不出。
+    psid_new = out.ops.get("printer_settings_id") or f"{label} {noz_txt} nozzle"
+    try:
+        from . import preset_names
+        proc_new = preset_names.remap(cur.get("print_settings_id"), psid_new, "process")
+        fil_new = preset_names.remap(_first_str(cur.get("filament_settings_id")),
+                                     psid_new, "filament", strict=True)
+        compat = preset_names.compat_of(proc_new) if proc_new else []
+    except Exception:                              # noqa: BLE001 - 没装 Studio 就不换
+        proc_new = fil_new = None
+        compat = []
+    if proc_new:
+        out.ops["print_settings_id"] = proc_new
+        if cur.get("default_print_profile"):
+            out.ops["default_print_profile"] = proc_new
+        # 工程里还把「这个工艺预设能配哪些机器」抄了一份：`print_compatible_printers`。
+        # 这一行不改，Studio 仍然按旧的机型列表判定不兼容，报
+        # `process not compatible with printer` 直接拒绝切片（实测就是它）。
+        # 只能写成「当前这台机器」这一项：写成整个兼容列表时 Studio 反而拒（实测）。
+        out.ops["print_compatible_printers"] = json.dumps([psid_new], ensure_ascii=False)
+        out.notes.append(
+            f"机型同步：工艺预设从「{cur.get('print_settings_id')}」换成「{proc_new}」"
+            "（Studio 切片前会校验预设认不认这台机器，不换就直接拒绝切片）。")
+    if fil_new:
+        cnt = _slots(cur.get("filament_settings_id"))
+        out.ops["filament_settings_id"] = json.dumps([fil_new] * cnt, ensure_ascii=False)
+        if cur.get("default_filament_profile"):
+            out.ops["default_filament_profile"] = json.dumps([fil_new] * cnt, ensure_ascii=False)
+        out.notes.append(
+            f"机型同步：耗材预设名换成「{fil_new}」（同一段耗材，这台机器认的那个名字）。")
+    elif _first_str(cur.get("filament_settings_id")):
+        out.warnings.append(
+            "机型同步：没在这台机器上找到对应的耗材预设，耗材名保持原样。"
+            "如果 Studio 提示耗材不兼容，请在软件里手动选一条该机型的耗材。")
 
     # ---- 只保留「值真的不同」的项。
     # 工程里没存这一行的标准键（printable_area / machine_max_* 等）也要写：

@@ -38,9 +38,19 @@ import time
 import zipfile
 from dataclasses import dataclass, field
 
+#: 这几项是切片器的内部开关：Studio 认它们、但不写进 gcode 的 CONFIG_BLOCK，
+#: 所以「核对」里看不到是正常的，不是没生效。
+KNOWN_NO_GCODE = frozenset({
+    "counterbore_hole_bridging",
+    "enable_order_independent_overlap_carving",
+    "different_settings_to_system",
+    "spiral_mode_smooth",
+})
+
 __all__ = [
     "STUDIO_PATHS", "find_studio", "SliceCheck", "probe_gcode",
-    "run_slice_check", "CHECKED_KEYS",
+    "run_slice_check", "KNOWN_NO_GCODE", "CHECKED_KEYS", "parse_config",
+    "compare_all",
 ]
 
 #: 常见的安装位置（可以在界面上手填一个别的路径）

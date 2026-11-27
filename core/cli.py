@@ -354,6 +354,8 @@ def cmd_verify(a) -> int:
         print(f"{'参数':<28}{'写进去的':>12}{'gcode 里':>12}   结果")
         for key, want_s, got_s, verdict in all_rows:
             tag = {"ok": "生效", "overridden": "被改写", "absent": "不参与切片"}[verdict]
+            if verdict == "absent" and key in slice_check.KNOWN_NO_GCODE:
+                tag = "切片器内部开关"
             print(f"{key:<28}{str(want_s):>12}{str(got_s):>12}   {tag}")
         print()
         print(f"写入 {len(all_rows)} 项：切片器采用一致 {res.effective_ok} 项 | "
