@@ -19,6 +19,8 @@
 
 from __future__ import annotations
 
+import json
+
 from dataclasses import dataclass, field
 
 MODES = ("keep", "file", "new")
@@ -80,7 +82,10 @@ def plan(mode: str, *, base_name: str = "", settings: dict | None = None,
     name = new_name(base)
     out.name = name
     n = max(1, int(slots or 1))
-    out.ops["filament_settings_id"] = [name] * n
+    # 工程里这个键是「JSON 数组文本」（["Bambu PLA Basic @BBL P2S"]），
+    # 必须按同样形态写回去：写 Python list 会让 threemf._typed_list 拿 list 去 json.loads，
+    # 保存时直接 TypeError（0.5 秒前刚被抓到的那个「保存时出错」）。
+    out.ops["filament_settings_id"] = json.dumps([name] * n, ensure_ascii=False)
     out.notes.append(
         f"耗材另存为「{name}」—— Studio 打开会显示成一份改过但没保存的耗材，"
         "在你原来的耗材上点「保存」就多出一份新的，原预设不会被改。")

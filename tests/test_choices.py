@@ -98,7 +98,7 @@ class TestFilamentWrite(unittest.TestCase):
 
     def test_plan_new_writes_one_name_per_slot(self):
         plan = filament_write.plan("new", base_name='["Bambu PETG HF @BBL P2S"]', slots=2)
-        self.assertEqual(plan.ops["filament_settings_id"],
+        self.assertEqual(json.loads(plan.ops["filament_settings_id"]),
                          ["Bambu PETG HF @BBL P2S 优化"] * 2)
         self.assertTrue(plan.notes)
 
@@ -116,6 +116,28 @@ class TestFilamentWrite(unittest.TestCase):
         kept2, dropped2 = filament_write.split_by_mode(values, "file", scope)
         self.assertEqual(kept2, values)
         self.assertEqual(dropped2, [])
+
+
+@unittest.skipUnless(PROJ.exists(), "缺少样例工程")
+class TestFilamentNewModeRoundTrip(unittest.TestCase):
+    """回归：「新建一份耗材」保存时不能崩，且写回去必须是数组型键。"""
+
+    def test_save_new_mode_produces_array(self):
+        import tempfile
+        from pathlib import Path as _P
+        proj = threemf.ThreeMfProject.load(PROJ)
+        base = str(proj.settings.get("filament_settings_id") or "")
+        plan = filament_write.plan("new", base_name=base, settings=proj.settings, slots=1)
+        proj.apply(plan.ops, allow_missing=frozenset({"filament_settings_id"}))
+        with tempfile.TemporaryDirectory() as td:
+            out = _P(td) / "new_fil.3mf"
+            proj.save_as(out)                      # 这一步以前会 TypeError
+            again = threemf.ThreeMfProject.load(out)
+        raw = again.settings["filament_settings_id"]
+        self.assertIsInstance(raw, str)
+        names = json.loads(raw)
+        self.assertIsInstance(names, list)
+        self.assertTrue(names[0].endswith("优化"))
 
 
 @unittest.skipUnless(PROJ.exists(), "缺少样例工程")

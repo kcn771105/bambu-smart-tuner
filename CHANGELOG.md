@@ -22,6 +22,18 @@
 8. **结论卡新增三行**：熨烫一句（类型 + 流量/间距/速度）、特殊模式一项一行、耗材页处理方式一句；
    行数超过 10 行时先牺牲「模型判定」，保证「要你看一眼」那句不被裁掉。
 
+**修掉一个会让「新建一份耗材」直接保存失败的 bug（v1.2 补丁）**
+
+- 现象：耗材页选「新建一份耗材」后点保存 → 弹「保存失败」，日志里是
+  `TypeError: the JSON object must be str, bytes or bytearray, not list`。
+- 根因：`filament_settings_id` 在工程文件里是**数组型键**（存成 `["Bambu PLA Basic @BBL P2S"]`
+  这样的 JSON 文本），我们却把 Python list 直接塞进了 settings；写盘时
+  `_typed_list()` 拿 list 去 `json.loads()` 就炸了。
+- 修法：`filament_write.plan()` 改成 `json.dumps([name] * slots)` 按原形态写回；
+  `threemf._typed_list()` 增加兜底（收到 list 直接返回，不再 json.loads）。
+- 回归测试：`tests/test_choices.py::TestFilamentNewModeRoundTrip`（保存 → 重开 → 断言仍是数组）；
+  另外跑了 3×5×2 = 30 种「耗材页 × 熨烫 × 自动」组合的保存矩阵，全部 0 失败。
+
 **切片器实测核对：参数不只是「写进文件」，而是真的进了 gcode。**
 
 | 项 | 原工程 | 优化后（本机 Bambu Studio 02.03.00.70 实测） |

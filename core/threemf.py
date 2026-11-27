@@ -222,6 +222,9 @@ class ThreeMfProject:
     def _typed_list(self, key: str, raw: str, elem_kind: str) -> list:
         """数组型参数写回：第 0 槽用优化值，其余槽沿用原值。"""
         want = self.list_lens.get(key, 0)
+        if isinstance(raw, (list, tuple)):
+            # 兜底：调用方直接给了 list（例如新增的键没走 stringify）
+            return [str(x) for x in raw]
         try:
             items = json.loads(raw)
         except (TypeError, ValueError, json.JSONDecodeError):
