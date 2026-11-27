@@ -242,17 +242,25 @@ class TestFanAuto(_Base):
         self.assertIsNone(win._current_fan_trim(), "默认应该是自动（None）")
         self.assertIn("自动", win.cmb_fan.currentText())
 
+    def _fan_max(self, win) -> float:
+        """取引擎算完的 fan_max_speed（写不写进文件都一样能看）。"""
+        raw = win.result.write_values.get("fan_max_speed") or win.result.values.get("fan_max_speed")
+        try:
+            return float(json.loads(raw)[0]) if str(raw).startswith("[") else float(raw)
+        except (TypeError, ValueError):
+            self.fail(f"取不到 fan_max_speed：{raw!r}")
+
     def test_manual_zero_overrides_cold_auto(self):
         win = self.make_window()
         win.ed_room.setText("8")
         _app.processEvents()
         win.run_optimize(silent=True)
-        auto_max = float(json.loads(win.result.write_values["fan_max_speed"])[0])
+        auto_max = self._fan_max(win)
         idx = win.cmb_fan.findData(0)
         win.cmb_fan.setCurrentIndex(idx)
         _app.processEvents()
         win.run_optimize(silent=True)
-        manual_max = float(json.loads(win.result.write_values["fan_max_speed"])[0])
+        manual_max = self._fan_max(win)
         self.assertGreater(manual_max, auto_max, "手动 0 档不该还带着冷天 −10")
 
 

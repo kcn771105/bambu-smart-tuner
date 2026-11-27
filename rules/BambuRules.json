@@ -13,7 +13,19 @@
       "modes[].ops": "模式策略：对当前值做 set/mul/add/min/max/clamp 运算。",
       "interactions[]": "交叉规则：when 命中后再改参数或输出警告，适合写「小机型 + 软材料」这类组合。"
     },
-    "printers_note": "机型共 18 个，真值全部取自官方 machine 预设（0.4 喷嘴、沿 inherits 合并后取第 0 槽）。v1.1.0 对齐 Bambu Studio 2.09：新增 A2L / H2C / H3C / P3C / X2D 五个机型。A2L 为 A1 的大幅面版（330x320x325、加速度 12000、熔池 92）；H2C 为 H2 双热端（330x320x325、熔池 130）；H3C 为新一代高速机架（330x320x325、1400/25000、熔池 125.9）；P3C 与 H3C 同平台但热床 256x256x260；X2D 为 X2 双头（256x256x261、熔池 92，想跑高速必须换高流量热端）。"
+    "printers_note": "机型共 18 个，真值全部取自官方 machine 预设（0.4 喷嘴、沿 inherits 合并后取第 0 槽）。v1.1.0 对齐 Bambu Studio 2.09：新增 A2L / H2C / H3C / P3C / X2D 五个机型。A2L 为 A1 的大幅面版（330x320x325、加速度 12000、熔池 92）；H2C 为 H2 双热端（330x320x325、熔池 130）；H3C 为新一代高速机架（330x320x325、1400/25000、熔池 125.9）；P3C 与 H3C 同平台但热床 256x256x260；X2D 为 X2 双头（256x256x261、熔池 92，想跑高速必须换高流量热端）。",
+    "provenance": "defaults 的数值以本机官方 process 预设 0.20mm Standard @BBL P2S 为基线（沿 inherits 合并、取第 0 槽）；只有官方没给的键才用几何推导/经验值（见 geometry_rules、shape_profiles、interactions 各节的 note）。thermal.plate_baseline 与 thermal.fan 整表取自官方 filament 预设 Generic <耗材> @BBL P2S。printers[*].limits / bed 取自官方 machine 预设。",
+    "provenance_levels": {
+      "A_official": "直接取自本机 Bambu Studio 官方预设（process / filament / machine 三个目录，沿 inherits 合并取第 0 槽）。逐键可复核，脚本 tools/audit_against_installed.py、tools/compare_with_official.py。",
+      "B_physics": "物理/几何公式推导：体积流量上限 → 速度上限（v = flow /（层高×线宽））、层高 ≤ 最薄特征÷2、墙圈数 = 壁厚÷线宽、悬垂面积比 → 支撑密度。公式写在每行 reason 里，可手算复核。",
+      "C_empirical": "经验阈值，未经本机实测标定：几何自适应的分档阈值、时长估算指数、熨烫基准、室温修正档位。改规则库即可调，风险最低。",
+      "D_community": "社区/厂商口径，只用于提示与警告，不直接决定参数（见 README 第 15 节的 Overture / Raise3D / 知乎三篇）。"
+    },
+    "provenance_counts": {
+      "A_official_keys": "printers[*].limits、printers[*].bed、filaments[*].limits（含 flow_by_printer 18×6）、thermal.plate_baseline、thermal.fan、defaults 中 114+ 项",
+      "verified_by_slicer": "11 组功能矩阵全部真机切片通过，写入的键 0 项被切片器改写（见 CHANGELOG 与 README 第 14 节）",
+      "not_verified_on_real_print": "所有『这组值对你这个件是否最优』的判断都未验证——需要真机打印回流。"
+    }
   },
   "options": {
     "write_soft_keys": false,
@@ -63,7 +75,7 @@
     "bottom_shell_layers": 3,
     "sparse_infill_density": "15%",
     "sparse_infill_pattern": "grid",
-    "top_surface_pattern": "monotonicline",
+    "top_surface_pattern": "monotonic",
     "internal_solid_infill_pattern": "zig-zag",
     "infill_wall_overlap": "15%",
     "infill_direction": 45.0,
@@ -74,7 +86,7 @@
     "top_surface_speed": 200.0,
     "initial_layer_speed": 50.0,
     "initial_layer_infill_speed": 105.0,
-    "travel_speed": 500.0,
+    "travel_speed": 600.0,
     "support_speed": 150.0,
     "bridge_speed": 50.0,
     "overhang_1_4_speed": 0.0,
@@ -86,7 +98,7 @@
     "prime_tower_width": 35.0,
     "prime_tower_brim_width": 3.0,
     "default_acceleration": 10000.0,
-    "outer_wall_acceleration": 5000.0,
+    "outer_wall_acceleration": 6000.0,
     "top_surface_acceleration": 2000.0,
     "initial_layer_acceleration": 500.0,
     "travel_acceleration": 10000.0,
@@ -189,7 +201,7 @@
     "overhang_totally_speed": 10.0,
     "top_surface_density": 100,
     "bottom_surface_density": 100,
-    "bottom_surface_pattern": "monotonic",
+    "bottom_surface_pattern": "monotonicline",
     "sub_top_surface_pattern": "monotonic",
     "top_shell_thickness": 1.0,
     "bottom_shell_thickness": 0.0,
@@ -4662,85 +4674,254 @@
   },
   "ironing": {
     "note": "熨烫基准：流量小、间距密、速度低。profiles 按耗材取，by_mode 按优化模式微调，nozzle_spacing_mul 按喷嘴缩放。",
-    "default": {"flow": 10.0, "spacing": 0.15, "speed": 30.0, "pattern": "monotonic", "inset": 0.15},
+    "default": {
+      "flow": 10.0,
+      "spacing": 0.15,
+      "speed": 30.0,
+      "pattern": "monotonic",
+      "inset": 0.15
+    },
     "profiles": {
-      "PLA":  {"flow": 10.0, "spacing": 0.15, "speed": 30.0, "pattern": "monotonic", "inset": 0.15},
-      "PETG": {"flow": 12.0, "spacing": 0.20, "speed": 25.0, "pattern": "monotonic", "inset": 0.20},
-      "ABS":  {"flow": 10.0, "spacing": 0.15, "speed": 30.0, "pattern": "monotonic", "inset": 0.15},
-      "ASA":  {"flow": 10.0, "spacing": 0.15, "speed": 30.0, "pattern": "monotonic", "inset": 0.15},
-      "TPU":  {"flow": 8.0,  "spacing": 0.22, "speed": 20.0, "pattern": "monotonic", "inset": 0.20}
+      "PLA": {
+        "flow": 10.0,
+        "spacing": 0.15,
+        "speed": 30.0,
+        "pattern": "monotonic",
+        "inset": 0.15
+      },
+      "PETG": {
+        "flow": 12.0,
+        "spacing": 0.2,
+        "speed": 25.0,
+        "pattern": "monotonic",
+        "inset": 0.2
+      },
+      "ABS": {
+        "flow": 10.0,
+        "spacing": 0.15,
+        "speed": 30.0,
+        "pattern": "monotonic",
+        "inset": 0.15
+      },
+      "ASA": {
+        "flow": 10.0,
+        "spacing": 0.15,
+        "speed": 30.0,
+        "pattern": "monotonic",
+        "inset": 0.15
+      },
+      "TPU": {
+        "flow": 8.0,
+        "spacing": 0.22,
+        "speed": 20.0,
+        "pattern": "monotonic",
+        "inset": 0.2
+      }
     },
     "by_mode": {
-      "fine":     {"spacing_mul": 0.85, "speed_mul": 0.90},
-      "balanced": {"spacing_mul": 1.00, "speed_mul": 1.00},
-      "strong":   {"spacing_mul": 1.00, "speed_mul": 1.00},
-      "fast":     {"spacing_mul": 1.25, "speed_mul": 1.20}
+      "fine": {
+        "spacing_mul": 0.85,
+        "speed_mul": 0.9
+      },
+      "balanced": {
+        "spacing_mul": 1.0,
+        "speed_mul": 1.0
+      },
+      "strong": {
+        "spacing_mul": 1.0,
+        "speed_mul": 1.0
+      },
+      "fast": {
+        "spacing_mul": 1.25,
+        "speed_mul": 1.2
+      }
     },
-    "nozzle_spacing_mul": {"0.2": 0.70, "0.4": 1.00, "0.6": 1.25, "0.8": 1.45}
+    "nozzle_spacing_mul": {
+      "0.2": 0.7,
+      "0.4": 1.0,
+      "0.6": 1.25,
+      "0.8": 1.45
+    }
   },
   "special": [
-    {"key": "print_sequence", "label": "打印顺序", "kind": "enum",
-     "choices": [["by layer", "逐层打（默认）"], ["by object", "逐件打（一次打完一个）"]],
-     "help": "逐件打时喷嘴会跳动避让，一个件打坏不影响其他件；但件与件之间要留间隙。"},
-    {"key": "spiral_mode", "label": "螺旋花瓶模式", "kind": "bool",
-     "choices": [["1", "开启"], ["0", "关闭"]],
-     "help": "只适合单壁无顶的容器（花瓶/灯罩）；开了以后壁厚只有一圈，不能有填充。"},
-    {"key": "spiral_mode_smooth", "label": "螺旋平滑", "kind": "bool",
-     "choices": [["1", "开启"], ["0", "关闭"]],
-     "help": "螺旋模式下把 Z 抬升抹匀，表面更顺；只在螺旋花瓶模式下有效。"},
-    {"key": "enable_arc_fitting", "label": "圆弧拟合（G2/G3）", "kind": "bool",
-     "choices": [["1", "开启"], ["0", "关闭"]],
-     "help": "把圆弧压成 G2/G3，圆孔更圆、文件更小；老固件不认时关掉。"},
-    {"key": "fuzzy_skin", "label": "磨砂皮肤", "kind": "enum",
-     "choices": [["none", "不磨砂（默认）"], ["external", "只磨外表面"], ["all", "磨所有表面"], ["all_shells", "磨所有外壳"]],
-     "help": "给外表面加粗糙质感，能遮住层纹；尺寸会微微变大。"},
-    {"key": "avoid_crossing_wall_includes_support", "label": "避墙时也避支撑", "kind": "bool",
-     "choices": [["1", "开启"], ["0", "关闭"]],
-     "help": "空驶不穿过支撑，支撑面更干净；多一点空驶时间。"},
-    {"key": "only_one_wall_top", "label": "顶面只打一圈墙", "kind": "bool",
-     "choices": [["1", "开启"], ["0", "关闭"]],
-     "help": "顶面用填充直接盖住，省时间；顶面质量会差一点。"},
-    {"key": "wall_sequence", "label": "墙打印顺序", "kind": "enum",
-     "choices": [["inner wall/outer wall", "先内后外（表面好）"], ["outer wall/inner wall", "先外后内"], ["inner-outer-inner wall", "内外内"]],
-     "help": "先内后外时外壁靠内壁支撑，表面更平整（默认）。"}
+    {
+      "key": "print_sequence",
+      "label": "打印顺序",
+      "kind": "enum",
+      "choices": [
+        [
+          "by layer",
+          "逐层打（默认）"
+        ],
+        [
+          "by object",
+          "逐件打（一次打完一个）"
+        ]
+      ],
+      "help": "逐件打时喷嘴会跳动避让，一个件打坏不影响其他件；但件与件之间要留间隙。"
+    },
+    {
+      "key": "spiral_mode",
+      "label": "螺旋花瓶模式",
+      "kind": "bool",
+      "choices": [
+        [
+          "1",
+          "开启"
+        ],
+        [
+          "0",
+          "关闭"
+        ]
+      ],
+      "help": "只适合单壁无顶的容器（花瓶/灯罩）；开了以后壁厚只有一圈，不能有填充。"
+    },
+    {
+      "key": "spiral_mode_smooth",
+      "label": "螺旋平滑",
+      "kind": "bool",
+      "choices": [
+        [
+          "1",
+          "开启"
+        ],
+        [
+          "0",
+          "关闭"
+        ]
+      ],
+      "help": "螺旋模式下把 Z 抬升抹匀，表面更顺；只在螺旋花瓶模式下有效。"
+    },
+    {
+      "key": "enable_arc_fitting",
+      "label": "圆弧拟合（G2/G3）",
+      "kind": "bool",
+      "choices": [
+        [
+          "1",
+          "开启"
+        ],
+        [
+          "0",
+          "关闭"
+        ]
+      ],
+      "help": "把圆弧压成 G2/G3，圆孔更圆、文件更小；老固件不认时关掉。"
+    },
+    {
+      "key": "fuzzy_skin",
+      "label": "磨砂皮肤",
+      "kind": "enum",
+      "choices": [
+        [
+          "none",
+          "不磨砂（默认）"
+        ],
+        [
+          "external",
+          "只磨外表面"
+        ],
+        [
+          "all",
+          "磨所有表面"
+        ],
+        [
+          "all_shells",
+          "磨所有外壳"
+        ]
+      ],
+      "help": "给外表面加粗糙质感，能遮住层纹；尺寸会微微变大。"
+    },
+    {
+      "key": "avoid_crossing_wall_includes_support",
+      "label": "避墙时也避支撑",
+      "kind": "bool",
+      "choices": [
+        [
+          "1",
+          "开启"
+        ],
+        [
+          "0",
+          "关闭"
+        ]
+      ],
+      "help": "空驶不穿过支撑，支撑面更干净；多一点空驶时间。"
+    },
+    {
+      "key": "only_one_wall_top",
+      "label": "顶面只打一圈墙",
+      "kind": "bool",
+      "choices": [
+        [
+          "1",
+          "开启"
+        ],
+        [
+          "0",
+          "关闭"
+        ]
+      ],
+      "help": "顶面用填充直接盖住，省时间；顶面质量会差一点。"
+    },
+    {
+      "key": "wall_sequence",
+      "label": "墙打印顺序",
+      "kind": "enum",
+      "choices": [
+        [
+          "inner wall/outer wall",
+          "先内后外（表面好）"
+        ],
+        [
+          "outer wall/inner wall",
+          "先外后内"
+        ],
+        [
+          "inner-outer-inner wall",
+          "内外内"
+        ]
+      ],
+      "help": "先内后外时外壁靠内壁支撑，表面更平整（默认）。"
+    }
   ],
   "thermal": {
     "说明": "热床温度与风速：按耗材、板子类型、室温三个维度推导，写入 3mf。",
     "plate_baseline": {
       "Supertack Plate": {
-        "PLA": 60,
+        "PLA": 45,
         "PETG": 70,
-        "ABS": 100,
-        "ASA": 90,
-        "TPU": 50
+        "ABS": 0,
+        "ASA": 0,
+        "TPU": 0
       },
       "Textured PEI Plate": {
-        "PLA": 60,
+        "PLA": 55,
         "PETG": 70,
         "ABS": 90,
-        "ASA": 85,
-        "TPU": 45
+        "ASA": 90,
+        "TPU": 35
       },
       "High Temp Plate": {
-        "PLA": 65,
-        "PETG": 75,
-        "ABS": 110,
-        "ASA": 100,
-        "TPU": 50
+        "PLA": 55,
+        "PETG": 70,
+        "ABS": 90,
+        "ASA": 90,
+        "TPU": 35
       },
       "Engineering Plate": {
-        "PLA": 70,
+        "PLA": 55,
         "PETG": 70,
-        "ABS": 100,
+        "ABS": 90,
         "ASA": 90,
-        "TPU": 50
+        "TPU": 35
       },
       "Cool Plate": {
-        "PLA": 30,
-        "PETG": 30,
-        "ABS": 60,
-        "ASA": 55,
-        "TPU": 25
+        "PLA": 35,
+        "PETG": 0,
+        "ABS": 0,
+        "ASA": 0,
+        "TPU": 30
       }
     },
     "initial_layer_delta": 5,
@@ -4777,46 +4958,60 @@
     "fan": {
       "说明": "风扇分档：min/max 是转速百分比；first_x_layer_fan_speed 是首层转速（0=关）；close_the_first_x_layers 是前几层关闭层数；overhang_fan_speed 是悬垂段转速。",
       "PLA": {
+        "min": 100,
+        "max": 100,
+        "first_x_layer_fan_speed": 40,
+        "close_the_first_x_layers": 1,
+        "overhang_fan_speed": 100,
+        "source": "Generic PLA @BBL P2S 官方预设"
+      },
+      "PETG": {
         "min": 40,
+        "max": 90,
+        "first_x_layer_fan_speed": 40,
+        "close_the_first_x_layers": 3,
+        "overhang_fan_speed": 90,
+        "source": "Generic PETG @BBL P2S 官方预设"
+      },
+      "ABS": {
+        "min": 10,
         "max": 80,
         "first_x_layer_fan_speed": 0,
         "close_the_first_x_layers": 3,
-        "overhang_fan_speed": 50,
-        "note": "PLA 冷却需求高：风扇给足，首层关、前 3 层慢升，避免首层降温过快翘边。"
-      },
-      "PETG": {
-        "min": 20,
-        "max": 50,
-        "first_x_layer_fan_speed": 0,
-        "close_the_first_x_layers": 3,
-        "overhang_fan_speed": 50,
-        "note": "PETG 怕拉丝、怕粘支撑：风扇压低，首层关，悬垂段单独给 50% 保证悬垂质量。"
-      },
-      "ABS": {
-        "min": 0,
-        "max": 20,
-        "first_x_layer_fan_speed": 0,
-        "close_the_first_x_layers": 6,
-        "overhang_fan_speed": 10,
-        "note": "ABS 收缩大、怕冷：风扇尽量关，前 6 层全关，靠热床保温，悬垂段只开 10%。"
+        "overhang_fan_speed": 80,
+        "source": "Generic ABS @BBL P2S 官方预设"
       },
       "ASA": {
-        "min": 25,
-        "max": 60,
+        "min": 10,
+        "max": 80,
         "first_x_layer_fan_speed": 0,
         "close_the_first_x_layers": 3,
-        "overhang_fan_speed": 50,
-        "note": "ASA 介于 PLA/ABS 之间：风扇中等，首层关，悬垂段给足。"
+        "overhang_fan_speed": 80,
+        "source": "Generic ASA @BBL P2S 官方预设"
       },
       "TPU": {
-        "min": 10,
-        "max": 30,
-        "first_x_layer_fan_speed": 0,
-        "close_the_first_x_layers": 2,
-        "overhang_fan_speed": 20,
-        "note": "TPU 柔软、怕拉扯堵料：风扇压低，首层关，悬垂段少开，靠慢速避免拉扯。"
+        "min": 100,
+        "max": 100,
+        "first_x_layer_fan_speed": 40,
+        "close_the_first_x_layers": 1,
+        "overhang_fan_speed": 100,
+        "source": "Generic TPU @BBL P2S 官方预设"
       }
     },
-    "plate_baseline_note": "只列 Studio 有独立温度键的五个板型；「光滑 PEI 板」与「高温板」共用 hot_plate_temp，按 High Temp Plate 查表。"
+    "plate_baseline_note": "每个数直接取自本机 Bambu Studio 官方耗材预设 Generic <耗材> @BBL P2S 的 *_plate_temp 第 0 槽（沿 inherits 合并后）。0 表示官方不支持这条料在这块板上打印——那种组合不写板温，只给警告。",
+    "plate_unsupported": {
+      "Cool Plate": [
+        "PETG",
+        "ABS",
+        "ASA"
+      ],
+      "Supertack Plate": [
+        "ABS",
+        "ASA",
+        "TPU"
+      ]
+    },
+    "plate_unsupported_note": "来自本机 Bambu Studio 官方耗材预设：按官方口径，某条料在某块板上该板温度键写 0，表示「官方不支持这条料在这块板上打印」。这组料不再写板温，只在界面/报告里给硬警告。",
+    "fan_note": "数值直接取自本机官方耗材预设（Generic … @BBL P2S）的 fan_min/max_speed、first_x_layer_fan_speed、close_fan_the_first_x_layers、overhang_fan_speed 第 0 槽。"
   }
 }

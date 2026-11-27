@@ -623,6 +623,12 @@ class RulesEngine:
                 for r in th.rows:
                     self._derivations.append(r.as_dict())
             notes.extend(th.notes)
+            # 官方明确不支持「这条料 × 这块板」：这是硬警告，不能只躺在 notes 里
+            if getattr(th, "unsupported", ""):
+                warnings.append(
+                    f"⚠ 官方不支持：{th.unsupported}。板温没有改，请先在 Bambu Studio 的"
+                    "「打印板类型」里换一块这块料支持的板（或换料），否则首层会粘不住或撕板。")
+                self._thermal_text = f"官方不支持 {th.unsupported}：板温未改，只给警告。"
             if th.ops:
                 self._thermal_text = (
                     f"热床与风速已按「{filament_key} × {thermal_mod.bed_type_of(current) if not bed_type else bed_type}"

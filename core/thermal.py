@@ -114,6 +114,8 @@ class ThermalOps:
     rows: list[ThermalRow] = field(default_factory=list)
     #: 「因为室温 X°C，所以热床 Y、风扇 Z」这一句（没有室温时为空）
     room_note: str = ""
+    #: 官方明确不支持「这条料 × 这块板」时的组合名（为空表示支持或未知）
+    unsupported: str = ""
 
 
 def normalize_plate(name: str) -> str:
@@ -322,7 +324,15 @@ def derive(rules: dict, current: dict, *, filament_key: str = "", bed_type: str 
     else:
         target = _num(base.get(filament_key), 0.0)
     if target <= 0:
-        out.notes.append(f"热床温度：规则库里没有「{filament_key} × {plate_label(bed)}」的基线，保持工程原值不动。")
+        note = (f"官方不支持：{filament_key} × {plate_label(bed)}（官方耗材预设里这块板的温度键是 0），"
+                "不写板温、也不猜一个替代值——请先换板，或在 Studio 里自己确认。")
+        out.notes.append(note)
+        out.rows.append(ThermalRow(
+            metric=f"{plate_label(bed)} 温度",
+            measured=f"{filament_key} 在这块板上的官方温度为 0",
+            formula="官方 * _plate_temp = 0 → 不支持",
+            conclusion="不改板温，只给警告"))
+        out.unsupported = f"{filament_key} × {plate_label(bed)}"
         return out
 
     # 首层要比其余层「更热」才抓得住底板（Bambu 自带预设也是这么配的：

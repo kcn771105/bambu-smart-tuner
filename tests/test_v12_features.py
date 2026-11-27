@@ -229,7 +229,8 @@ class TestThermalFanTrim(unittest.TestCase):
     def test_bed_temp_rises_when_room_is_cold(self):
         warm = self._fan(room_temp_c=25)
         cold = self._fan(room_temp_c=8)
-        self.assertEqual(warm["supertack_plate_temp"], 60.0)
+        # 基线取自官方预设（PLA × Supertack = 45°C），不是自造值
+        self.assertEqual(warm["supertack_plate_temp"], 45.0)
         self.assertGreater(cold["supertack_plate_temp"],
                            warm["supertack_plate_temp"])
         # 天冷时首层同样加热更久、风扇更小（防翘边）
