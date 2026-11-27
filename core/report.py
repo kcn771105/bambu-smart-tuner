@@ -144,6 +144,46 @@ def build_markdown(project_path: str, det: Detection, result: OptResult,
         add(f"- {seam}")
         add("")
 
+    iron = getattr(result, "ironing", "") or ""
+    if iron:
+        add("## 熨烫")
+        add("")
+        add("熨烫是拿热喷嘴在已经打好的平面上再刮一遍，把层纹、走线缝隙抹平。"
+            "熨哪儿由你选（`ironing_type`），流量/间距/速度/图案按耗材、层高、喷嘴算。")
+        add("")
+        for row in (getattr(result, "ironing_rows", None) or []):
+            add(f"- {row.get('metric', '')}：{row.get('conclusion', '')}"
+                f"（{row.get('formula', '')}）")
+        add(f"- {iron}")
+        add("")
+
+    sp_notes = [x for x in (getattr(result, "special_notes", None) or []) if x]
+    if sp_notes:
+        add("## 特殊模式（你手动选的）")
+        add("")
+        add("这些是 Bambu Studio「其他」页里的开关。本工具不会替你开任何一项，"
+            "只写你亲手选的那几个；没选的保持工程原值。")
+        add("")
+        for n in sp_notes:
+            add(f"- {n}")
+        add("")
+
+    fmode = getattr(result, "filament_mode", "file")
+    fnote = getattr(result, "filament_note", "") or ""
+    if fmode != "file" or fnote:
+        add("## 耗材页怎么处理的")
+        add("")
+        add({"keep": "**不改耗材页**：热床温度、风速、喷头温度、压力提前、流量比这些"
+                     "属于耗材页的键一个都没写，本次只改工艺参数。",
+             "new": "**新建一份耗材**：参数照常写入，同时把 `filament_settings_id` 换成"
+                    "「原名 + 优化」。Studio 打开会显示成一份改过但未保存的耗材，"
+                    "在耗材列表里点「保存」就多出一份新的，你原来的预设不会被改。",
+             }.get(fmode, "**写进当前耗材**：在你自己那份耗材上改。"))
+        add("")
+        if fnote:
+            add(f"- {fnote}")
+            add("")
+
     machine_note = getattr(result, "machine_sync_note", "")
     if machine_note:
         add("## 机型同步")

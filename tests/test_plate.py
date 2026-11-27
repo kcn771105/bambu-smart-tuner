@@ -73,9 +73,11 @@ class TestPlateRead(unittest.TestCase):
         self.assertEqual(info.temp_key, "cool_plate_temp")
         self.assertFalse(info.supported)
 
-    def test_smooth_pei_uses_textured_key(self):
+    def test_smooth_pei_is_high_temp_plate(self):
+        """Studio 把「光滑 PEI」和「高温板」当同一格（官方 machine 预设写成
+        `Smooth PEI Plate / High Temp Plate`），温度键是 hot_plate_temp。"""
         info = plate.read(FakeProject(_base_settings("Smooth PEI Plate")), self.rules)
-        self.assertEqual(info.temp_key, "textured_plate_temp")
+        self.assertEqual(info.temp_key, "hot_plate_temp")
 
     def test_unknown_name_falls_back(self):
         info = plate.read(FakeProject(_base_settings("Some Future Plate")), self.rules)

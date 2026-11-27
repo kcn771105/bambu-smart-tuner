@@ -327,16 +327,26 @@ def tune(profile, *, layer_height: float = 0.2, mode: str = "balanced",
             "普通支撑（网格底座）"))
 
     # ---- 6 速度（数组键，schema 会整槽写入）
+    # 支撑「只慢不快」：支撑是打印里最不需要赶时间的部分，树状支撑的细枝
+    # 快了会晃、会倒，接触面快了会更难拆。所以算出来的值只允许比工程原值低。
     cap = float(max_speed) if max_speed else 500.0
     spd = max(20.0, min(cap, round(cap * MODE_SPEED.get(mode, 0.75))))
     ispd = max(10.0, min(spd, round(spd * MODE_IFACE.get(mode, 0.6))))
+    cur_spd = _num((values or {}).get("support_speed"), 0.0)
+    cur_ispd = _num((values or {}).get("support_interface_speed"), 0.0)
+    held = ""
+    if cur_spd > 0 and spd > cur_spd:
+        spd, held = cur_spd, "（不超过工程原值）"
+    if cur_ispd > 0 and ispd > cur_ispd:
+        ispd = cur_ispd
+        held = "（不超过工程原值）"
     out.ops["support_speed"] = {"set": spd}
     out.ops["support_interface_speed"] = {"set": ispd}
     out.rows.append(SupportRow(
         "支撑速度",
         f"机型上限 {cap:.0f} mm/s ／ 模式 {mode}",
-        "支撑本体 = 上限 ×0.55~0.85；接触面 = 本体 ×0.45~0.70",
-        f"本体 {spd:g} ／ 接触面 {ispd:g} mm/s（最终还要受体积流量上限钳制）"))
+        "支撑本体 = 上限 ×0.55~0.85；接触面 = 本体 ×0.45~0.70；只慢不快",
+        f"本体 {spd:g} ／ 接触面 {ispd:g} mm/s（最终还要受体积流量上限钳制）{held}"))
 
     # ---- 7 质量向
     if mode in QUALITY_FAMILY:

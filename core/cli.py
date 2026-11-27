@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -20,7 +21,8 @@ if __package__ in (None, ""):                       # 允许 python cli.py 直�
 
 from core import (bambu_profiles, detector, hardware, machine_sync,  # noqa: E402
                   model_analysis, preset_diff, report, rules_engine, schema,
-                  seam_plan, support_model, thermal, threemf)
+                  seam_plan, slice_check, studio_env, support_model, thermal,
+                  threemf)
 
 
 def _fmt(v) -> str:
@@ -54,6 +56,54 @@ def cmd_analyze(a) -> int:
     return 0
 
 
+def _pick_cli_plate(proj, want: str) -> tuple[str, float | None]:
+    """挑一块本机 Studio 认识的板子；工程原来那块它不认识就换一块，并把原板温带过去。
+
+    返回 (写进文件的板名, 要沿用的板温或 None)。
+    """
+    try:
+        env = studio_env.detect()
+    except Exception:
+        return want, None
+    if not env.found or not env.plates:
+        return want, None
+    target = thermal.normalize_plate(want) or want if want else ""
+    if not target:
+        target = thermal.bed_type_of(proj.settings)
+    if target in env.plates:
+        return want, None
+    alt = ""
+    for name in ("Textured PEI Plate", "Smooth PEI Plate / High Temp Plate",
+                 "Engineering Plate", "Cool Plate"):
+        if name in env.plates:
+            alt = name
+            break
+    if not alt:
+        return want, None
+    keep = thermal.read_bed_temp(proj.settings, target)
+    msg = (f"工程用的是「{thermal.plate_label(target)}」，本机 Studio {env.version} "
+           f"没有这块板 —— 已换成「{thermal.plate_label(alt)}」"
+           + (f"，板温保持为 {keep:.0f}°C。" if keep else "。"))
+    try:
+        print("⚠ " + msg)
+    except UnicodeEncodeError:          # 老控制台 cp936 编不出 ⚠/中文
+        print(msg.encode("ascii", "replace").decode("ascii"))
+    return alt, keep
+
+
+def _parse_special(items) -> dict:
+    """把 --special spiral_mode=1 --special ironing_type=top 解析成 {key: value}。"""
+    out: dict[str, str] = {}
+    for item in (items or []):
+        if "=" not in item:
+            continue
+        key, value = item.split("=", 1)
+        key = key.strip()
+        if key:
+            out[key] = value.strip()
+    return out
+
+
 def _do_optimize(path: Path, a, engine, overlay: dict | None, rules) -> tuple[threemf.ThreeMfProject, object, object, object]:
     proj = threemf.ThreeMfProject.load(path)
     det = detector.detect(proj, rules)
@@ -71,6 +121,7 @@ def _do_optimize(path: Path, a, engine, overlay: dict | None, rules) -> tuple[th
         except model_analysis.ModelError:
             profile = None
     hw = hardware.read(proj)
+    bed_choice, bed_keep = _pick_cli_plate(proj, getattr(a, "bed", "") or "")
     res = engine.optimize(
         proj.settings, printer_key=printer, filament_key=filament, nozzle=nozzle,
         mode_key=a.mode, detection_warnings=list(det.warnings) if a.printer is None else [],
@@ -81,9 +132,14 @@ def _do_optimize(path: Path, a, engine, overlay: dict | None, rules) -> tuple[th
         support_mode=getattr(a, "support", "auto"),
         support_ease=getattr(a, "ease", "standard"),
         room_temp_c=getattr(a, "room", None),
-        bed_type=getattr(a, "bed", "") or "",
-        fan_trim=getattr(a, "fan_trim", 0),
-        seam_smooth=not getattr(a, "no_seam", False))
+        bed_type=bed_choice,
+        fan_trim=getattr(a, "fan_trim", None),
+        seam_smooth=not getattr(a, "no_seam", False),
+        ironing_choice=getattr(a, "ironing", "keep"),
+        ironing_auto=not getattr(a, "no_iron_auto", False),
+        filament_mode=getattr(a, "filament_mode", "file"),
+        special_modes=_parse_special(getattr(a, "special", None)),
+        bed_keep_temp=bed_keep)
     return proj, det, res, profile
 
 
@@ -225,6 +281,90 @@ def cmd_rules(a) -> int:
     return 0
 
 
+def cmd_verify(a) -> int:
+    """切一片，看参数是不是真的进了 gcode。"""
+    from . import slice_check
+
+    proj = threemf.ThreeMfProject.load(a.file)
+    # 先取「工具声明过差异」的全部键 —— 那才是这次改动过的每一项；
+    # 老工程没有声明数组时退回原来那几项特征值。
+    declared = []
+    raw = proj.settings.get("different_settings_to_system")
+    if isinstance(raw, str):
+        try:
+            arr = json.loads(raw)
+        except ValueError:
+            arr = []
+        for slot in (arr if isinstance(arr, list) else [arr]):
+            if isinstance(slot, list):
+                declared.extend(str(x) for x in slot)
+            elif slot:
+                declared.extend(str(slot).split(";"))
+    declared = [k.strip() for k in declared if k.strip()]
+    # gcode 模板这几项在兼容副本里被换过，逐键比没有意义（它们不是打印参数）
+    skip = {"machine_start_gcode", "machine_end_gcode", "change_filament_gcode",
+            "layer_change_gcode", "before_layer_change_gcode", "time_lapse_gcode",
+            "printing_by_object_gcode", "machine_pause_gcode", "template_custom_gcode",
+            # 元信息，不是打印参数
+            "from", "name", "version", "is_custom_defined", "setting_id", "base_id"}
+    keys = [k for k in declared if k in proj.settings and k not in skip]         or list(slice_check.CHECKED_KEYS)
+    want = {k: proj.settings[k] for k in keys if k in proj.settings}
+    for bed in ("supertack_plate_temp", "textured_plate_temp", "hot_plate_temp",
+                "eng_plate_temp", "cool_plate_temp"):
+        if bed in proj.settings:
+            want.setdefault(bed, proj.settings[bed])
+            break
+    if "enable_support" in proj.settings:
+        want.setdefault("enable_support", proj.settings["enable_support"])
+
+    print(f"切片器 : {slice_check.find_studio(a.studio or '') or '（没找到）'}")
+    res = slice_check.run_slice_check(a.file, want, studio=a.studio or "",
+                                      out_dir=a.outdir or "")
+    for note in res.notes:
+        print(f"· 兼容处理：{note}")
+    for warn in res.warnings:
+        print(f"⚠ {warn}")
+    if res.log_tail:
+        print("切片器输出（尾部）：")
+        for line in res.log_tail.splitlines():
+            print("    " + line)
+    if not res.probe:
+        return 1
+
+    p = res.probe
+    print(f"gcode   : {res.gcode}")
+    print(f"层数    : {p.layers} ｜ 预计时间：{p.time_text} ｜ 支撑路径：{p.support_moves} 条")
+    print()
+    print(f"{'参数':<26}{'文件里的值':>12}{'gcode 里的值':>14}   结果")
+    bad = 0
+    for key, want_s, got_s, ok in res.rows:
+        print(f"{key:<26}{want_s:>12}{got_s:>14}   {'一致' if ok else '不一致'}")
+        bad += 0 if ok else 1
+    print()
+    print(f"{'参数全部一致' if not bad else str(bad) + ' 项不一致'}："
+          f"{len(res.rows) - bad}/{len(res.rows)}")
+
+    # 全量核对：写入的每一项，切片器是否真的采用
+    all_rows = res.all_rows or []
+    if all_rows:
+        over = [row for row in all_rows if row[3] == "overridden"]
+        absent = res.effective_absent or []
+        print()
+        print("—— 全量核对（写入的每一项 vs 切片器实际采用）——")
+        print(f"{'参数':<28}{'写进去的':>12}{'gcode 里':>12}   结果")
+        for key, want_s, got_s, verdict in all_rows:
+            tag = {"ok": "生效", "overridden": "被改写", "absent": "不参与切片"}[verdict]
+            print(f"{key:<28}{str(want_s):>12}{str(got_s):>12}   {tag}")
+        print()
+        print(f"写入 {len(all_rows)} 项：切片器采用一致 {res.effective_ok} 项 | "
+              f"被改成别的值 {len(over)} 项 | 不参与切片 {len(absent)} 项")
+        if over:
+            print("⚠ 这些键切片器没采用文件里的值："
+                  + "、".join(row[0] for row in over))
+            return 2
+    return 0 if bad == 0 else 2
+
+
 def main(argv: list[str] | None = None) -> int:
     # Windows 控制台默认 cp936，遇到 mm³/s、⚠ 这类字符会直接 UnicodeEncodeError 崩掉。
     # 改为 UTF-8 + replace，宁可显示成 ? 也不要让整条命令挂掉。
@@ -268,6 +408,15 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--no-seam", action="store_true",
                        help="关闭接缝/斜接缝自动调整")
         p.add_argument("--no-shape", action="store_true", help="关闭按模型形状微调")
+        p.add_argument("--ironing", choices=("keep", "off", "top", "topmost", "solid"),
+                       default="keep",
+                       help="熨烫：keep=不动 / off=关掉 / top=只熨顶面 / topmost=所有朝上面 / solid=所有实心层")
+        p.add_argument("--no-iron-auto", action="store_true",
+                       help="熨烫参数不自动算，只改熨烫类型")
+        p.add_argument("--filament-mode", choices=("keep", "file", "new"), default="file",
+                       help="耗材页：keep=一个字不写 / file=写进当前耗材 / new=另存为「原名+优化」")
+        p.add_argument("--special", action="append", metavar="KEY=VALUE",
+                       help="手动指定其他页的特殊模式，可重复，如 --special spiral_mode=1")
         p.add_argument("--md", nargs="?", const="auto", default=None,
                        help="同时导出 Markdown 报告（auto=与输出同名）")
 
@@ -290,6 +439,12 @@ def main(argv: list[str] | None = None) -> int:
 
     p5 = sub.add_parser("rules", help="打印规则库概览并自检")
     p5.set_defaults(func=cmd_rules)
+
+    p6 = sub.add_parser("verify", help="用本机 Bambu Studio 切片一次，核对参数真的生效")
+    p6.add_argument("file")
+    p6.add_argument("--studio", default=None, help="bambu-studio.exe 路径（默认自动找）")
+    p6.add_argument("--outdir", default=None, help="切片临时目录（默认用系统临时目录）")
+    p6.set_defaults(func=cmd_verify)
 
     a = ap.parse_args(argv)
     # batch 的 add_opt_args 也塞了 file，这里删掉免得混淆

@@ -165,6 +165,42 @@ def _adhesion_sentence(result) -> str:
     return "附着加强：" + "、".join(labels)
 
 
+def _ironing_line(result) -> str:
+    """「熨烫：只熨最顶面（流量 12%、间距 0.2 mm、速度 25 mm/s）。」"""
+    rows = getattr(result, "ironing_rows", None) or []
+    if not rows:
+        return getattr(result, "ironing", "") or ""
+    kind = ""
+    params = ""
+    for row in rows:
+        if row.get("metric") == "熨烫类型":
+            kind = str(row.get("conclusion") or "")
+        elif row.get("metric") == "熨烫参数":
+            formula = str(row.get("formula") or "")
+            bits = [b.split("·")[0].strip() for b in formula.split("·")][:3]
+            params = "、".join(b for b in bits if b)
+        elif row.get("metric") == "熨烫":
+            kind = kind or str(row.get("measured") or "")
+    if not kind:
+        return getattr(result, "ironing", "") or ""
+    kind = kind.replace("写入 ", "").replace("已关掉熨烫，顶面保留层纹，但省时间", "不熨烫")
+    kind = {"top": "只熨最顶面", "topmost": "熨所有朝上的面",
+            "solid": "熨所有实心层顶面", "no ironing": "不熨烫"}.get(kind, kind)
+    return "熨烫：" + kind + (f"（{params}）" if params else "") + "。"
+
+
+def _special_line(result) -> str:
+    """「特殊模式：螺旋花瓶模式=开启、打印顺序=逐件打。」（只列用户亲手选的）"""
+    picks = []
+    for row in (getattr(result, "derivations", None) or []):
+        metric = str(row.get("metric") or "")
+        if metric.startswith("特殊模式 · "):
+            picks.append(metric.replace("特殊模式 · ", "") + "=" + str(row.get("conclusion") or ""))
+    if not picks:
+        return ""
+    return "特殊模式：" + "、".join(picks) + "。"
+
+
 def build(result, *, thermal_rows: list[dict] | None = None,
           machine_note: str = "", support_ease: str = "standard") -> list[str]:
     """返回 3~6 行结论（每行都是给人看的一句话，不含参数键名）。"""
@@ -211,7 +247,8 @@ def build(result, *, thermal_rows: list[dict] | None = None,
         if bits:
             line = " · ".join(bits)
             if room:
-                line += "（" + room.replace("（冷天容易翘边，这两项就是治它的）", "") + "）"
+                # room_note 本身不带括号，这里统一包一层，避免嵌套括号
+                line += "（" + room + "）"
             out.append(_clip(line, 190) + "。")
 
     if support_ease and support_ease != "standard":
@@ -220,6 +257,22 @@ def build(result, *, thermal_rows: list[dict] | None = None,
             "max": "支撑：按「极好拆」调过——间隙最大、接触面最少，几乎一掰就掉（接触面痕迹会明显一点）。",
         }.get(support_ease, ""))
 
+    # 熨烫（用户手动选的档位）：只留类型 + 三个关键数，别复述整段说明
+    if getattr(result, "ironing", "") or getattr(result, "ironing_rows", None):
+        out.append(_clip(_ironing_line(result), 120))
+
+    # 用户手动勾的特殊模式：只列「名字=取值」
+    sp = _special_line(result)
+    if sp:
+        out.append(_clip(sp, 120))
+
+    # 耗材页处理方式（keep / new 与默认的 file 差别很大，必须说出来）
+    fmode = getattr(result, "filament_mode", "file")
+    if fmode == "keep":
+        out.append("耗材页：不改（热床温度、风速、喷头温度这些一个都没写）。")
+    elif fmode == "new":
+        out.append("耗材页：照写，并把耗材另存为「原名 + 优化」，原预设不动。")
+
     if machine_note:
         out.append(machine_note)
 
@@ -227,4 +280,10 @@ def build(result, *, thermal_rows: list[dict] | None = None,
     if warns:
         out.append("要你看一眼：" + _clip(warns[0], 120))
         # 第二条警告不再占一行：点开日志/报告都看得到，卡片高度优先留给结论
-    return [line for line in out if line]
+    clean = [line for line in out if line]
+    # 卡片高度只够十来行：超了就先牺牲「模型判定」那一行，警告必须留到最后
+    if len(clean) > 10:
+        trimmed = [l for l in clean if not l.startswith("模型判定：")]
+        if trimmed:
+            clean = trimmed
+    return clean

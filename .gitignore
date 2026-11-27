@@ -44,3 +44,4 @@ _shot_ui.py
 _t_verify.py
 _dump_det.py
 samples/*_optimized_*.3mf
+_slice_test/

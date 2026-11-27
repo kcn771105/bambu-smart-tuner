@@ -55,7 +55,7 @@ def _first(val, default=0.0) -> float:
 PLATE_KEY = {
     "Supertack Plate": "supertack_plate_temp",
     "Textured PEI Plate": "textured_plate_temp",
-    "Smooth PEI Plate": "textured_plate_temp",
+    "Smooth PEI Plate": "hot_plate_temp",
     "High Temp Plate": "hot_plate_temp",
     "Engineering Plate": "eng_plate_temp",
     "Cool Plate": "cool_plate_temp",
@@ -154,12 +154,20 @@ class TestBedFollowsProject(_Base):
         self.assertEqual(win._current_bed(), "")
 
     def test_after_load_bed_follows_project_value(self):
+        """工程里的板本机认识就照它选；不认识就换一块它认识的（板温沿用原值）。"""
         win = self.make_window()
-        self.assertEqual(win._current_bed(), thermal.bed_type_of(win.original_settings))
+        want = thermal.bed_type_of(win.original_settings)
+        allowed = win._studio_plate_filter()
+        if allowed is None or want in allowed:
+            self.assertEqual(win._current_bed(), want)
+        else:
+            self.assertIn(win._current_bed(), allowed)
+            self.assertIsNotNone(win._bed_keep_temp(),
+                                 "换板子时必须记住原板温，否则会按新板基线悄悄改温度")
 
     def test_plate_temp_key_matches_projects_plate(self):
         win = self.make_window()
-        bed = thermal.bed_type_of(win.original_settings)
+        bed = win._current_bed() or thermal.bed_type_of(win.original_settings)
         self.assertIn(PLATE_KEY[bed], win.result.write_values)
 
     def test_manual_plate_switches_target_key(self):
@@ -172,11 +180,15 @@ class TestBedFollowsProject(_Base):
     def test_first_layer_is_hotter_than_rest(self):
         """首层要比其余层热，否则首层抓不住板。"""
         win = self.make_window()
-        win.cmb_bed.setCurrentIndex(win.cmb_bed.findData("Supertack Plate"))
+        bed = win._current_bed()
+        if not bed:                                  # 没有可选项就跳过
+            self.skipTest("本机 Studio 板型列表为空")
+        win.cmb_bed.setCurrentIndex(win.cmb_bed.findData(bed))
         _app.processEvents()
         vals = win.result.write_values
-        rest = _first(vals.get("supertack_plate_temp"))
-        init = _first(vals.get("supertack_plate_temp_initial_layer"))
+        key = PLATE_KEY[bed]
+        rest = _first(vals.get(key))
+        init = _first(vals.get(key + "_initial_layer"))
         self.assertGreater(init, rest)
 
 
@@ -184,7 +196,7 @@ class TestLayoutNotOverlapping(_Base):
     def test_row_controls_do_not_overlap(self):
         """v1.2 首版把新控件塞到已有行上，打印板下拉被「原始值」标签压住。"""
         win = self.make_window()
-        row = [win.cmb_bed, win.sp_room, win.sp_fan, win.cmb_ease]
+        row = [win.cmb_bed, win.ed_room, win.cmb_fan, win.cmb_ease]
         rects = [(w.geometry().left(), w.geometry().right()) for w in row]
         for i in range(len(rects)):
             for j in range(i + 1, len(rects)):
@@ -222,53 +234,26 @@ if __name__ == "__main__":
     unittest.main()
 
 
-class TestPresetCanBeUndone(_Base):
-    """套用方案后再切回「（不套方案）」，参数必须回到你自己的设置。
+class TestFanAuto(_Base):
+    """风扇强弱：默认「自动」，手动档必须盖掉自动修正（不是叠加）。"""
 
-    用户反馈「方案关了」——当时关掉方案只是不套用了，界面还停在方案里。
-    """
-
-    def test_off_restores_previous_mode(self):
+    def test_default_is_auto(self):
         win = self.make_window()
-        before = win._current_mode()
-        idx = next((i for i in range(win.cmb_preset.count())
-                    if "外观优先" in win.cmb_preset.itemText(i)), -1)
-        if idx < 0:
-            self.skipTest("没有内置『外观优先』方案")
-        win.cmb_preset.setCurrentIndex(idx)
-        _app.processEvents()
-        self.assertNotEqual(win._current_mode(), before, "套用方案后模式没变，测试前提不成立")
-        win.cmb_preset.setCurrentIndex(0)
-        _app.processEvents()
-        self.assertEqual(win._current_mode(), before, "关掉方案后模式没回到原值")
+        self.assertIsNone(win._current_fan_trim(), "默认应该是自动（None）")
+        self.assertIn("自动", win.cmb_fan.currentText())
 
-    def test_off_restores_custom_filament_state(self):
-        """撤销要能把『自定义耗材』这类开关也一并还原。"""
+    def test_manual_zero_overrides_cold_auto(self):
         win = self.make_window()
-        before = win.cmb_custom.currentData()
-        idx = next((i for i in range(win.cmb_preset.count())
-                    if "冷天不翘边" in win.cmb_preset.itemText(i)), -1)
-        if idx < 0:
-            self.skipTest("没有内置『冷天不翘边』方案")
-        win.cmb_preset.setCurrentIndex(idx)
+        win.ed_room.setText("8")
         _app.processEvents()
-        win.cmb_preset.setCurrentIndex(0)
+        win.run_optimize(silent=True)
+        auto_max = float(json.loads(win.result.write_values["fan_max_speed"])[0])
+        idx = win.cmb_fan.findData(0)
+        win.cmb_fan.setCurrentIndex(idx)
         _app.processEvents()
-        self.assertEqual(win.cmb_custom.currentData(), before)
-
-    def test_snapshot_taken_once(self):
-        """在方案之间来回切，撤销点始终是『你自己的设置』，不会被中间方案污染。"""
-        win = self.make_window()
-        original = win._current_mode()
-        for text in ("外观优先", "快速出件", "外观优先"):
-            i = next((k for k in range(win.cmb_preset.count())
-                      if text in win.cmb_preset.itemText(k)), -1)
-            if i >= 0:
-                win.cmb_preset.setCurrentIndex(i)
-                _app.processEvents()
-        win.cmb_preset.setCurrentIndex(0)
-        _app.processEvents()
-        self.assertEqual(win._current_mode(), original)
+        win.run_optimize(silent=True)
+        manual_max = float(json.loads(win.result.write_values["fan_max_speed"])[0])
+        self.assertGreater(manual_max, auto_max, "手动 0 档不该还带着冷天 −10")
 
 
 class TestVerifyTab(_Base):
@@ -299,7 +284,7 @@ class TestVerifyTab(_Base):
     def test_room_temp_lands_in_plate_and_fan(self):
         """填了室温，热床温度必须真的写进文件（不是只显示在表里）。"""
         win = self.make_window()
-        win.sp_room.setValue(8)
+        win.ed_room.setText("8")
         _app.processEvents()
         win.run_optimize(silent=True)
         _app.processEvents()
@@ -310,3 +295,80 @@ class TestVerifyTab(_Base):
                             "supertack_plate_temp")
         temp = float(str(got.get(key, "0")).replace('"', '').strip("[]"))
         self.assertGreater(temp, 60.0, f"室温 8°C 时热床仍是 {temp}°C，冷天修正没生效")
+
+
+class TestPlateDowngradeWhenStudioLacksIt(_Base):
+    """工程用的板本机 Studio 没有（典型：Supertack + 旧版 Studio）时，
+    要换成能用的板，但**板温必须沿用原值**，不能按新板基线偷偷改温度。"""
+
+    def _fake_env(self):
+        from core import studio_env
+        return studio_env.StudioEnv(
+            found=True, root="C:/Program Files/Bambu Studio", version="02.03.00.02",
+            plates=("Textured PEI Plate", "Smooth PEI Plate / High Temp Plate",
+                    "Engineering Plate", "Cool Plate"),
+            machines=("Bambu Lab P2S",))
+
+    def test_downgrades_and_keeps_temp(self):
+        win = MainWindow(self.engine, rules_path=RULES)
+        self.addCleanup(win.close)
+        win._studio_cache = self._fake_env()
+        win.resize(1500, 980)
+        win.show()
+        win.load_file(PROJ)
+        self.assertEqual(win._current_bed(), "Textured PEI Plate")
+        self.assertEqual(win._bed_keep_temp(), 60.0)
+        win.run_optimize(silent=True)
+        vals = win.result.write_values
+        self.assertIn("textured_plate_temp", vals)
+        self.assertEqual(_first(vals["textured_plate_temp"]), 60.0,
+                         "换板后板温应保持工程原值 60°C，而不是纹理板的 70°C")
+
+    def test_dropdown_only_lists_known_plates(self):
+        win = MainWindow(self.engine, rules_path=RULES)
+        self.addCleanup(win.close)
+        win._studio_cache = self._fake_env()
+        win.resize(1500, 980)
+        win.show()
+        win.load_file(PROJ)
+        keys = [win.cmb_bed.itemData(i) for i in range(win.cmb_bed.count())]
+        self.assertNotIn("Supertack Plate", keys)
+        self.assertIn("Textured PEI Plate", keys)
+
+
+class TestBedOptionsFollowMachine(_Base):
+    """板子下拉只给 Studio 真有的板型，并且跟着机型过滤。"""
+
+    def _allowed_universe(self, win) -> set:
+        allowed = win._studio_plate_filter()
+        return set(allowed) if allowed is not None else set(thermal.PLATE_TYPES)
+
+    def test_only_plates_this_studio_knows(self):
+        """下拉里既有 Studio 认识的板，也不超过 Studio 的五个板型。"""
+        win = self.make_window()
+        keys = [win.cmb_bed.itemData(i) for i in range(win.cmb_bed.count())]
+        self.assertEqual(keys[0], "", "第一项应该是「跟随工程」")
+        self.assertNotIn("Smooth PEI Plate", keys)      # 别名不该出现，光滑 PEI 归高温板
+        self.assertLessEqual(len(keys), 6)
+        allowed = self._allowed_universe(win)
+        for key in keys[1:]:
+            self.assertIn(key, allowed, f"{key} 本机 Studio 不认识，不该出现在下拉里")
+
+    def test_machine_filter_hides_unsupported(self):
+        win = self.make_window()
+        idx = win.cmb_printer.findData("H3C")
+        self.assertGreaterEqual(idx, 0)
+        win.cmb_printer.setCurrentIndex(idx)
+        keys = [win.cmb_bed.itemData(i) for i in range(win.cmb_bed.count())]
+        self.assertNotIn("Cool Plate", keys)       # H3C 没有低温板
+        self.assertNotIn("High Temp Plate", keys)  # 也没有高温/光滑 PEI
+
+    def test_selection_falls_back_when_machine_changes(self):
+        win = self.make_window()
+        cool = win.cmb_bed.findData("Cool Plate")
+        self.assertGreaterEqual(cool, 0)
+        win.cmb_bed.setCurrentIndex(cool)
+        idx = win.cmb_printer.findData("H3C")
+        win.cmb_printer.setCurrentIndex(idx)
+        self.assertEqual(win.cmb_bed.currentData(), "",
+                         "所选板被机型排除时应退回「跟随工程」")

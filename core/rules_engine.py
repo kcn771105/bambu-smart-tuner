@@ -27,7 +27,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from . import (adhesion, estimator, hardware, hotend, nozzle_flow, seam_plan, thermal,
+from . import (adhesion, estimator, filament_write, hardware, hotend, ironing, nozzle_flow,
+               seam_plan, special, thermal,
                support_model, support_plan, wall_compat,
                modes as modes_registry, schema, scope)
 
@@ -95,6 +96,16 @@ class OptResult:
     machine_sync_note: str = ""
     #: 支撑好拆档位（standard / easy / max）
     support_ease: str = "standard"
+    #: 熨烫的推导明细与一句话说明
+    ironing_rows: list[dict] = field(default_factory=list)
+    ironing: str = ""
+    #: 熨烫档位（keep / off / top / topmost / solid）
+    ironing_choice: str = "keep"
+    #: 用户手动指定的特殊模式说明（一项一行）
+    special_notes: list[str] = field(default_factory=list)
+    #: 耗材页处理方式（keep / file / new）与说明
+    filament_mode: str = "file"
+    filament_note: str = ""
     #: 每个最终写入的键「最后是被哪一层改的」。用来回答
     #: 「这是按我的模型算的，还是套预设」——按层名分组即可给出比例。
     sources: dict[str, str] = field(default_factory=dict)
@@ -206,6 +217,10 @@ class RulesEngine:
         self._thermal_text: str = ""
         self._seam_text: str = ""
         self._machine_text: str = ""
+        self._ironing_rows: list[dict] = []
+        self._ironing_note: str = ""
+        self._special_notes: list[str] = []
+        self._filament_note: str = ""
         self._project_for_plate = None
         self._hotend = hotend.HotendInfo()
         self._hotend_detected = hotend.HotendInfo()
@@ -279,8 +294,13 @@ class RulesEngine:
                  support_ease: str = "standard",
                  room_temp_c: float | None = None,
                  bed_type: str = "",
-                 fan_trim: int = 0,
-                 seam_smooth: bool = True) -> OptResult:
+                 fan_trim: int | None = None,
+                 seam_smooth: bool = True,
+                 bed_keep_temp: float | None = None,
+                 ironing_choice: str = "keep",
+                 ironing_auto: bool = True,
+                 filament_mode: str = "file",
+                 special_modes: dict | None = None) -> OptResult:
         """filament_overlay：来自 Bambu Studio 用户预设的覆盖层（bambu_profiles.to_overlay）。
         model_profile：core.model_analysis.ModelProfile，按模型形状做最后一层微调。
         time_cap_pct：时长涨幅上限（%）。给了就把算出结果往回调，直到落在上限内。
@@ -290,8 +310,17 @@ class RulesEngine:
         support_ease：支撑好拆程度 standard/easy/max（顶面 Z 间隙与接触面）。
         room_temp_c：室温（°C）。与 bed_type、filament_key 一起推导热床温度与风速。
         bed_type：打印板类型；留空则从工程 curr_bed_type 读。
-        fan_trim：用户对风扇整体转速的偏置（百分点，正数更猛、负数更保守）。
+        fan_trim：风扇强弱。None=自动（按耗材基线，冷天自动降一档）；
+                  整数=手动偏置（百分点，正数更猛、负数更保守，不再叠加自动修正）。
         seam_smooth：是否对圆柱/细高件启用斜接缝（让外壁接缝几乎看不见）。
+        bed_keep_temp：换板子时沿用原板温（°C）。工程原本的板本机 Studio 不认识时，
+                      界面会换成它认识的板，但温度不该跟着新板基线走。
+        ironing_choice：熨烫档位 keep / off / top / topmost / solid（后四个对应 Studio 的
+                 ironing_type，keep = 不动你原来的设置）。
+        ironing_auto：熨烫参数（流量/间距/速度/图案）是否由本工具按耗材算；False 则只改类型。
+        filament_mode：耗材页怎么写 keep / file / new。keep = 耗材页一个字节都不写；
+                       new = 参数照写，另外把耗材名改成「原名 + 优化」（Studio 里另存即得新预设）。
+        special_modes：{参数键: 值}，用户在「特殊模式」里手动选的项；未出现的键一律不动。
         """
         pnode = self.printer(printer_key)
         fnode = self.filament(filament_key)
@@ -311,6 +340,10 @@ class RulesEngine:
         self._room_note = ""
         self._thermal_text = ""
         self._seam_text = ""
+        self._ironing_rows = []
+        self._ironing_note = ""
+        self._special_notes = []
+        self._filament_note = ""
         self._project_for_plate = current
         # 热端流量类型：UI 传了就用传的，没传就按工程自动识别
         self._hotend_detected = hotend.detect(current)
@@ -568,7 +601,8 @@ class RulesEngine:
                 bed_type=bed_type or "",
                 room_temp_c=room_temp_c,
                 printer_key=printer_key,
-                fan_trim=fan_trim)
+                fan_trim=fan_trim,
+                bed_keep_temp=bed_keep_temp)
             if th.ops:
                 # 用户在自己预设里标定过的键（覆盖层 baseline）优先，本层不翻它
                 ov_keys = set((filament_overlay or {}).get("baseline") or {})
@@ -619,6 +653,45 @@ class RulesEngine:
                                    else "接缝位置已按几何调整。")
         except Exception as exc:
             warnings.append(f"接缝策略计算失败（已跳过该项）：{exc}")
+
+        # ---- 7.87：熨烫（你选熨不熨、熨哪儿；流量/间距/速度/图案按耗材算）
+        try:
+            ip = ironing.plan(choice=ironing_choice, auto=bool(ironing_auto),
+                              filament_key=filament_key,
+                              layer_height=float(values.get("layer_height", 0.2) or 0.2),
+                              nozzle=float(nozzle or 0.4), mode_key=mode_key,
+                              current=current, rules=self.rules)
+            if ip.ops:
+                self._apply_ops(values, reasons,
+                                {k: {"set": v} for k, v in ip.ops.items()},
+                                "熨烫", warnings,
+                                allow_preserve=True, respect_locked=False)
+            if ip.rows:
+                self._ironing_rows = [dict(r) for r in ip.rows]
+                for r in ip.rows:
+                    self._derivations.append(dict(r))
+            if ip.note:
+                self._ironing_note = ip.note
+                notes.append(ip.note)
+        except Exception as exc:            # 熨烫出错不能影响主流程
+            warnings.append(f"熨烫设置失败（已跳过该项）：{exc}")
+
+        # ---- 7.88：其他页的特殊模式（只写用户手动选的那几项，其余一律不动）
+        try:
+            sm = special.plan(special_modes, self.rules)
+            if sm.ops:
+                self._apply_ops(values, reasons,
+                                {k: {"set": v} for k, v in sm.ops.items()},
+                                "你手动选的特殊模式", warnings,
+                                allow_preserve=False, respect_locked=False)
+            if sm.notes:
+                self._special_notes = list(sm.notes)
+                notes.extend(sm.notes)
+            if sm.rows:
+                for r in sm.rows:
+                    self._derivations.append(dict(r))
+        except Exception as exc:
+            warnings.append(f"特殊模式设置失败（已跳过）：{exc}")
 
         # ---- 7.75：裙边定量（小件 / 底面小 / 易倒 → 加宽裙边）
         # 「倒不倒」用倾覆指数算：高 ÷ √底面积 ×(1+重心偏移比)
@@ -822,6 +895,17 @@ class RulesEngine:
                                  project_nozzle=(hw.nozzle_diameter if hw else None),
                                  filament_key=filament_key)
 
+        # ---- 耗材页处理方式（keep / file / new）
+        _fil_mode = filament_write.normalize(filament_mode)
+        if _fil_mode == "keep":
+            self._filament_note = ("你选了「不改耗材页」：热床温度、风速、喷头温度、"
+                                   "压力提前、流量比这些耗材页的键一个都不写，只调工艺参数。")
+        elif _fil_mode == "new":
+            self._filament_note = ("耗材参数照写，保存时会把耗材另存为「原名 + 优化」——"
+                                   "Studio 里点保存就多出一份新耗材，你原来那份不会被改。")
+        if self._filament_note:
+            notes.append(self._filament_note)
+
         # ---- 组装
         rows: list[ParamRow] = []
         write_values: dict[str, str] = {}
@@ -846,7 +930,8 @@ class RulesEngine:
             will_write = (exists or write_soft
                           or key in thermal.STANDARD_KEYS
                           or key in seam_plan.STANDARD_KEYS
-                          or key in support_model.SUPPORT_KEYS)
+                          or key in support_model.SUPPORT_KEYS
+                          or key in ironing.STANDARD_KEYS)
             skip_reason = ""
             if not will_write:
                 skip_reason = "当前工程未存储该参数（机型/版本差异），已跳过写入"
@@ -863,6 +948,12 @@ class RulesEngine:
             rows.append(row)
             if not will_write:
                 skipped.append(row)
+                continue
+            # ---- 你选了「不改耗材页」：耗材页/热床页的键一概不写
+            if _fil_mode == "keep" and policy.scope(key) in ("filament", "thermal"):
+                row.will_write = False
+                row.skip_reason = "你选了「不改耗材页」，这一项不写（只调工艺参数）"
+                blocked.append(row)
                 continue
             # ---- 写入范围闸门：机器页/耗材页/元数据一律不写
             if not policy.allows(key):
@@ -919,6 +1010,12 @@ class RulesEngine:
             plate=self._plate_info,
             hotend=self._hotend.summary_line(),
             thermal_rows=list(self._thermal_rows),
+            ironing_rows=list(self._ironing_rows),
+            ironing=self._ironing_note,
+            ironing_choice=(ironing_choice or "keep"),
+            special_notes=list(self._special_notes),
+            filament_mode=_fil_mode,
+            filament_note=self._filament_note,
             room_note=self._room_note,
             thermal=self._thermal_text,
             seam=self._seam_text,

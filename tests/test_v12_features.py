@@ -3,7 +3,6 @@
 覆盖用户反馈对应的四块新能力：
     机型同步  : core/machine_sync.py    ← 「选了机型后 3mf 不对应」
     接缝光滑  : core/seam_plan.py       ← 「圆柱体接缝能光滑吗」
-    参数方案  : core/user_presets.py    ← 「预设几套参数在软件里」
     三槽声明  : core/preset_diff.py     ← 「参数有时生效有时不生效」
     热床风速  : core/thermal.py         ← 「不同耗材×板子×室温，天冷会翘边」
 """
@@ -14,7 +13,7 @@ import json
 import unittest
 from pathlib import Path
 
-from core import machine_sync, preset_diff, seam_plan, thermal, user_presets
+from core import machine_sync, preset_diff, seam_plan, thermal
 
 RULES_PATH = Path(__file__).resolve().parent.parent / "rules" / "BambuRules.json"
 
@@ -131,48 +130,6 @@ class TestSeamPlan(unittest.TestCase):
         self.assertIn("seam_slope_type", p.ops)
 
 
-class TestUserPresets(unittest.TestCase):
-    def test_builtin_are_three_and_readonly_flagged(self):
-        self.assertEqual(len(user_presets.BUILTIN), 3)
-        for p in user_presets.BUILTIN:
-            self.assertTrue(p.builtin)
-            self.assertTrue(p.summary())
-
-    def test_to_values_filters_and_coerces(self):
-        v = user_presets.to_values({
-            "printer": "A1", "nozzle": "0.6", "room_c": "12.5",
-            "fan_trim": "-10", "seam_smooth": 1,
-            "nonsense": "drop me",
-        })
-        self.assertEqual(v["nozzle"], 0.6)
-        self.assertEqual(v["room_c"], 12.5)
-        self.assertEqual(v["fan_trim"], -10)
-        self.assertIs(v["seam_smooth"], True)
-        self.assertNotIn("nonsense", v)
-
-    def test_room_empty_becomes_none(self):
-        self.assertIsNone(user_presets.to_values({"room_c": ""})["room_c"])
-
-    def test_from_values_and_upsert_dedupes_by_name(self):
-        p1 = user_presets.from_values({"printer": "A1", "mode": "draft"}, "我的方案")
-        self.assertFalse(p1.builtin)
-        user = user_presets.upsert([], p1)
-        self.assertEqual(len(user), 1)
-        p2 = user_presets.from_values({"printer": "P1S", "mode": "fine"}, "我的方案")
-        user = user_presets.upsert(user, p2)
-        self.assertEqual(len(user), 1)
-        self.assertEqual(user[0].values["printer"], "P1S")
-
-    def test_remove(self):
-        user = user_presets.upsert([], user_presets.from_values({}, "X"))
-        self.assertEqual(len(user_presets.remove(user, "X")), 0)
-
-    def test_store_path_is_under_user_dir(self):
-        p = user_presets.store_path()
-        self.assertEqual(p.name, "presets.json")
-        self.assertIn("BambuSmartTuner", str(p))
-
-
 class TestSplitByScope(unittest.TestCase):
     def test_three_slots(self):
         got = preset_diff.split_by_scope([
@@ -239,6 +196,35 @@ class TestThermalFanTrim(unittest.TestCase):
         cold = self._fan(room_temp_c=8)
         self.assertLess(float(str(cold["fan_max_speed"]).strip()),
                         float(str(warm["fan_max_speed"]).strip()))
+
+    def test_fan_auto_is_default_and_manual_overrides_it(self):
+        """风扇默认自动（None）；手动给 0 就照标定值来，不再叠加冷天修正。"""
+        auto_cold = self._fan(room_temp_c=8)
+        manual_0 = self._fan(room_temp_c=8, fan_trim=0)
+        self.assertLess(float(str(auto_cold["fan_max_speed"]).strip()),
+                        float(str(manual_0["fan_max_speed"]).strip()),
+                        "自动档在冷天应比手动 0 更低")
+
+    def test_plate_temp_stops_at_ceiling(self):
+        """加温有上限：室温再低也不许把板温顶到 85°C 以上（低温板 45°C）。"""
+        ops = thermal.derive(self.rules, {"curr_bed_type": "Supertack Plate"},
+                             filament_key="PETG", room_temp_c=-5)
+        self.assertLessEqual(float(str(ops.ops["supertack_plate_temp"]["set"])), 85.0)
+        cool = thermal.derive(self.rules, {"curr_bed_type": "Cool Plate"},
+                              filament_key="PLA", room_temp_c=-5)
+        self.assertLessEqual(float(str(cool.ops["cool_plate_temp"]["set"])), 45.0)
+
+    def test_room_note_wording_matches_direction(self):
+        """天冷说翘边、天热说粘死；22°C 这种常规区间也要给一句话（以前是空的）。"""
+        cold = thermal.derive(self.rules, {"curr_bed_type": "Supertack Plate"},
+                              filament_key="PETG", room_temp_c=8)
+        hot = thermal.derive(self.rules, {"curr_bed_type": "Supertack Plate"},
+                             filament_key="PETG", room_temp_c=30)
+        mild = thermal.derive(self.rules, {"curr_bed_type": "Supertack Plate"},
+                              filament_key="PETG", room_temp_c=22)
+        self.assertIn("天冷", cold.room_note)
+        self.assertIn("天热", hot.room_note)
+        self.assertIn("常规区间", mild.room_note)
 
     def test_bed_temp_rises_when_room_is_cold(self):
         warm = self._fan(room_temp_c=25)

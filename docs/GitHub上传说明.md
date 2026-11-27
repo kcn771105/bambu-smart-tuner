@@ -1,4 +1,4 @@
-# 上传到 GitHub（v1.2.2）
+﻿# 上传到 GitHub（v1.2）
 
 仓库已存在：https://github.com/kcn771105/bambu-smart-tuner
 本机 `.git` 已就绪（分支 `main`，remote `origin` 指向上面这个仓库）。
@@ -21,7 +21,7 @@
 ```powershell
 cd "F:\deep seekambu_smart_tuner"
 git add -A
-git commit -m "feat(v1.2.2): 悬垂位置/桥接跨度/稳定性判断 + 接通自动支撑；清掉旧 1.2 包"
+git commit -m "feat(v1.2): 悬垂位置/桥接跨度/稳定性判断 + 接通自动支撑；清掉旧 1.2 包"
 ```
 
 ### 2. 推
@@ -42,15 +42,15 @@ git push -u origin main
 
 网页打开 https://github.com/kcn771105/bambu-smart-tuner/releases → **Draft a new release**
 
-- **Choose a tag** → 输入 `v1.2.2` → 点 **Create new tag on publish**
-- **Release title** → `v1.2.2 — 按模型算的覆盖面加大`
+- **Choose a tag** → 输入 `v1.2` → 点 **Create new tag on publish**
+- **Release title** → `v1.2 — 按模型算的覆盖面加大`
 - **Describe this release** → 粘下面这段：
 
 ```
 修复：换喷嘴不同步机器页（v1.2.1）、打印板默认写死、控件叠字、首层温度方向、
 方案关掉不还原、盒子件被重复扣分导致降速。
 
-新增（v1.2.2）：
+新增（v1.2）：
 - 最长悬垂边 → 桥接速度 ≤30 mm/s
 - 悬垂高度分布 → 上部悬垂接触面顶层 +1
 - 细高 + 脚小 → 裙边加宽、首层 ≤40 mm/s
@@ -61,7 +61,8 @@ git push -u origin main
 ```
 
 - **Attach binaries** → 拖入
-  `F:\deep seekambu_smart_tunerelease\BambuSmartTuner-v1.2.2-win64.zip`
+  `F:\deep seekambu_smart_tuner
+elease\BambuSmartTuner-v1.2-win64.zip`
 - 点 **Publish release**
 
 ---
@@ -69,7 +70,7 @@ git push -u origin main
 ## 三、旧版怎么处理
 
 - 目录里已删：`v1.2`、`v1.2.1`、`v1.2.1b` 的 zip 与解压目录；
-  现在 `release/` 只剩 `v1.0`（历史存档）和 `v1.2.2`（当前版）。
+  现在 `release/` 只剩 `v1.0`（历史存档）和 `v1.2`（当前版）。
 - 仓库 Releases 页里旧的那几个 release，点进去 **Edit → 勾 Set as a pre-release**
   或直接 **Delete**，别留着让人下错版本。留 v1.0 当存档也行，标注 pre-release 即可。
 

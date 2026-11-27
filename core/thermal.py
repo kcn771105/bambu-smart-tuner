@@ -32,6 +32,8 @@
 
 from __future__ import annotations
 
+import json
+
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -40,16 +42,36 @@ from . import schema
 __all__ = ["ThermalOps", "ThermalRow", "bed_type_of", "derive", "plate_types",
            "fan_table", "STANDARD_KEYS"]
 
-PLATE_TYPES = ("Supertack Plate", "Textured PEI Plate", "Smooth PEI Plate",
-               "High Temp Plate", "Engineering Plate", "Cool Plate")
+#: 只列 **Bambu Studio 切片器里真实有、且工程文件里有独立温度键** 的板型。
+#: Studio 的工程里就这五个键：cool / eng / hot / textured / supertack。
+#: 「光滑 PEI 板（Smooth PEI Plate）」在 Studio 里和「高温板」是同一格
+#: （官方 machine 预设写的就是 `Smooth PEI Plate / High Temp Plate`，共用一个键），
+#: 所以它只是别名，不再作为独立选项出现在下拉里。
+PLATE_TYPES = ("Supertack Plate", "Textured PEI Plate", "High Temp Plate",
+               "Engineering Plate", "Cool Plate")
 
-#: 板型的中文名。工程文件里必须写英文（Studio 只认那六个串），
+#: 别名 → 规范名。工程里可能出现的各种写法都收敛到这五个。
+PLATE_ALIASES = {
+    "smooth pei plate": "High Temp Plate",
+    "smooth pei": "High Temp Plate",
+    "光面 pei 板": "High Temp Plate",
+    "光滑 pei 板": "High Temp Plate",
+    "光面板": "High Temp Plate",
+    "光滑板": "High Temp Plate",
+    "high temperature plate": "High Temp Plate",
+    "supertack": "Supertack Plate",
+    "cool plate (superTack)".lower(): "Supertack Plate",
+    "textured": "Textured PEI Plate",
+    "engineering": "Engineering Plate",
+    "cool": "Cool Plate",
+}
+
+#: 板型的中文名。工程文件里必须写英文（Studio 只认那几个串），
 #: 界面上给人看的一律用中文 —— 用户反馈「打印板用中文」。
 PLATE_LABELS = {
     "Supertack Plate": "超粘板 Supertack",
     "Textured PEI Plate": "纹理 PEI 板",
-    "Smooth PEI Plate": "光滑 PEI 板",
-    "High Temp Plate": "高温板",
+    "High Temp Plate": "高温板（含光滑 PEI）",
     "Engineering Plate": "工程板",
     "Cool Plate": "低温板",
 }
@@ -94,8 +116,48 @@ class ThermalOps:
     room_note: str = ""
 
 
-def plate_types() -> tuple[str, ...]:
-    return PLATE_TYPES
+def normalize_plate(name: str) -> str:
+    """任意写法 → 五个规范名之一；认不出来就给空串（调用方自己兜底）。"""
+    txt = str(name or "").strip()
+    if not txt:
+        return ""
+    if txt in PLATE_TYPES:
+        return txt
+    low = txt.lower()
+    if low in PLATE_ALIASES:
+        return PLATE_ALIASES[low]
+    for t in PLATE_TYPES:
+        if t.lower() == low:
+            return t
+    for t in PLATE_TYPES:
+        if t.lower() in low or low in t.lower():
+            return t
+    return ""
+
+
+def unsupported_plates(text: str | None) -> set[str]:
+    """解析机器预设里的 `not_support_bed_type`。
+
+    官方写法是分号分隔、`/` 表示「这两种其实是同一格」，例如
+        "Cool Plate;Smooth PEI Plate / High Temp Plate;3D Effect Plate"
+    只保留本程序认识的板型，其它（3D 效应板之类）不管。
+    """
+    out: set[str] = set()
+    for chunk in str(text or "").replace("；", ";").split(";"):
+        for piece in chunk.split("/"):
+            name = normalize_plate(piece)
+            if name:
+                out.add(name)
+    return out
+
+
+def plate_types(not_support: str | None = None) -> tuple[str, ...]:
+    """给下拉用的板型列表；给了机型的 not_support_bed_type 就滤掉不支持的。"""
+    bad = unsupported_plates(not_support)
+    if not bad:
+        return PLATE_TYPES
+    left = tuple(t for t in PLATE_TYPES if t not in bad)
+    return left or PLATE_TYPES
 
 
 def plate_label(name: str) -> str:
@@ -113,9 +175,9 @@ def plate_label(name: str) -> str:
     return txt
 
 
-def plate_options() -> list[tuple[str, str]]:
+def plate_options(not_support: str | None = None) -> list[tuple[str, str]]:
     """界面下拉用：(中文名, 写进工程的值)。"""
-    return [(plate_label(t), t) for t in PLATE_TYPES]
+    return [(plate_label(t), t) for t in plate_types(not_support)]
 
 
 def _num(v: Any, fallback: float = 0.0) -> float:
@@ -128,19 +190,78 @@ def bed_type_of(settings: dict) -> str:
     if isinstance(raw, list):
         raw = raw[0] if raw else None
     txt = str(raw or "").strip()
-    for t in PLATE_TYPES:
-        if txt == t or txt in t:
-            return t
-    for t in PLATE_TYPES:
-        if t.lower() in txt.lower():
-            return t
+    name = normalize_plate(txt)
+    if name:
+        return name
     return "Supertack Plate"
+
+
+#: 板型 → 板温键（写进工程的键名）
+PLATE_TEMP_KEY = {
+    "Supertack Plate": "supertack_plate_temp",
+    "Textured PEI Plate": "textured_plate_temp",
+    "Smooth PEI Plate / High Temp Plate": "hot_plate_temp",
+    "High Temp Plate": "hot_plate_temp",
+    "Engineering Plate": "eng_plate_temp",
+    "Cool Plate": "cool_plate_temp",
+}
+
+
+def plate_temp_key(name: str) -> str:
+    return PLATE_TEMP_KEY.get(str(name or "").strip(), "supertack_plate_temp")
+
+
+def read_bed_temp(settings: dict, bed_name: str = "") -> float | None:
+    """读工程里这块板现在的温度；读不到返回 None。
+
+    用在「换板子」的场合：工程原本的板本机 Studio 不认识，只能换一块，
+    但温度得接着用原来的值，不能套新板的基线。
+    """
+    def _read(raw: Any) -> float:
+        """工程里的值可能是 ["60"] 这种按热端分槽的 JSON 文本，先拆再取首个非零。"""
+        if isinstance(raw, str):
+            txt = raw.strip()
+            if txt.startswith("["):
+                try:
+                    raw = json.loads(txt)
+                except (ValueError, TypeError):
+                    raw = [t.strip().strip('"') for t in txt.strip("[]").split(",")]
+        if isinstance(raw, (list, tuple)):
+            for item in raw:
+                got = _read(item)
+                if got > 0:
+                    return got
+            return 0.0
+        got = schema.numeric(raw)
+        return float(got) if got is not None else 0.0
+
+    bed = str(bed_name or "").strip() or bed_type_of(settings)
+    key = plate_temp_key(bed)
+    value = _read((settings or {}).get(key))
+    if value > 0:
+        return value
+    # 工程里可能只存了首层温度，或者键名和板型对不上，兜一圈找非零值
+    for cand in (key + "_initial_layer", "hot_plate_temp", "textured_plate_temp"):
+        value = _read((settings or {}).get(cand))
+        if value > 0:
+            return value
+    return None
 
 
 def fan_table(rules: dict, filament_key: str) -> dict:
     """取某耗材的风扇基线。"""
     node = (rules.get("thermal") or {}).get("fan", {})
     return node.get(filament_key) or {}
+
+
+# 各打印板的热床上限（°C）：低温板加热过头反而更难取件，工程板/高温板才耐得住
+_PLATE_MAX = {
+    "Supertack Plate": 85.0,
+    "Textured PEI Plate": 85.0,
+    "High Temp Plate": 90.0,
+    "Engineering Plate": 90.0,
+    "Cool Plate": 45.0,
+}
 
 
 def _room_delta(rules: dict, room_c: float | None) -> tuple[float, str]:
@@ -161,7 +282,7 @@ def _room_delta(rules: dict, room_c: float | None) -> tuple[float, str]:
 
 def derive(rules: dict, current: dict, *, filament_key: str = "", bed_type: str = "",
            room_temp_c: float | None = None, printer_key: str = "",
-           fan_trim: int = 0) -> ThermalOps:
+           fan_trim: int | None = None, bed_keep_temp: float | None = None) -> ThermalOps:
     """按耗材 × 板子 × 室温推导热床温度与风速。
 
     参数
@@ -174,6 +295,9 @@ def derive(rules: dict, current: dict, *, filament_key: str = "", bed_type: str 
     printer_key : 机型键（仅用于说明，未来可按机型微调）
     fan_trim    : 风扇整体偏置（百分点）。负数更保守（更不容易翘边/拉丝），
                   正数更猛（悬垂更好看）。只对 min/max 生效，首层关风不受影响。
+    bed_keep_temp: 指定板温（°C）。用在「换板子」的场合：工程原本用的是本机 Studio
+                  不认识的板（比如 Supertack），只能换成它认识的板，这时板温要沿用
+                  用户原来的温度，而不是套用新板的基线，否则等于偷偷改了温度。
     """
     out = ThermalOps()
     filament_key = filament_key or "PLA"
@@ -189,7 +313,14 @@ def derive(rules: dict, current: dict, *, filament_key: str = "", bed_type: str 
                 base = row
                 break
 
-    target = _num(base.get(filament_key), 0.0)
+    if bed_keep_temp is not None and float(bed_keep_temp) > 0:
+        target = float(bed_keep_temp)
+        base = {filament_key: target}          # 让下游算公式时用的是这个值
+        out.notes.append(
+            f"板子换成「{plate_label(bed)}」，板温以你原来的 {target:.0f}°C 为基准"
+            "（不套用这块板的基线，免得悄悄改温度；室温修正照常叠加）。")
+    else:
+        target = _num(base.get(filament_key), 0.0)
     if target <= 0:
         out.notes.append(f"热床温度：规则库里没有「{filament_key} × {plate_label(bed)}」的基线，保持工程原值不动。")
         return out
@@ -199,19 +330,33 @@ def derive(rules: dict, current: dict, *, filament_key: str = "", bed_type: str 
     delta_init = _num(node.get("initial_layer_delta", 5.0), 5.0)
     room_delta, room_txt = _room_delta(rules, room_temp_c)
 
-    temp_target = max(0.0, min(120.0, target + room_delta))
-    temp_init = max(0.0, min(120.0, temp_target + delta_init))
+    # 加温别越界：delta 最多 +12°C（再高板子受不了、也未必更粘），
+    # 各板另有物理上限：低温板 45°C 就是上限，超了反而更难取件。
+    room_delta = max(-8.0, min(12.0, room_delta))
+    ceiling = _PLATE_MAX.get(bed, 85.0)
+    temp_target = max(0.0, min(ceiling, target + room_delta))
+    temp_init = max(0.0, min(ceiling + 5.0, temp_target + delta_init))
 
     # 板子温度键按板型映射
     plate_key = {
         "Supertack Plate": "supertack_plate_temp",
         "Textured PEI Plate": "textured_plate_temp",
-        "Smooth PEI Plate": "textured_plate_temp",
         "High Temp Plate": "hot_plate_temp",
         "Engineering Plate": "eng_plate_temp",
         "Cool Plate": "cool_plate_temp",
     }.get(bed, "supertack_plate_temp")
     plate_key_init = plate_key + "_initial_layer"
+
+    # 板子本身也要写进工程：Studio 是按 curr_bed_type 决定读哪一块板的温度键，
+    # 只改温度不改板名，它照样按旧板解释（换板后「导入不对」的另一半原因）。
+    curr_bed = str(current.get("curr_bed_type") or "").strip()
+    if isinstance(current.get("curr_bed_type"), list):
+        items = current.get("curr_bed_type") or []
+        curr_bed = str(items[0]).strip() if items else ""
+    if bed and curr_bed and curr_bed != bed:
+        out.ops["curr_bed_type"] = {"set": bed}
+        out.notes.append(f"打印板已从「{plate_label(curr_bed)}」改成「{plate_label(bed)}」"
+                         "（Studio 按板名决定读哪块板的温度，板名不改温度就等于白改）。")
 
     now = _num(current.get(plate_key), 0.0)
     if now > 0:
@@ -244,6 +389,10 @@ def derive(rules: dict, current: dict, *, filament_key: str = "", bed_type: str 
 
     # ---------------- 风扇
     fan = fan_table(rules, filament_key)
+    # 风扇强弱：None=自动，数字=手动。这里先给默认，风扇表缺失时也不至 NameError。
+    auto_fan = fan_trim is None
+    trim = 0
+
     if fan:
         fan_min = _num(fan.get("min"), 0.0)
         fan_max = _num(fan.get("max"), 0.0)
@@ -251,14 +400,18 @@ def derive(rules: dict, current: dict, *, filament_key: str = "", bed_type: str 
         close_layers = _num(fan.get("close_the_first_x_layers"), 0.0)
         overhang = fan.get("overhang_fan_speed")
 
-        # 风扇整体偏置：用户的「更保守/更猛」诉求 + 冷天自动保守一档
-        trim = int(fan_trim or 0)
+        # 风扇强弱：None = 自动（按耗材基线，冷天再自动降一档）；
+        # 给了数字 = 用户手动指定，照他说的来，不再叠加自动修正。
         trim_txt = ""
-        if trim:
-            trim_txt += f"，整体偏置 {trim:+d}"
-        if room_temp_c is not None and room_temp_c < 18.0:
-            trim -= 10
-            trim_txt += f"，室温 {room_temp_c:.0f}°C 偏冷再降 10 个百分点防翘边"
+        if auto_fan:
+            if room_temp_c is not None and room_temp_c < 18.0:
+                trim = -10
+                trim_txt = f"，室温 {room_temp_c:.0f}°C 偏冷，自动降 10 个百分点防翘边"
+            else:
+                trim_txt = "，自动（按耗材基线）" if room_temp_c is None else ""
+        else:
+            trim = int(fan_trim)
+            trim_txt = f"，手动 {trim:+d}" if trim else "，手动不动"
         if trim:
             fan_min = min(100.0, max(0.0, fan_min + trim))
             fan_max = min(100.0, max(0.0, fan_max + trim))
@@ -294,17 +447,24 @@ def derive(rules: dict, current: dict, *, filament_key: str = "", bed_type: str 
     if room_txt:
         out.notes.append(room_txt)
 
-    # 室温联动的一句话总结：用户填了室温就想知道「到底动了什么」
-    if room_txt:
+    # 室温联动的一句话总结：用户填了室温就想知道「到底动了什么」。
+    # 只要填了就给一句，哪怕这次推导值没变（否则界面看起来像没生效）。
+    if room_temp_c is not None:
         moved = []
-        if abs(temp_target - target) >= 0.5:
+        delta_bed = temp_target - target
+        if abs(delta_bed) >= 0.5:
             moved.append(f"热床 {target:.0f} → {temp_target:.0f}°C")
-        if room_temp_c is not None and room_temp_c < 18.0:
-            moved.append("风扇再降 10 个百分点")
+        if auto_fan and trim:
+            moved.append(f"风扇再降 {abs(trim)} 个百分点")
         if moved:
-            out.room_note = f"室温 {room_temp_c:.0f}°C：{'、'.join(moved)}（冷天容易翘边，这两项就是治它的）"
+            why = "天冷防翘边" if delta_bed > 0 else "天热防粘死、好取件"
+            out.room_note = f"室温 {room_temp_c:.0f}°C：{'、'.join(moved)}，{why}"
+        elif room_temp_c < 18.0:
+            out.room_note = (f"室温 {room_temp_c:.0f}°C：板温已到 {temp_target:.0f}°C 上限，"
+                             "再高板子受不了，改靠关门/加罩保温")
         else:
-            out.room_note = f"室温 {room_temp_c:.0f}°C：推导值已在工程里，热床与风扇不用再动"
+            out.room_note = (f"室温 {room_temp_c:.0f}°C：常规区间，热床 {temp_target:.0f}°C、"
+                             "风扇按标定值走")
     out.notes.append(f"热床：{filament_key} × {plate_label(bed)}，目标 {temp_target:.0f}°C"
                      + (f"，首层 {temp_init:.0f}°C" if delta_init else "") + "。")
     return out

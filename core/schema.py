@@ -251,8 +251,10 @@ _PARAM_LIST: list[ParamSpec] = [
     P("nozzle_temperature", "喷嘴温度", "thermal", ARRAY_FLOAT, 150, 350, 5, "°C", decimals=0),
     P("nozzle_temperature_initial_layer", "喷嘴首层温度", "thermal", ARRAY_FLOAT, 150, 350, 5, "°C", decimals=0),
     P("curr_bed_type", "板子类型", "thermal", ENUM, 0, 0, 1, "",
-      choices=("Supertack Plate", "Textured PEI Plate", "Smooth PEI Plate",
-               "High Temp Plate", "Engineering Plate", "Cool Plate")),
+      # 只列 Bambu Studio 真实有独立温度键的五个板型；光滑 PEI 在 Studio 里
+      # 与高温板同一格，作为别名收敛（见 core/thermal.py 的 PLATE_ALIASES）。
+      choices=("Supertack Plate", "Textured PEI Plate", "High Temp Plate",
+               "Engineering Plate", "Cool Plate")),
 
     # ---------------- 支撑接触面 / 易拆卸 ----------------
     P("support_interface_layers", "支撑接触面层数", "support", INT, 0, 8, 1, "层"),

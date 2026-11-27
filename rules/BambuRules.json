@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "Bambu Smart Tuner 规则库",
-    "version": "1.2.2",
+    "version": "1.2",
     "updated": "2026-11-26",
     "author": "Bambu Smart Tuner",
     "note": "本文件是纯数据，改完保存后回到程序点「重新加载规则库」即生效，不需要改代码。所有键名必须存在于 core/schema.py 的参数表中，否则会被忽略并在日志里报警。",
@@ -756,7 +756,8 @@
         320,
         325
       ],
-      "note": "A1 的大幅面兄弟（330×320×325 mm），开放式 i3 结构、无辅助风扇与封腔：加速度上限只有 12000，热端熔池 92 mm³ 与 A1 同级 —— 速度/加速度必须比 H2 系压低，大件优先降速保表面。"
+      "note": "A1 的大幅面兄弟（330×320×325 mm），开放式 i3 结构、无辅助风扇与封腔：加速度上限只有 12000，热端熔池 92 mm³ 与 A1 同级 —— 速度/加速度必须比 H2 系压低，大件优先降速保表面。",
+      "not_support_bed_type": "Cool Plate"
     },
     "H2C": {
       "label": "Bambu Lab H2C",
@@ -783,7 +784,8 @@
         320,
         325
       ],
-      "note": "H2 家族双热端机型（330×320×325 mm）：速度 1000 / 加速度 20000，熔池 130 mm³（高流量热端 133/145）。双方头可同时装两种耗材，本程序按第 1 个计算。"
+      "note": "H2 家族双热端机型（330×320×325 mm）：速度 1000 / 加速度 20000，熔池 130 mm³（高流量热端 133/145）。双方头可同时装两种耗材，本程序按第 1 个计算。",
+      "not_support_bed_type": "Cool Plate;Smooth PEI Plate / High Temp Plate"
     },
     "H3C": {
       "label": "Bambu Lab H3C",
@@ -810,7 +812,8 @@
         320,
         325
       ],
-      "note": "H3 新一代高速机架（330×320×325 mm）：速度为全系最高 1400、加速度 25000，Z 轴 Jerk 只有 1 —— 抬 Z 要保守。熔池 125.9 mm³ 配高流量热端。"
+      "note": "H3 新一代高速机架（330×320×325 mm）：速度为全系最高 1400、加速度 25000，Z 轴 Jerk 只有 1 —— 抬 Z 要保守。熔池 125.9 mm³ 配高流量热端。",
+      "not_support_bed_type": "Cool Plate;Smooth PEI Plate / High Temp Plate"
     },
     "P3C": {
       "label": "Bambu Lab P3C",
@@ -837,7 +840,8 @@
         256,
         260
       ],
-      "note": "P 系第三代（256×256×260 mm）：与 H3C 同运动平台（1400 / 25000），但热床只有 256 见方、封腔高度 260。"
+      "note": "P 系第三代（256×256×260 mm）：与 H3C 同运动平台（1400 / 25000），但热床只有 256 见方、封腔高度 260。",
+      "not_support_bed_type": "Cool Plate;Smooth PEI Plate / High Temp Plate"
     },
     "X2D": {
       "label": "Bambu Lab X2D",
@@ -865,7 +869,8 @@
         256,
         261
       ],
-      "note": "X2 双头机型（256×256×261 mm）：速度 1000 / 加速度 20000，但熔池只有 92 mm³（与 A1 同级）—— 想跑高速必须换高流量热端，否则先撞流量墙。"
+      "note": "X2 双头机型（256×256×261 mm）：速度 1000 / 加速度 20000，但熔池只有 92 mm³（与 A1 同级）—— 想跑高速必须换高流量热端，否则先撞流量墙。",
+      "not_support_bed_type": "Cool Plate"
     }
   },
   "filaments": {
@@ -4593,27 +4598,20 @@
         "process": {},
         "advice": "纹理面首层实际接触面积比光面小：薄底/高瘦件建议手动把裙边加到 6~8 mm。"
       },
-      "Smooth PEI Plate": {
-        "label": "光面 PEI 板",
-        "temp_key": "textured_plate_temp",
-        "aliases": [
-          "Smooth PEI Plate",
-          "Smooth PEI",
-          "光面板"
-        ],
-        "note": "光面板首层接触充分，底面会有镜面效果；温度键与纹理板共用。",
-        "process": {},
-        "advice": "光面板首层接触充分，裙边按形状层给的就行。"
-      },
       "High Temp Plate": {
-        "label": "高温板",
+        "label": "高温板（含光滑 PEI）",
         "temp_key": "hot_plate_temp",
         "aliases": [
           "High Temp Plate",
           "High Temperature Plate",
-          "高温板"
+          "高温板",
+          "Smooth PEI Plate",
+          "Smooth PEI",
+          "光面板",
+          "光滑 PEI 板",
+          "光面 PEI 板"
         ],
-        "note": "耐高温板，ABS/ASA 大件首选；PLA 也能用，但降温后件会自己松开。",
+        "note": "耐高温板，ABS/ASA 大件首选；PLA 也能用，但降温后件会自己松开。 Studio 把「光滑 PEI 板」和「高温板」当同一格（官方 machine 预设写成 `Smooth PEI Plate / High Temp Plate`），温度键都是 hot_plate_temp。",
         "process": {},
         "advice": "高温板降温后会自己松开，不用为拆件改参数。"
       },
@@ -4662,6 +4660,50 @@
       }
     }
   },
+  "ironing": {
+    "note": "熨烫基准：流量小、间距密、速度低。profiles 按耗材取，by_mode 按优化模式微调，nozzle_spacing_mul 按喷嘴缩放。",
+    "default": {"flow": 10.0, "spacing": 0.15, "speed": 30.0, "pattern": "monotonic", "inset": 0.15},
+    "profiles": {
+      "PLA":  {"flow": 10.0, "spacing": 0.15, "speed": 30.0, "pattern": "monotonic", "inset": 0.15},
+      "PETG": {"flow": 12.0, "spacing": 0.20, "speed": 25.0, "pattern": "monotonic", "inset": 0.20},
+      "ABS":  {"flow": 10.0, "spacing": 0.15, "speed": 30.0, "pattern": "monotonic", "inset": 0.15},
+      "ASA":  {"flow": 10.0, "spacing": 0.15, "speed": 30.0, "pattern": "monotonic", "inset": 0.15},
+      "TPU":  {"flow": 8.0,  "spacing": 0.22, "speed": 20.0, "pattern": "monotonic", "inset": 0.20}
+    },
+    "by_mode": {
+      "fine":     {"spacing_mul": 0.85, "speed_mul": 0.90},
+      "balanced": {"spacing_mul": 1.00, "speed_mul": 1.00},
+      "strong":   {"spacing_mul": 1.00, "speed_mul": 1.00},
+      "fast":     {"spacing_mul": 1.25, "speed_mul": 1.20}
+    },
+    "nozzle_spacing_mul": {"0.2": 0.70, "0.4": 1.00, "0.6": 1.25, "0.8": 1.45}
+  },
+  "special": [
+    {"key": "print_sequence", "label": "打印顺序", "kind": "enum",
+     "choices": [["by layer", "逐层打（默认）"], ["by object", "逐件打（一次打完一个）"]],
+     "help": "逐件打时喷嘴会跳动避让，一个件打坏不影响其他件；但件与件之间要留间隙。"},
+    {"key": "spiral_mode", "label": "螺旋花瓶模式", "kind": "bool",
+     "choices": [["1", "开启"], ["0", "关闭"]],
+     "help": "只适合单壁无顶的容器（花瓶/灯罩）；开了以后壁厚只有一圈，不能有填充。"},
+    {"key": "spiral_mode_smooth", "label": "螺旋平滑", "kind": "bool",
+     "choices": [["1", "开启"], ["0", "关闭"]],
+     "help": "螺旋模式下把 Z 抬升抹匀，表面更顺；只在螺旋花瓶模式下有效。"},
+    {"key": "enable_arc_fitting", "label": "圆弧拟合（G2/G3）", "kind": "bool",
+     "choices": [["1", "开启"], ["0", "关闭"]],
+     "help": "把圆弧压成 G2/G3，圆孔更圆、文件更小；老固件不认时关掉。"},
+    {"key": "fuzzy_skin", "label": "磨砂皮肤", "kind": "enum",
+     "choices": [["none", "不磨砂（默认）"], ["external", "只磨外表面"], ["all", "磨所有表面"], ["all_shells", "磨所有外壳"]],
+     "help": "给外表面加粗糙质感，能遮住层纹；尺寸会微微变大。"},
+    {"key": "avoid_crossing_wall_includes_support", "label": "避墙时也避支撑", "kind": "bool",
+     "choices": [["1", "开启"], ["0", "关闭"]],
+     "help": "空驶不穿过支撑，支撑面更干净；多一点空驶时间。"},
+    {"key": "only_one_wall_top", "label": "顶面只打一圈墙", "kind": "bool",
+     "choices": [["1", "开启"], ["0", "关闭"]],
+     "help": "顶面用填充直接盖住，省时间；顶面质量会差一点。"},
+    {"key": "wall_sequence", "label": "墙打印顺序", "kind": "enum",
+     "choices": [["inner wall/outer wall", "先内后外（表面好）"], ["outer wall/inner wall", "先外后内"], ["inner-outer-inner wall", "内外内"]],
+     "help": "先内后外时外壁靠内壁支撑，表面更平整（默认）。"}
+  ],
   "thermal": {
     "说明": "热床温度与风速：按耗材、板子类型、室温三个维度推导，写入 3mf。",
     "plate_baseline": {
@@ -4673,13 +4715,6 @@
         "TPU": 50
       },
       "Textured PEI Plate": {
-        "PLA": 60,
-        "PETG": 70,
-        "ABS": 90,
-        "ASA": 85,
-        "TPU": 45
-      },
-      "Smooth PEI Plate": {
         "PLA": 60,
         "PETG": 70,
         "ABS": 90,
@@ -4781,6 +4816,7 @@
         "overhang_fan_speed": 20,
         "note": "TPU 柔软、怕拉扯堵料：风扇压低，首层关，悬垂段少开，靠慢速避免拉扯。"
       }
-    }
+    },
+    "plate_baseline_note": "只列 Studio 有独立温度键的五个板型；「光滑 PEI 板」与「高温板」共用 hot_plate_temp，按 High Temp Plate 查表。"
   }
 }

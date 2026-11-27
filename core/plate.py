@@ -32,14 +32,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-#: 板型名 → 官方温度键。Bambu 的「光面 PEI」复用纹理板温度键。
+#: 板型名 → 官方温度键。工程里只有这五个键；Studio 把「光滑 PEI」和
+#: 「高温板」当同一格（官方 machine 预设写 `Smooth PEI Plate / High Temp Plate`），
+#: 所以光滑 PEI 用 hot_plate_temp，不是 textured_plate_temp。
 PLATE_TEMP_KEYS = {
     "cool plate": "cool_plate_temp",
     "engineering plate": "eng_plate_temp",
     "high temp plate": "hot_plate_temp",
     "high temperature plate": "hot_plate_temp",
     "textured pei plate": "textured_plate_temp",
-    "smooth pei plate": "textured_plate_temp",
+    "smooth pei plate": "hot_plate_temp",
     "supertack plate": "supertack_plate_temp",
     "supertack": "supertack_plate_temp",
 }

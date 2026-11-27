@@ -50,7 +50,7 @@ Copy-Item "README.md" $stage
 
 Copy-Item "docs\收件人须知.txt" $stage
 # 更新说明（改了什么都写清楚的那份）
-if (Test-Path "CHANGELOG-1.2.2.md") { Copy-Item "CHANGELOG-1.2.2.md" $stage }
+if (Test-Path "CHANGELOG.md") { Copy-Item "CHANGELOG.md" $stage }
 
 # 收款码 + 窗口图标：放进去收件人也能换（不换就用 EXE 内置那张）
 

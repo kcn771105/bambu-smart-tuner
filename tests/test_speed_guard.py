@@ -138,3 +138,50 @@ class TestPlateLabelsAreChinese(unittest.TestCase):
         from core import thermal
         self.assertEqual(thermal.plate_label("Textured PEI Plate"), "纹理 PEI 板")
         self.assertIn("超粘", thermal.plate_label("Supertack"))
+
+
+class TestOnlyStudioPlateTypes(unittest.TestCase):
+    """板子只提供 Bambu Studio 切片器里真实有、且有独立温度键的那几个。"""
+
+    def test_plate_list_matches_studio_keys(self):
+        from core import plate, thermal
+        self.assertEqual(
+            thermal.PLATE_TYPES,
+            ("Supertack Plate", "Textured PEI Plate", "High Temp Plate",
+             "Engineering Plate", "Cool Plate"))
+        # 每个板型都要能映射到一个真实存在的温度键
+        for name in thermal.PLATE_TYPES:
+            self.assertIn(name.lower(), plate.PLATE_TEMP_KEYS)
+
+    def test_smooth_pei_is_alias_of_high_temp(self):
+        from core import thermal
+        self.assertNotIn("Smooth PEI Plate", thermal.PLATE_TYPES)
+        self.assertEqual(thermal.normalize_plate("Smooth PEI Plate"), "High Temp Plate")
+        self.assertEqual(thermal.normalize_plate("光面板"), "High Temp Plate")
+        self.assertEqual(thermal.bed_type_of({"curr_bed_type": "Smooth PEI Plate"}),
+                         "High Temp Plate")
+
+    def test_unsupported_string_is_parsed(self):
+        from core import thermal
+        bad = thermal.unsupported_plates(
+            "Cool Plate;Smooth PEI Plate / High Temp Plate;3D Effect Plate")
+        self.assertEqual(bad, {"Cool Plate", "High Temp Plate"})
+        self.assertEqual(thermal.unsupported_plates(None), set())
+
+    def test_plates_are_filtered_per_machine(self):
+        from core import thermal
+        h3c = thermal.plate_types("Cool Plate;Smooth PEI Plate / High Temp Plate")
+        self.assertEqual(h3c, ("Supertack Plate", "Textured PEI Plate", "Engineering Plate"))
+        a2l = thermal.plate_types("Cool Plate")
+        self.assertNotIn("Cool Plate", a2l)
+        self.assertIn("High Temp Plate", a2l)      # A2L 支持高温板
+        self.assertEqual(thermal.plate_types(None), thermal.PLATE_TYPES)
+
+    def test_rules_carry_not_support_per_printer(self):
+        from core import rules_engine
+        eng = rules_engine.build_engine("rules/BambuRules.json")
+        printers = eng.rules["printers"]
+        self.assertIn("Cool Plate", str(printers["H3C"].get("not_support_bed_type")))
+        self.assertIn("Cool Plate", str(printers["A2L"].get("not_support_bed_type")))
+        # 老机型没有这个字段 = 官方没限制，五个板都能选
+        self.assertFalse(printers["X1C"].get("not_support_bed_type"))

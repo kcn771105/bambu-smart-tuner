@@ -73,7 +73,13 @@ def _area_points(bed: list[float]) -> list[str]:
 
 
 def _num(v: Any) -> float | None:
+    """取值并转数字。工程里的键常是 ["0.4"] 这种按热端分槽的 JSON 文本，先拆。"""
     try:
+        if isinstance(v, str) and v.strip().startswith("["):
+            try:
+                v = json.loads(v)
+            except (TypeError, ValueError):
+                v = [t.strip().strip('"') for t in v.strip().strip("[]").split(",")]
         if isinstance(v, (list, tuple)):
             v = v[0] if v else None
         if v is None:
