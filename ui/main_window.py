@@ -171,7 +171,11 @@ class MainWindow(QMainWindow):
         self._render_rules_preview()
         self._render_coverage()
         self._log("Bambu Smart Tuner 已启动。", "ok")
-        self._log(f"规则库：{self.rules_path}")
+        try:
+            shown = self.rules_path.relative_to(Path(os.getcwd()))
+        except Exception:
+            shown = self.rules_path.name
+        self._log(f"规则库：{shown}（改这个文件后到「规则库预览」页点「重新加载 JSON」）")
         self._log("第 1 步：点「加载 3mf」，选 Bambu Studio 保存的工程文件（.3mf / .bambu）。")
 
     # ================================================================ UI 搭建
@@ -940,10 +944,13 @@ class MainWindow(QMainWindow):
         <h2>已知限制</h2>
         <ul>{limits}</ul>
         <h2>自定义调参策略</h2>
-        <p>规则全部在 <code>{html.escape(str(self.rules_path))}</code>：
+        <p>规则全部在程序目录下的 <code>rules/{html.escape(self.rules_path.name)}</code>
+        （在哪台机器上运行，这个路径就在那台机器上；想直接定位，去「规则库预览」页点
+        「打开 JSON 所在目录」）：
         机型硬件上限在 <code>printers</code>，耗材特性在 <code>filaments</code>，
-        三种模式的加减乘改在 <code>modes</code>，跨维度特例在 <code>interactions</code>。
-        改完回到「规则库预览」页点「重新加载 JSON」。</p>
+        模式档的加减乘改在 <code>modes</code>，跨维度特例在 <code>interactions</code>，
+        板温与风扇在 <code>thermal</code>，几何阈值在 <code>geometry_rules</code>。
+        改完回到「规则库预览」页点「重新加载 JSON」，不用重启。</p>
         """)
         v.addWidget(browser, 1)
         return w

@@ -19,7 +19,7 @@
 ### 1. 提交这一版
 
 ```powershell
-cd "F:\deep seekambu_smart_tuner"
+cd "<你的仓库目录>"
 git add -A
 git commit -m "feat(v1.2): 悬垂位置/桥接跨度/稳定性判断 + 接通自动支撑；清掉旧 1.2 包"
 ```
@@ -61,8 +61,7 @@ git push -u origin main
 ```
 
 - **Attach binaries** → 拖入
-  `F:\deep seekambu_smart_tuner
-elease\BambuSmartTuner-v1.2-win64.zip`
+  `<你的仓库目录>\release\BambuSmartTuner-v1.2-win64.zip`
 - 点 **Publish release**
 
 ---

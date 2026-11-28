@@ -22,7 +22,8 @@ from core.threemf import ThreeMfProject  # noqa: E402
 from ui.main_window import MainWindow  # noqa: E402
 
 RULES = str(ROOT / "rules" / "BambuRules.json")
-PROJ = r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf"
+from tests._sample import PROJ as _SAMPLE  # noqa: E402
+PROJ = str(_SAMPLE)
 
 _app = QApplication.instance() or QApplication([])
 

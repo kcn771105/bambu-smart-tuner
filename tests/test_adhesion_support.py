@@ -220,7 +220,7 @@ class TestSupportFlowClamp(unittest.TestCase):
         from core.threemf import ThreeMfProject
 
         root = _Path(__file__).resolve().parent.parent
-        src = _Path(r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf")
+        src = _Path(__import__("tests._sample", fromlist=["PROJ"]).PROJ)
         if not src.exists():
             self.skipTest("真实工程不在本机")
         rules = _json.load(io.open(root / "rules" / "BambuRules.json", encoding="utf-8-sig"))
@@ -250,7 +250,7 @@ class TestSupportSwitch(unittest.TestCase):
         from core.rules_engine import RulesEngine
         from core.threemf import ThreeMfProject
 
-        src = _Path(r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf")
+        src = _Path(__import__("tests._sample", fromlist=["PROJ"]).PROJ)
         if not src.exists():
             self.skipTest("真实工程不在本机")
         root = _Path(__file__).resolve().parent.parent

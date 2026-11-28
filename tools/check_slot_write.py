@@ -8,9 +8,10 @@ sys.path.insert(0, ".")
 from core import hardware
 from core.rules_engine import RulesEngine
 from core.threemf import ThreeMfProject
+from _paths import project as _project, out as _out  # noqa: E402
 
-SRC = r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf"
-OUT = r"F:\deep seek\鱼缸温度计支架\_test_slots.3mf"
+SRC = str(_project())
+OUT = str(_out("_test_slots.3mf"))
 
 rules = json.load(io.open("rules/BambuRules.json", encoding="utf-8-sig"))
 eng = RulesEngine(rules)

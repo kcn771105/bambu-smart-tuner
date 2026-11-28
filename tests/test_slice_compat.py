@@ -14,7 +14,7 @@ from pathlib import Path
 from core import machine_sync, preset_names, rules_engine, special, threemf
 
 RULES = Path(__file__).resolve().parent.parent / "rules" / "BambuRules.json"
-PROJ = Path(r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf")
+from tests._sample import PROJ  # noqa: E402
 
 
 def _engine():

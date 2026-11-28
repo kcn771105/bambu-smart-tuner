@@ -1,4 +1,4 @@
-﻿"""验证打印板同步：板型识别 / 兼容性 / 板面尺寸 / 模型放得下吗 / 板型工艺微调。"""
+"""验证打印板同步：板型识别 / 兼容性 / 板面尺寸 / 模型放得下吗 / 板型工艺微调。"""
 import sys
 from pathlib import Path
 
@@ -6,8 +6,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from core import detector, hardware, model_analysis, plate, rules_engine, threemf  # noqa: E402
+from _paths import project as _project, out as _out  # noqa: E402
 
-PROJ = Path(r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf")
+PROJ = _project()
 
 
 def main() -> int:

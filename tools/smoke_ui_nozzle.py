@@ -14,8 +14,9 @@ from PySide6.QtWidgets import QApplication  # noqa: E402
 from core import rules_engine  # noqa: E402
 from ui import style  # noqa: E402
 from ui.main_window import MainWindow  # noqa: E402
+from _paths import project as _project, out as _out  # noqa: E402
 
-PROJ = r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf"
+PROJ = str(_project())
 SHOT_DIR = ROOT / "shots"
 
 

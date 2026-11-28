@@ -17,7 +17,7 @@ sys.path.insert(0, str(ROOT))
 from core import filament_write, ironing, rules_engine, special, threemf  # noqa: E402
 
 RULES = ROOT / "rules" / "BambuRules.json"
-PROJ = Path(r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf")
+from tests._sample import PROJ  # noqa: E402  (环境变量 BST_PROJECT 可覆盖)
 
 
 class TestIroning(unittest.TestCase):

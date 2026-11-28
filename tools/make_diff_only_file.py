@@ -7,9 +7,10 @@ sys.path.insert(0, str(ROOT))
 
 from core import (detector, hardware, model_analysis, preset_diff,  # noqa: E402
                  rules_engine, safety, threemf)
+from _paths import project as _project, out as _out  # noqa: E402
 
-SRC = Path(r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf")
-OUT = Path(r"F:\deep seek\鱼缸温度计支架\_test_diff_only.3mf")
+SRC = _project()
+OUT = _out("_test_diff_only.3mf")
 MODE = sys.argv[1] if len(sys.argv) > 1 else "strength"
 
 

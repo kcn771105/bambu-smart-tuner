@@ -33,10 +33,11 @@ import json
 from core import hardware
 from core.rules_engine import RulesEngine
 from core.threemf import ThreeMfProject
+from _paths import project as _project, out as _out  # noqa: E402
 
 rules = json.load(io.open("rules/BambuRules.json", encoding="utf-8-sig"))
 eng = RulesEngine(rules)
-p = ThreeMfProject.load(r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf")
+p = ThreeMfProject.load(str(_project()))
 p.settings["alternate_extra_wall"] = "1"   # 模拟用户在 Studio 里勾上这个选项
 hw = hardware.read(p)
 r = eng.optimize(p.settings, printer_key="P2S", filament_key="PETG", nozzle=0.4,

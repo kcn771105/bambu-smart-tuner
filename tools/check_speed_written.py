@@ -2,11 +2,12 @@ import io
 import json
 import sys
 import zipfile
+from _paths import project as _project, out as _out  # noqa: E402
 
 sys.path.insert(0, ".")
 
-SRC = r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf"
-OUT = r"F:\deep seek\鱼缸温度计支架\_test_diff_only.3mf"
+SRC = str(_project())
+OUT = str(_out("_test_diff_only.3mf"))
 
 SPEED_KEYS = [
     "outer_wall_speed", "inner_wall_speed", "sparse_infill_speed",

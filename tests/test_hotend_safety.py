@@ -19,9 +19,10 @@ sys.path.insert(0, str(ROOT))
 
 from core import hotend, preset_diff, rules_engine, safety, threemf  # noqa: E402
 
-PROJECT = str(Path(r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf"))
+from tests._sample import PROJ as _SAMPLE  # noqa: E402
+PROJECT = str(_SAMPLE)
 
-PROJ = Path(r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf")
+PROJ = _SAMPLE
 
 
 def _settings(**kw) -> dict:

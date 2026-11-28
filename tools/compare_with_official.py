@@ -27,6 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from core import detector, hardware, model_analysis, rules_engine, schema, threemf  # noqa: E402
+from _paths import project as _project, out as _out  # noqa: E402
 
 PROFILE_DIR = Path(r"C:\Program Files\Bambu Studio\resources\profiles\BBL\process")
 
@@ -46,7 +47,7 @@ MACHINE_NAME = {
     "H2D": "H2D", "H2DP": "H2D Pro", "H2S": "H2S",
 }
 
-DEFAULT_PROJECT = Path(r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf")
+DEFAULT_PROJECT = _project()
 
 
 def _load(name: str) -> dict:

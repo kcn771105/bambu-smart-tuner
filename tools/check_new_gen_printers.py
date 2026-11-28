@@ -7,10 +7,11 @@ import sys
 sys.path.insert(0, ".")
 
 from core import detector, rules_engine, schema, threemf  # noqa: E402
+from _paths import project as _project, out as _out  # noqa: E402
 
 RULES = json.load(io.open("rules/BambuRules.json", encoding="utf-8-sig"))
 engine = rules_engine.RulesEngine(RULES)
-PROJ = r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf"
+PROJ = str(_project())
 
 print("=== 机型下拉（%d 项）" % len(engine.printer_choices()))
 for i, (k, label) in enumerate(engine.printer_choices(), 1):

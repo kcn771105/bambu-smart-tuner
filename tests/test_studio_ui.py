@@ -9,7 +9,8 @@ sys.path.insert(0, str(ROOT))
 from core import detector, report, rules_engine, scope, studio_ui  # noqa: E402
 from core.threemf import ThreeMfProject  # noqa: E402
 
-PROJ = r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf"
+from tests._sample import PROJ as _SAMPLE  # noqa: E402
+PROJ = str(_SAMPLE)
 PROCESS_KEYS = [k for k, v in scope.SCOPE.items() if v == scope.PROCESS]
 
 

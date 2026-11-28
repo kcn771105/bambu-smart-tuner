@@ -11,8 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from core import detector, hardware, model_analysis, rules_engine, schema, threemf  # noqa: E402
+from _paths import project as _project, out as _out  # noqa: E402
 
-PROJECT = Path(r"F:\deep seek\鱼缸温度计支架\鱼缸温度计支架.3mf")
+PROJECT = _project()
 
 
 def main() -> int:

@@ -278,6 +278,18 @@ python cli.py sync-filaments --export my_filaments.json
 python cli.py rules                                  # 规则库概览 + 自检
 ```
 
+**跑它自带的验证脚本时**，工程文件用环境变量指定，不用改代码里的路径：
+
+```powershell
+$env:BST_PROJECT  = "D:\my\part.3mf"      # 要验证的 3mf 工程
+$env:BST_OUT_DIR  = "$env:TEMPst_out"    # 脚本输出目录（不设就用临时目录）
+$env:BST_SCAN_DIR = "D:\models"            # audit 脚本扫描 .3mf 的目录
+python tools/check_plate.py
+python tools/verify_real_project.py
+```
+
+不设 `BST_PROJECT` 时会退回仓库自带的 `samples/shape_plate_flat.3mf`，所以 clone 下来直接跑也能出结果。
+
 ---
 
 ## 1.5 机型与耗材覆盖

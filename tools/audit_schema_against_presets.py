@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import zipfile
@@ -28,7 +29,9 @@ from core import schema                                    # noqa: E402
 BBL = Path(r"C:\Program Files\Bambu Studio\resources\profiles\BBL")
 PRESET_DIRS = [BBL / "process", BBL / "filament", BBL / "machine"]
 USER_PRESET_DIR = Path.home() / "AppData/Roaming/BambuStudio/user"
-REAL_PROJECTS = list(Path(r"F:\deep seek").glob("**/*.3mf"))
+# 真实工程从环境变量取（BST_SCAN_DIR），不把某台机器的路径写进仓库
+_SCAN = os.environ.get("BST_SCAN_DIR")
+REAL_PROJECTS = list(Path(_SCAN).expanduser().glob("**/*.3mf")) if _SCAN else []
 
 NUM_RE = re.compile(r"^-?\d+(\.\d+)?$")
 

@@ -81,7 +81,11 @@ def keys_from_projects() -> set[str]:
     keys: set[str] = set()
     roots = [Path(os.environ.get("USERPROFILE", "")) / d for d in
              ("Desktop", "Downloads", "Documents")]
-    roots += [Path(r"F:\deep seek"), Path(r"C:\Users\teng\AppData\Roaming\BambuStudio")]
+    # 别人跑这个脚本时这些路径不存在，会自动跳过；要扫别的目录就设 BST_SCAN_DIR
+    for extra in (os.environ.get("BST_SCAN_DIR"),):
+        if extra:
+            roots.append(Path(extra).expanduser())
+    roots.append(Path(os.environ.get("APPDATA", "")) / "BambuStudio")
     found = 0
     sys.path.insert(0, str(ROOT))
     from core import threemf
